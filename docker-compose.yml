@@ -1,0 +1,25 @@
+services:
+  auth-service:
+    container_name: auth-service
+    build:
+      services/auth-service
+
+  chat-service:
+    container_name: chat-service
+    build:
+      services/chat-service
+
+  game-service:
+    container_name: game-service
+    build:
+      services/chat-service
+
+  tournament-service:
+    container_name: tournament-service
+    build:
+      services/tournament-service
+
+  user-management-service:
+    container_name: user-management-service
+    build:
+      services/user-management-service
