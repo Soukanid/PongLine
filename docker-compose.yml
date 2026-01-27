@@ -1,30 +1,59 @@
+
 services:
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - frontend
+    networks:
+      - app-network
+
   auth-service:
     container_name: auth-service
     build:
       services/auth-service
+    volumes:
+      - ./services/auth-service/data:/app/data
+    networks:
+      - app-network
 
-  chat-service:
-    container_name: chat-service
-    build:
-      services/chat-service
+  # chat-service:
+  #   container_name: chat-service
+  #   build:
+  #     services/chat-service
+  #
+  # game-service:
+  #   container_name: game-service
+  #   build:
+  #     services/chat-service
+  #
+  # tournament-service:
+  #   container_name: tournament-service
+  #   build:
+  #     services/tournament-service
+  #
+  # user-management-service:
+  #   container_name: user-management-service
+  #   build:
+  #     services/user-management-service
 
-  game-service:
-    container_name: game-service
+  frontend:
+    container_name: frontend
     build:
-      services/chat-service
+      ./frontend
+    command: dev
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
 
-  tournament-service:
-    container_name: tournament-service
-    build:
-      services/tournament-service
+  #The Mysql service
 
-  user-management-service:
-    container_name: user-management-service
-    build:
-      services/user-management-service
 
-  frontend-service:
-    container_name: frontend-service
-    build:
-      services/frontend-service
+networks:
+  app-network:
+    driver: bridge
+

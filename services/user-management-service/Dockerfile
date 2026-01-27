@@ -1,8 +1,4 @@
-FROM debian:bookworm-slim
-
-RUN apt update -y && apt upgrade -y && apt install nodejs npm -y
-
-RUN mkdir /app
+FROM node:lts-bookworm-slim
 
 WORKDIR /app
 
@@ -12,4 +8,6 @@ RUN npm ci
 
 COPY . .
 
-CMD ["npm", "run"]
+ENTRYPOINT ["npm", "run"]
+
+CMD ["start"]
