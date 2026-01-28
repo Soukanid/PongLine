@@ -1,4 +1,4 @@
-import { appStore } from './Store';
+ import { appStore } from './Store';
 
 export abstract class BaseComponent extends HTMLElement {
   constructor() {

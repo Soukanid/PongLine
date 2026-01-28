@@ -1,8 +1,24 @@
+
 services:
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - frontend
+    networks:
+      - app-network
+
   auth-service:
     container_name: auth-service
     build:
       services/auth-service
+    volumes:
+      - ./services/auth-service/data:/app/data
+    networks:
+      - app-network
 
   chat-service:
     container_name: chat-service
@@ -24,7 +40,20 @@ services:
     build:
       services/user-management-service
 
-  frontend-service:
-    container_name: frontend-service
+  frontend:
+    container_name: frontend
     build:
-      services/frontend-service
+      ./frontend
+    command: dev
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+
+  #The Mysql service
+
+
+networks:
+  app-network:
+    driver: bridge
+
