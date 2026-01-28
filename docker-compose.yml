@@ -24,21 +24,37 @@ services:
     container_name: chat-service
     build:
       services/chat-service
+    volumes:
+      - ./services/chat-service/data:/app/data
+    networks:
+      - app-network
 
   game-service:
     container_name: game-service
     build:
-      services/chat-service
+      services/game-service
+    volumes:
+      - ./services/game-service/data:/app/data
+    networks:
+      - app-network
 
   tournament-service:
     container_name: tournament-service
     build:
       services/tournament-service
+    volumes:
+      - ./services/tournament-service/data:/app/data
+    networks:
+      - app-network
 
   user-management-service:
     container_name: user-management-service
     build:
       services/user-management-service
+    volumes:
+      - ./services/user-management-service/data:/app/data
+    networks:
+      - app-network
 
   frontend:
     container_name: frontend
