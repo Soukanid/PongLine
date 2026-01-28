@@ -66,8 +66,6 @@ services:
     networks:
       - app-network
 
-  #The Mysql service
-
 
 networks:
   app-network:

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "migrate": "ts-node src/database/createTables.ts"
   },
   "keywords": [],
   "author": "",

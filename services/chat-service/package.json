@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "ts-node src/index.ts",
+    "migrate": "ts-node src/database/createTables.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,9 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "fastify": "^5.6.2"
+    "fastify": "^5.6.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2"
   }
 }
