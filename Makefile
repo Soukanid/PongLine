@@ -1,5 +1,13 @@
+install:
+	cd frontend && npm install
+	cd services/auth-service && npm install
+	cd services/chat-service && npm install
+	cd services/game-service && npm install
+	cd services/tournament-service && npm install
+	cd services/user-management-service && npm install
+
 build:
-	docker compose build
+	docker compose build --parallel
 
 up:
 	docker  compose up  -d 
@@ -7,8 +15,7 @@ up:
 up_foreground:
 	docker  compose up
 
-re: down
-	docker  compose up --build --force-recreate -d 
+re: down build up
 
 down:
 	docker compose down 
@@ -21,3 +28,11 @@ migrate:
 	docker compose exec tournament-service npm run migrate
 	docker compose exec user-management-service npm run migrate
 
+logs:
+	docker compose logs -f
+
+fclean: down
+	docker system prune -af
+	docker volume prune -f
+
+.PHONY: all install build up down re migrate fclean logs

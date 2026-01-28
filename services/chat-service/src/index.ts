@@ -6,6 +6,22 @@ const fastify = Fastify({
   logger: true
 });
 
+
+const dbPath = path.join(process.cwd(), "..", "data", "chat.sqlite");
+
+export const db = new sqlite3.Database(
+  dbPath,
+  sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+  (err) => {
+    if (err) {
+      console.error(err.message);
+    }
+  }
+);
+
+
+
+
 const start = async () => {
   try {
     // This keeps the server alive!
