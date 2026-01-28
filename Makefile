@@ -35,4 +35,7 @@ fclean: down
 	docker system prune -af
 	docker volume prune -f
 
-.PHONY: all install build up down re migrate fclean logs
+show_database:
+	docker compose exec chat-service sqlite3 data/chat.sqlite
+
+.PHONY: all install build up down re migrate fclean logs show_database
