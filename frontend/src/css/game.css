@@ -1,0 +1,71 @@
+
+.pong-text {
+    font-family: monospace;
+    font-weight: 400;
+    font-size: 5px;
+    line-height: 7px;
+    color: #1BFB08;
+    white-space: pre;
+    flex-shrink: 0;      
+    overflow-x: auto;
+    max-width: 100%; 
+}
+
+.header-row {
+  top: 0;
+  left: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+
+  height: auto;
+  padding: 10px ;
+  
+  box-sizing: border-box;
+  z-index: 50;
+  overflow:auto;
+}
+.logo {
+  height: 25px;
+  width: auto;
+}
+.game-title-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1BFB08;
+    font-size: 30px;
+    font-weight: bold;
+    margin-left: 20px;
+    white-space: nowrap;
+}
+
+.right-icons {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+}
+
+.right-icons img {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0; 
+}
+
+.canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 100px;
+}
+
+.pong-table {
+    border: 1px solid #1BFB08;
+    background-color: #000000;
+
+    width: min(1000px, 80vw);  
+    aspect-ratio: 1.6;  
+
+    display: block;
+}

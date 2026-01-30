@@ -10,6 +10,10 @@ export class Router {
         e.preventDefault();
         this.navigateTo((target as HTMLAnchorElement).href);
       }
+      if (target.matches('button[data-url]')) {
+        e.preventDefault();
+        this.navigateTo(target.dataset.url!);
+      }
     });
     this.loadRoute();
   }
