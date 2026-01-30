@@ -38,4 +38,9 @@ fclean: down
 show_database:
 	docker compose exec chat-service sqlite3 data/chat.sqlite
 
-.PHONY: all install build up down re migrate fclean logs show_database
+push: down
+	git add .
+	git commit -m "$(ARGS)"
+	git push
+
+.PHONY: all push install build up down re migrate fclean logs show_database
