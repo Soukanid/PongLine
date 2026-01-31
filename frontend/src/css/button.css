@@ -1,0 +1,75 @@
+.button-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    min-height: 100%; 
+    margin: 40px 30px 0 30px;
+}
+
+.btn {
+    --color: #1BFB08;
+    --color2: #050505;
+
+    position: relative;
+    overflow: hidden;
+
+    width: min(550px, 100vw);
+    aspect-ratio: 12 / 10;
+
+    padding: 0;
+    background-color: var(--color2);
+    border: 0.5px solid var(--color);
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 1;
+
+    font-family: "Fira Code", monospace;
+    line-height: 1; 
+    white-space: pre;
+    color: var(--color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-decoration: none;
+}
+
+.btn pre {
+    margin: 0;
+    font-family: inherit;
+    white-space: pre;
+    text-align: center;
+
+    display: block;
+    overflow: hidden;
+}
+
+
+.btn:hover {
+    background-color: var(--color);
+    color: var(--color2);
+}
+
+.btn:hover pre {
+    color: var(--color2);
+}
+
+.btn:active {
+    transform: scale(.98);
+}
+
+.btn-label {
+    font-family: "VT323", monospace;
+    color: var(--color);
+    font-size: 1rem;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.btn:hover .btn-label {
+    color: var(--color2);
+}
