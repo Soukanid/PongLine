@@ -1,11 +1,3 @@
-install:
-	cd frontend && npm install
-	cd services/auth-service && npm install
-	cd services/chat-service && npm install
-	cd services/game-service && npm install
-	cd services/tournament-service && npm install
-	cd services/user-management-service && npm install
-
 build:
 	docker compose build --parallel
 

@@ -1,5 +1,6 @@
 import { db } from "./database"
 
+// [soukaina]  add await async after learning it :)
 
 export const createTables = () => {
   db.serialize(() => {
