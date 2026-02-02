@@ -1,6 +1,5 @@
 import { BaseComponent } from '../../core/Component';
-import { io } from 'socket.io-client';   //  <<===    npm install socket.io-client
-// import { router } from '../../main';
+import { io } from 'socket.io-client';
 import { PongGame } from "./Render";
 import "../../css/button.css";
 import "../../css/game.css";
@@ -15,7 +14,7 @@ export class Game extends BaseComponent {
         `)
         if (!this.game) {
             const params = new URL(window.location.href).searchParams;
-            const mode = params.get('mode') || undefined;
+            const mode = params.get('mode') || 'local';
             const nick = params.get('nick') || undefined;
             const left = params.get('left') || undefined;
             const right = params.get('right') || undefined;
@@ -30,6 +29,5 @@ export class Game extends BaseComponent {
         
     }
 }
-
 
 customElements.define('page-game', Game);

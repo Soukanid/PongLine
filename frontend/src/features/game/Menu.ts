@@ -107,7 +107,6 @@ export class Menu extends BaseComponent {
         });
       });
     }
-
     addEvents(): void {
       const buttons = this.querySelectorAll<HTMLButtonElement>(".btn");
       buttons.forEach(btn => {
