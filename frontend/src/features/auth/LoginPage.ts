@@ -1,4 +1,4 @@
-//import "../../css/login.css";
+import "../../css/login.css";
 import { BaseComponent } from "../../core/Component";
 
 export class LoginPage extends BaseComponent {

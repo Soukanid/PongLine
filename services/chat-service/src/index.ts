@@ -1,4 +1,9 @@
- import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
+import Fastify from 'fastify'
+import { PrismaClient } from '@prisma/client'
+
+// init prisma client
+
+export const prisma = new PrismaClient();
 
 const fastify = Fastify({
   logger: true
