@@ -1,5 +1,7 @@
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
+import { chatRoutes } from './routes/chat'
+
 
 // init prisma client
 
@@ -9,6 +11,7 @@ const fastify = Fastify({
   logger: true
 });
 
+fastify.register(chatRoutes)
 
 const start = async () => {
   try {
