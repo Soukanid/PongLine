@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
-import { chatRoutes } from './routes/chat'
+import { chatRoutes } from './routes/chat.ts'
 
 
 // init prisma client
