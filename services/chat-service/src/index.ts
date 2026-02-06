@@ -1,21 +1,23 @@
 import Fastify from 'fastify'
-import { PrismaClient } from '@prisma/client'
+import fastifyWebsocket from '@fastify/websocket'
 import { chatRoutes } from './routes/chat.ts'
 
 
-// init prisma client
-
-export const prisma = new PrismaClient();
+// init fastify 
 
 const fastify = Fastify({
   logger: true
 });
 
+// add plugins
+
+fastify.register(fastifyWebsocket);
 fastify.register(chatRoutes)
+
+// run the server
 
 const start = async () => {
   try {
-    // This keeps the server alive!
     await fastify.listen({ port: 3002, host: '0.0.0.0' }); 
     console.log('Server is running...');
   } catch (err) {

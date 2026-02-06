@@ -22,3 +22,12 @@ model Message {
   sent_at      DateTime  @default(now())
 }
 
+model Block {
+  id        Int      @id @default(autoincrement())
+  blockerId Int      // The person who clicked "Block"
+  blockedId Int      // The person getting blocked
+  createdAt DateTime @default(now())
+
+  // to ensure that we don't block twice < just in case ;) >
+  @@unique([blockerId, blockedId])
+}
