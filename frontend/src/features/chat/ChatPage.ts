@@ -1,6 +1,8 @@
 import { BaseComponent } from '../../core/Component';
 import { chatService } from './ChatServices';
 import { API_GATEWAY_URL } from '../../config' 
+import contactIcon from '../../../public/contact.png'
+import searchIcon from '../../../public/search.png'
 
 interface Friend {
   id: number;
@@ -37,7 +39,13 @@ export class ChatPage extends BaseComponent {
         </div>
         <div class="w-1/4 flex border border-retro/50 rounded-xl flex-col ml-4">
           <div class="h-12 flex  text-white border-b border-retro/50">
-                fs
+            <img src="${searchIcon}" class="items-center m-2  w-8 h-8" alt="Search" />
+            <input 
+              id="friend-search" 
+              type="text" 
+              class="flex-1 bg-transparent border-none outline-none text-sm text-retro placeholder-retro" 
+              placeholder="Search friends..." 
+            >
           </div>
           <div id="friends-list" class=" flex-1 flex flex-col text-white">
                 Who am I
@@ -51,24 +59,24 @@ export class ChatPage extends BaseComponent {
   
   }
 
-  renderFriendList() {
+  renderFriendList(listToRender: Friend[] = this.friends) {
     const div = this.querySelector('#friends-list');
 
     if (!div)
       return ;
     
-    if (this.friends.length === 0)
+    if (listToRender.length === 0)
     {
-      div.innerHTML = `<div class="text-gray-500 text-conter">No friends :(, The Poor you </div>`;
+      div.innerHTML = `<div class="m-3 text-retro text-conter">No friends :(</div>`;
       return ;
     }
 
     div.innerHTML = '';
 
-    this.friends.forEach(f => {
+    listToRender.forEach(f => {
         
         const friendItem = document.createElement('div')
-        friendItem.className = "cursor-pointer hover:bg-gray-700 flex items-center border border-transparent hover:border-gray-600";
+        friendItem.className = "group cursor-pointer hover:bg-retro hover:text-black- flex items-center border border-transparent hover:border-gray-600";
 
         friendItem.dataset.id = f.id.toString();
         friendItem.dataset.name = f.username;
@@ -76,7 +84,7 @@ export class ChatPage extends BaseComponent {
         friendItem.innerHTML = `
           <img class="m-2 w-10 h-10 rounded-full avatar-img"> </div>
           <div class="m-2 flex-1">
-            <div class="it font-mono text-retro username-text"></div>
+            <div class=" font-bold group-hover:text-black font-mono text-retro username-text"></div>
           </div>
           `;
         
@@ -117,6 +125,21 @@ export class ChatPage extends BaseComponent {
         console.log(`Sending: ${input.value}`);
         input.value = '';
       }
+    });
+
+    // search for friends
+    const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
+
+    // add the search event
+    searchInput?.addEventListener('input', (e) => {
+        const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+        
+        const filtered = this.friends.filter(f => 
+            f.username.toLowerCase().includes(query)
+        );
+
+        // Re-render with the filtered list
+        this.renderFriendList(filtered);
     });
   }
 }
