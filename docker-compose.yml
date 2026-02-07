@@ -57,6 +57,7 @@ services:
     build:
       services/user-management-service
     volumes:
+      - /app/node_modules
       - ./services/user-management-service/data:/app/data
     networks:
       - app-network

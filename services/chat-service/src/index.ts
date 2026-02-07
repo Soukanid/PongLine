@@ -19,7 +19,7 @@ fastify.register(chatRoutes)
 const start = async () => {
   try {
     await fastify.listen({ port: 3002, host: '0.0.0.0' }); 
-    console.log('Server is running...');
+    console.log('Chat Service is running...');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

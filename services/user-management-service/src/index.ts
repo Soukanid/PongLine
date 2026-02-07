@@ -1,5 +1,4 @@
 import Fastify from 'fastify'
-import fastifyWebsocket from '@fastify/websocket'
 import { userRoutes } from './routes/user_route'
 
 
@@ -11,7 +10,6 @@ const fastify = Fastify({
 
 // add plugins
 
-fastify.register(fastifyWebsocket);
 fastify.register(userRoutes)
 
 // run the server
