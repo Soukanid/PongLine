@@ -1,0 +1,35 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/user.db.sqlite" 
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  avatar    String   @default("https://i.pravatar.cc/150?u=default")
+  
+  sentRequests     Friendship[] @relation("sender")
+  receivedRequests Friendship[] @relation("receiver")
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+
+  //the status can be either  PENDING, ACCEPTED, BLOCKED 
+  status    String   @default("PENDING")
+  
+  senderId  Int
+  sender    User     @relation("sender", fields: [senderId], references: [id])
+  
+  receiverId Int
+  receiver User     @relation("receiver", fields: [receiverId], references: [id])
+
+  //It Prevent duplicate friend requests
+  @@unique([senderId, receiverId]) 
+}

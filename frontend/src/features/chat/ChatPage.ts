@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../core/Component';
+import { chatService } from './ChatServices';
 
 export class ChatPage extends BaseComponent {
 

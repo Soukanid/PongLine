@@ -1,5 +1,6 @@
 //import "./style.css";
 import { Router } from "./core/Router";
+import { chatService } from "./features/chat/ChatServices"
 
 import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
@@ -16,3 +17,15 @@ const routes = {
 };
 
 export const router = new Router(routes);
+
+//const savedUserId = localStorage.getItem('userId');
+
+const savedUserId = 1;
+// for know we will asume that the user is already logged in
+
+if (savedUserId) {
+
+  chatService.connect(savedUserId);
+}
+
+// if he is not we should redirect him to the login page

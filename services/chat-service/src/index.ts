@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import fastifyWebsocket from '@fastify/websocket'
-import { chatRoutes } from './routes/chat.ts'
+import { chatRoutes } from './routes/chat_route.ts'
 
 
 // init fastify 
