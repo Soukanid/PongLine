@@ -67,35 +67,6 @@ export class ChatPage extends BaseComponent {
 
     this.friends.forEach(f => {
         
-        // // Create elements securely
-        // const item = document.createElement('div');
-        // item.className = "friend-item p-3 rounded-lg cursor-pointer hover:bg-gray-700/50 flex items-center gap-3 transition-all border border-transparent hover:border-gray-600";
-        // item.dataset.id = f.id.toString();
-        // item.dataset.name = f.username;
-        //
-        // item.innerHTML = `
-        //    <div class="w-10 h-10 rounded-full bg-gray-600 overflow-hidden border border-gray-500">
-        //       <img src="${f.avatar}" class="w-full h-full object-cover" alt="avatar">
-        //    </div>
-        //    <div class="flex-1">
-        //       <div class="font-bold text-sm text-gray-200 username-text"></div> 
-        //       <div class="text-[10px] text-green-400 font-bold tracking-wide">ONLINE</div>
-        //    </div>
-        // `;
-        //
-        // // ✅ SECURITY: Set username via textContent
-        // const nameEl = item.querySelector('.username-text');
-        // if (nameEl) nameEl.textContent = f.username;
-        //
-        // // Add Click Event
-        // item.addEventListener('click', () => {
-        //     this.querySelectorAll('.friend-item').forEach(el => el.classList.remove('bg-blue-600/20', 'border-blue-500/30'));
-        //     item.classList.add('bg-blue-600/20', 'border-blue-500/30');
-        //     this.querySelectorAll(f.username);
-        // });
-        //
-        // div.appendChild(item);
-
         const friendItem = document.createElement('div')
         friendItem.className = "cursor-pointer hover:bg-gray-700 flex items-center border border-transparent hover:border-gray-600";
 
