@@ -36,15 +36,17 @@ export class PongGame {
 		this.socket = socket;
 
 		this.initializeGameState(mode, left, right);
-		this.setupKeyboardListeners();
 		this.setupSocketListeners();
+		this.setupKeyboardListeners();
 	}
+
 	public joinRoom(gameId: string): void {
 	    if (this.socket) {
 	        this.socket.emit('joinGame', gameId);
 	        this.currentGameId = gameId;
 	    }
 	}
+	
 	private initializeGameState(_mode: string, left?: string, right?: string): void {
 		this.game = {
 			ballX: this.width / 2,
@@ -62,45 +64,52 @@ export class PongGame {
 	
 	private update(): void {
 		const speed = 5;
-    	if (this.game.mode === 'local') {
-        	if (this.keys['w'] || this.keys['W']) this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
-        	if (this.keys['s'] || this.keys['S']) this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
-    	} else if (this.game.mode === 'bot') {
-    	    const paddleCenter = this.game.paddle2Y + 40;
-    	    if (this.game.ballX < this.width / 4) {
-				if (paddleCenter < this.game.ballY - 20) {
-					this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
-				} else if (paddleCenter > this.game.ballY + 20) {
-					this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
+		if (this.game.mode === 'remote') {
+        this.socket.emit('playerInput', {
+            gameId: this.currentGameId,
+            up: this.keys['ArrowUp'] || this.keys['w'] || this.keys['W'],
+            down: this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']
+        });
+    	} else {
+    		if (this.game.mode === 'local') {
+        		if (this.keys['w'] || this.keys['W']) this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
+        		if (this.keys['s'] || this.keys['S']) this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
+    		} else if (this.game.mode === 'bot') {
+    		    const paddleCenter = this.game.paddle2Y + 40;
+    		    if (this.game.ballX < this.width / 4) {
+					if (paddleCenter < this.game.ballY - 20) {
+						this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
+					} else if (paddleCenter > this.game.ballY + 20) {
+						this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
+					}
 				}
 			}
-		}
-    	if (this.keys['ArrowUp']) {
-		    this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
-   		}
-   		if (this.keys['ArrowDown']) {
-   		    this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
-   		}
-   		if (this.game.mode === 'local' || this.game.mode === 'bot') {
-   		    this.game.ballX += this.ballVelX;
-   		    this.game.ballY += this.ballVelY;
-   		    if (this.game.ballY - this.ballRadius <= 0 || this.game.ballY + this.ballRadius >= this.height) {
-   		        this.ballVelY *= -1;
-   		    }
+			if (this.game.mode === 'local' || this.game.mode === 'bot') {
+				if (this.keys['ArrowUp']) {
+					this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
+				   }
+				   if (this.keys['ArrowDown']) {
+					   this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
+				   }
+			}
+   			if (this.game.mode === 'local' || this.game.mode === 'bot') {
+   			    this.game.ballX += this.ballVelX;
+   			    this.game.ballY += this.ballVelY;
+   			    if (this.game.ballY - this.ballRadius <= 0 || this.game.ballY + this.ballRadius >= this.height) {
+   			        this.ballVelY *= -1;
+   			    }
 
-    	    this.checkPaddleCollision();
-   		    if (this.game.ballX - this.ballRadius <= 0) {
-   		        this.game.score_plr1++;
-   		        this.resetBall();
-   		    }
-   		    if (this.game.ballX + this.ballRadius >= this.width) {
-   		        this.game.score_plr2++;
-   		        this.resetBall();
-   		    }
-   		}
-   		if (this.game.mode === 'remote') {
-   		    this.sendPaddleInput();
-   		}
+    		    this.checkPaddleCollision();
+   			    if (this.game.ballX - this.ballRadius <= 0) {
+   			        this.game.score_plr1++;
+   			        this.resetBall();
+   			    }
+   			    if (this.game.ballX + this.ballRadius >= this.width) {
+   			        this.game.score_plr2++;
+   			        this.resetBall();
+   			    }
+   			}
+		}
 	}
 	private resetBall(): void {
 		this.game.ballX = this.width / 2;
@@ -132,14 +141,7 @@ export class PongGame {
 		}
 		
 	}
-	private sendPaddleInput(): void {
-		if (!this.socket || !this.currentGameId) return;
-		
-	    this.socket.emit('paddleMove', {
-			gameId: this.currentGameId,
-	        paddleY: this.game.paddle1Y
-	    });
-	}
+
 	private setupKeyboardListeners(): void {
 		window.addEventListener('keydown', (e) => {
 			this.keys[e.key] = true;
@@ -153,13 +155,11 @@ export class PongGame {
 	private setupSocketListeners(): void {
 		if (!this.socket) return;
 
-		this.socket.on('opponentMove', (data: { paddleY: number }) => {
-        if (this.game.mode === 'remote') {
-            this.game.paddle2Y = data.paddleY;
-        }
-    	});
+		this.socket.on('gameFull', () => {
+		    alert('The game room is full. Cannot join the game.');
+		});
 		this.socket.on('gameState', (state: Partial<GameState>) => {
-			this.game = { ...this.game, ...state };
+			this.game = {...this.game, ...state};
 		});
 		this.socket.on('connect', () => {
 			console.log('Connected to game server');
