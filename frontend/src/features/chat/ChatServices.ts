@@ -65,6 +65,28 @@ class ChatService {
 
   }
 
+  async sendMessage(friendId: number, text: string)
+  {
+    const url = new URL(`${API_GATEWAY_URL}/api/chat/create_message`);
+    
+    const data= {
+      sender_id: this.myUserId,
+      receiver_id: friendId,
+      content: text
+    };
+
+    const response = await fetch(url.toString(), {
+      method: 'Post',
+      headers: {
+        'content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok)
+      console.error("Failed to send message");
+  }
+
   async getMessageHistory(friendId: number, ): Promise<Message[]> {
 
     const url = new URL(`${API_GATEWAY_URL}/api/chat/messages`);

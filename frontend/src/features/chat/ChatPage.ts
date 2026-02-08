@@ -31,7 +31,7 @@ export class ChatPage extends BaseComponent {
         <div class="w-3/4 flex flex-col border border-retro/50 rounded-xl">
 
           <div id="chat-header" class="h-12 flex  border-b border-retro/50"></div>
-          <div id="message-area" class="flex-1 flex "></div>
+          <div id="message-area" class="flex-1 flex flex-col"></div>
           <div class="msg-input h-15 flex border-t border-retro/50">
           <input id="msg-input" 
            type="text" 
@@ -152,34 +152,28 @@ export class ChatPage extends BaseComponent {
     if (!area) return;
 
     const isFriend = msg.sender_id === this.activeFriendId;
+    const senderName = isFriend ? (this.activeFriendUsername || 'Unknown') : 'you';
 
-    // 1. Create Wrapper
-    const bubble = document.createElement('div');
-    bubble.className = `flex w-full mb-2 ${isFriend ? 'justify-start' : 'justify-end'}`;
-    
-    // 2. Create Box
-    const box = document.createElement('div');
-    box.className = `max-w-[70%] px-4 py-2 rounded-2xl text-sm shadow-md ${
-        isFriend 
-          ? 'bg-gray-700 text-gray-100 rounded-tl-none' 
-          : 'bg-blue-600 text-white rounded-tr-none'
-    }`;
-
-    const textDiv = document.createElement('div');
-    textDiv.className = "break-words";
-    textDiv.textContent = msg.content; // The content is treated as pure text
-    
-    const timeDiv = document.createElement('div');
-    timeDiv.className = "text-[10px] opacity-50 mt-1 text-right";
     const date = msg.sent_at ? new Date(msg.sent_at) : new Date();
-    timeDiv.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const timeStr = date.toLocaleTimeString('en-GB', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
 
-    box.appendChild(textDiv);
-    box.appendChild(timeDiv);
-    bubble.appendChild(box);
+    const line = document.createElement('div');
+    line.className = "w-full mb-1 font-mono text-sm text-retro break-words hover:bg-retro/10 transition-colors px-2";
 
-    area.appendChild(bubble);
-    // this.scrollToBottom();
+    line.innerHTML = `
+      <span class="opacity-60 mr-2">[${timeStr}]</span>
+      <span class="font-bold mr-2">&lt;${senderName}&gt;</span>
+      <span class="text-retro">${msg.content}</span>
+    `;
+
+    area.appendChild(line);
+    
+    area.scrollTop = area.scrollHeight; 
   }
 
   
@@ -228,12 +222,29 @@ export class ChatPage extends BaseComponent {
     const btn = this.querySelector('#send-btn');
     const input = this.querySelector('#msg-input') as HTMLInputElement;
 
-    btn?.addEventListener('click', () => {
-      if (input?.value) {
-        console.log(`Sending: ${input.value}`);
-        input.value = '';
-      }
-    });
+    const sendMessage = () =>
+    {
+      const msg = input.value.trim();
+
+      // if the message is empty we don't do anything
+      if (!msg || !this.activeFriendId)
+        return ;
+
+      chatService.sendMessage(this.activeFriendId, msg); 
+
+      // now let's show what we sent
+      this.addMessageToUI({
+        id: Date.now(), // this is not correct just temporory untill the page refresh
+        sender_id: 1, //[soukaina: alert] hard coded for know
+        receiver_id: this.activeFriendId,
+        content: msg,
+        sent_at: new Date().toISOString()
+      });
+
+      input.value = '';
+    }
+
+    btn?.addEventListener('click', sendMessage);
 
     // search for friends
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
