@@ -8,7 +8,7 @@ export interface Message {
   sent_at: string;
 }
 
-export class chatService {
+class ChatService {
 
   private socket: WebSocket | null  = null;
   private timeToReconnect = 3000; // to reconect every 3 seconds
@@ -65,7 +65,7 @@ export class chatService {
 
   }
 
-  async getMessageHistory(friendId: number): Promise<Message[]> {
+  async getMessageHistory(friendId: number, ): Promise<Message[]> {
 
     const url = new URL(`${API_GATEWAY_URL}/api/chat/messages`);
 
@@ -86,3 +86,5 @@ export class chatService {
     return await response.json();
   }
 }
+
+export const chatService = new ChatService();

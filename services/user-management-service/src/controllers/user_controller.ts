@@ -16,8 +16,8 @@ export class UserController {
           ]
         },
         include: {
-          sender: { select: { id: true, username: true, avatar: true } },
-          receiver: { select: { id: true, username: true, avatar: true } }
+          sender: { select: { id: true, username: true, avatar: true, isOnline: true } },
+          receiver: { select: { id: true, username: true, avatar: true, isOnline: true } }
         }
       });
 

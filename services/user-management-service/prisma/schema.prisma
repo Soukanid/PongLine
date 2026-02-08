@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   username  String   @unique
   avatar    String   @default("https://i.pravatar.cc/150?u=default")
+  isOnline  Boolean  @default(false)
   
   sentRequests     Friendship[] @relation("sender")
   receivedRequests Friendship[] @relation("receiver")

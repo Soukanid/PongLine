@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { type FastifyInstance } from 'fastify';
 import { ChatController } from '../controllers/chat_controller.ts';
 
 const chatController = new ChatController();

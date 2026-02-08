@@ -1,6 +1,6 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { type FastifyReply, type FastifyRequest } from 'fastify';
 import { WebSocket } from 'ws';
-import { prisma } from '../utils/prisma_init';
+import { prisma } from './../utils/prisma_init.ts';
 
 const activeUsers = new Map<number, WebSocket>();
 
