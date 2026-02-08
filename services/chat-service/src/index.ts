@@ -1,5 +1,4 @@
 import Fastify from 'fastify'
-import fastifyWebsocket from '@fastify/websocket'
 import { chatRoutes } from './routes/chat_route.ts'
 
 
@@ -11,8 +10,7 @@ const fastify = Fastify({
 
 // add plugins
 
-fastify.register(fastifyWebsocket);
-fastify.register(chatRoutes)
+await fastify.register(chatRoutes)
 
 // run the server
 

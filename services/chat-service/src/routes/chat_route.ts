@@ -1,14 +1,15 @@
 import { type FastifyInstance } from 'fastify';
 import { ChatController } from '../controllers/chat_controller.ts';
+import websocket from '@fastify/websocket'
 
 const chatController = new ChatController();
 
 export async function chatRoutes(server: FastifyInstance) {
 
   // HTTP Routes
-  server.post('/create_message', chatController.sendMessage);
   server.get('/messages', chatController.getHistory);
 
+  await server.register(websocket);
   // WebSocket Route
   server.get('/ws', { 
     websocket: true,

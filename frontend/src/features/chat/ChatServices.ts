@@ -12,24 +12,27 @@ class ChatService {
 
   private socket: WebSocket | null  = null;
   private timeToReconnect = 3000; // to reconect every 3 seconds
-  private myUserId : number = 0;
+  private myUserId : number = 0; // should be updated
+
+  private messageHandler: ((msg: Message) => void) | null = null;
 
   connectSocket(userId: number)
   {
     if (this.socket && this.socket.readyState === WebSocket.OPEN)
-    {
       return ;
-    }
+
     this.myUserId = userId;
     const url = `${API_GATEWAY_URL}/api/chat/ws?userId=${userId}`;
     this.socket = new WebSocket(url);
 
-
     this.socket.onmessage = (event) => {
       try {
         const mesg: Message = JSON.parse(event.data);
-        //[soukaina] to remove (for debugging)
-        console.log(" the new message : ", mesg);
+
+        // the moment the message been arrived ,show it on the UI
+        if (this.messageHandler) {
+            this.messageHandler(mesg);
+        }
       } catch {
         console.error("Failed to parse the message ", event.data);
       }
@@ -55,6 +58,10 @@ class ChatService {
 
   }
 
+  onMessageReceived(callback: (msg: Message) => void) {
+      this.messageHandler = callback;
+  }
+  
   disconnectSocket() {
     this.myUserId = 0;
     if (this.socket)
@@ -67,24 +74,18 @@ class ChatService {
 
   async sendMessage(friendId: number, text: string)
   {
-    const url = new URL(`${API_GATEWAY_URL}/api/chat/create_message`);
-    
-    const data= {
-      sender_id: this.myUserId,
-      receiver_id: friendId,
-      content: text
-    };
+    if (this.socket && this.socket.readyState == WebSocket.OPEN)
+    {
+      const data= {
+        sender_id: this.myUserId,
+        receiver_id: friendId,
+        content: text
+      };
 
-    const response = await fetch(url.toString(), {
-      method: 'Post',
-      headers: {
-        'content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
-    });
-    
-    if (!response.ok)
-      console.error("Failed to send message");
+      this.socket.send(JSON.stringify(data));
+    }
+    else
+      console.error("Socket no connected");
   }
 
   async getMessageHistory(friendId: number, ): Promise<Message[]> {

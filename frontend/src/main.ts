@@ -21,11 +21,11 @@ export const router = new Router(routes);
 //const savedUserId = localStorage.getItem('userId');
 
 const savedUserId = 1;
-// for know we will asume that the user is already logged in
+//[soukaina] for know we will asume that the user is already logged in
 
 if (savedUserId) {
 
-  chatService.connect(savedUserId);
+  chatService.connectSocket(savedUserId);
 }
 
 // if he is not we should redirect him to the login page

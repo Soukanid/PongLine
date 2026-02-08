@@ -19,8 +19,13 @@ export class ChatPage extends BaseComponent {
   private friends: Friend[] = [];
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
+  private myUserId: number = 0;
+
 
   async render() {
+
+    this.myUserId = 1; //[soukaina] hard coded for now
+
     this.setHtml(`
     <div id="grandparent" class="h-full w-full   flex flex-col">
       <header class="h-16 flex items-center justify-between px-4">
@@ -32,8 +37,8 @@ export class ChatPage extends BaseComponent {
         <div class="w-3/4 flex flex-col border border-retro/50 rounded-xl">
 
           <div id="chat-header" class="items-center h-12 flex  border-b border-retro/50"></div>
-          <div id="message-area" class="flex-1 flex flex-col"></div>
-          <div class="msg-input h-15 flex border-t border-retro/50">
+          <div id="message-area" class="flex-1 flex flex-col overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"></div>
+          <div class="msg-input h-15 flex border-t border-retro/50 ">
           <input id="msg-input" 
            type="text" 
            autocomplete="off"
@@ -61,7 +66,7 @@ export class ChatPage extends BaseComponent {
               placeholder="Search friends..." 
             >
           </div>
-          <div id="friends-list" class=" flex-1 flex flex-col text-white">
+          <div id="friends-list" class=" flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           </div>
         </div>
       </div>
@@ -153,7 +158,16 @@ export class ChatPage extends BaseComponent {
     if (!area) return;
 
     const isFriend = msg.sender_id === this.activeFriendId;
-    const senderName = isFriend ? (this.activeFriendUsername || 'Unknown') : 'you';
+    let senderName = 'Unknown';
+
+    if (msg.sender_id === this.myUserId) {
+        senderName = 'You';
+    } else if (msg.sender_id === this.activeFriendId) {
+        senderName = this.activeFriendUsername || 'Friend';
+    } else {
+        // If we implement group chat or notifications later
+        senderName = 'Someone else'; 
+    }
 
     const date = msg.sent_at ? new Date(msg.sent_at) : new Date();
     const timeStr = date.toLocaleTimeString('en-GB', { 
@@ -235,6 +249,19 @@ export class ChatPage extends BaseComponent {
     const btn = this.querySelector('#send-btn');
     const input = this.querySelector('#msg-input') as HTMLInputElement;
 
+    chatService.onMessageReceived((msg: Message) => {
+        //[soukaina] this is hardcoded for now
+        if (msg.sender_id === this.activeFriendId )
+        {
+            this.addMessageToUI(msg);
+        }
+        else if (msg.sender_id === this.myUserId) {
+           if (msg.receiver_id === this.activeFriendId) {
+              this.addMessageToUI(msg);
+           }
+        }
+    }); 
+
     const sendMessage = () =>
     {
       const msg = input.value.trim();
@@ -244,15 +271,6 @@ export class ChatPage extends BaseComponent {
         return ;
 
       chatService.sendMessage(this.activeFriendId, msg); 
-
-      // now let's show what we sent
-      this.addMessageToUI({
-        id: Date.now(), // this is not correct just temporory untill the page refresh
-        sender_id: 1, //[soukaina: alert] hard coded for know
-        receiver_id: this.activeFriendId,
-        content: msg,
-        sent_at: new Date().toISOString()
-      });
 
       input.value = '';
     }

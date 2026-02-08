@@ -4,32 +4,15 @@ import { prisma } from './../utils/prisma_init.ts';
 
 const activeUsers = new Map<number, WebSocket>();
 
+declare module 'fastify' {
+  interface FastifyRequest {
+    user: {
+      id: number;
+    };
+  }
+}
 export class ChatController {
 
-  async sendMessage(req: FastifyRequest<{ Body: { sender_id: number, receiver_id: number, content: string } }>, reply: FastifyReply) {
-    const { sender_id, receiver_id, content } = req.body;
-    try {
-
-      await prisma.message.create({
-        data: { sender_id, receiver_id, content }
-      });
-
-      const receiverSocket = activeUsers.get(receiver_id);
-      if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
-        receiverSocket.send(JSON.stringify({
-          sender_id,
-          receiver_id,
-          content,
-          sent_at: new Date().toISOString()
-        }));
-      }
-
-      return reply.code(201).send({ status: 'sent' });
-    } catch (error) {
-      req.log.error(error);
-      return reply.code(500).send({ error: 'Failed to send message' });
-    }
-  }
 
   async getHistory(req: FastifyRequest<{ Querystring: { user1: string, user2: string } }>, reply: FastifyReply) {
     const { user1, user2 } = req.query;
@@ -55,14 +38,55 @@ export class ChatController {
   }
 
   handleConnection(connection: any, req: FastifyRequest) {
-    const socket: WebSocket = connection.socket;
-    const userId = (req as any).user.id;
+    const socket: WebSocket = connection.socket || connection;
+    const userId = req.user.id;
 
     activeUsers.set(userId, socket);
 
-    socket.on('message', (rawMsg) => {
-        // Handle incoming messages from socket if you want
-        // But we are using the POST method mostly
+    socket.on('message', async (rawMsg) => {
+      try {
+        const data = JSON.parse(rawMsg.toString());
+
+        const { receiver_id, content } = data;
+
+        if (!receiver_id || !content)
+          return;
+        const receiverIdNum = Number(receiver_id);
+        // store the message
+        const savedMsg = await prisma.message.create({
+          data: {
+            sender_id: userId,
+            receiver_id: Number(receiver_id),
+            content: content
+          }
+        });
+
+        const receiverSocket = activeUsers.get(receiverIdNum);
+
+        // send the message to the receiver
+        if (receiverSocket && receiverSocket.readyState)
+        {
+          receiverSocket.send(JSON.stringify({
+            id: savedMsg.id,
+            sender_id: savedMsg.sender_id,
+            receiver_id: savedMsg.receiver_id,
+            content: savedMsg.content,
+            sent_at: savedMsg.sent_at.toISOString(),
+          }));
+        }
+        
+        // send the message to myself
+        socket.send(JSON.stringify({
+          id: savedMsg.id,
+          sender_id: savedMsg.sender_id,
+          receiver_id: savedMsg.receiver_id,
+          content: savedMsg.content,
+          sent_at: savedMsg.sent_at.toISOString(),
+        }));
+
+      } catch (error) {
+        console.error("faild to save the message");
+      }
     });
 
     socket.on('close', () => {
