@@ -4,9 +4,9 @@ import { chatService } from "./features/chat/ChatServices"
 
 import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
-import "./features/demo/showdata";
 import "./features/game/Menu";
 import "./features/game/Game";
+import "./components/Header";
 
 const routes = {
   "/": "login-page",
@@ -28,4 +28,3 @@ if (savedUserId) {
   chatService.connectSocket(savedUserId);
 }
 
-// if he is not we should redirect him to the login page

@@ -1,4 +1,3 @@
-
 import { BaseComponent } from '../../core/Component';
 import { io, Socket } from 'socket.io-client'; 
 import { PongGame } from "./Render";

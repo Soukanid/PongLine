@@ -28,10 +28,6 @@ export class ChatPage extends BaseComponent {
 
     this.setHtml(`
     <div id="grandparent" class="h-full w-full   flex flex-col">
-      <header class="h-16 flex items-center justify-between px-4">
-        Pongline 
-      </header>
-
       <div class="flex-1 flex overflow-hidden ">
       
         <div class="w-3/4 flex flex-col border border-retro/50 rounded-xl">
@@ -62,7 +58,7 @@ export class ChatPage extends BaseComponent {
               id="friend-search" 
               type="text" 
               autocomplete=off
-              class="flex-1 focus:outline-none bg-transparent text text-retro" 
+              class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
               placeholder="Search friends..." 
             >
           </div>
@@ -213,14 +209,9 @@ export class ChatPage extends BaseComponent {
       icon.className = "items-center m-2  w-8 h-8 ml-auto";
       icon.src = gameIcon;
 
-      const playSpan = document.createElement('span');
-      playSpan.className = "p-3 items-center text-retro font-bold font-mono"
-      playSpan.textContent = "Let's Play ";
-
       chatHeader.appendChild(span);
       chatHeader.appendChild(nameSpane);
       chatHeader.appendChild(icon);
-      chatHeader.appendChild(playSpan);
 
     }
 

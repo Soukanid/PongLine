@@ -3,7 +3,10 @@ export class Router {
 
   constructor(routes: Record<string, string>) {
     this.routes = routes;
+
+    // handle the 'Back' button
     window.addEventListener('popstate', () => this.loadRoute());
+
     document.body.addEventListener('click', e => {
       const target = e.target as HTMLElement;
       if (target.matches('[data-link]')) {
