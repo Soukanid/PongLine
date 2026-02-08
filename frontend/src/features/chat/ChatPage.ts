@@ -2,6 +2,7 @@ import { BaseComponent } from '../../core/Component';
 import { chatService , Message} from './ChatServices';
 import { API_GATEWAY_URL } from '../../config' 
 import contactIcon from '../../../public/contact.png'
+import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
 import sendIcon from '../../../public/sent.png'
 
@@ -30,7 +31,7 @@ export class ChatPage extends BaseComponent {
       
         <div class="w-3/4 flex flex-col border border-retro/50 rounded-xl">
 
-          <div id="chat-header" class="h-12 flex  border-b border-retro/50"></div>
+          <div id="chat-header" class="items-center h-12 flex  border-b border-retro/50"></div>
           <div id="message-area" class="flex-1 flex flex-col"></div>
           <div class="msg-input h-15 flex border-t border-retro/50">
           <input id="msg-input" 
@@ -193,8 +194,20 @@ export class ChatPage extends BaseComponent {
       const nameSpane = document.createElement('span');
       nameSpane.className = "p-3 items-center text-retro font-bold font-mono"
       nameSpane.textContent = name;
+
+      const icon = document.createElement('img');
+      icon.className = "items-center m-2  w-8 h-8 ml-auto";
+      icon.src = gameIcon;
+
+      const playSpan = document.createElement('span');
+      playSpan.className = "p-3 items-center text-retro font-bold font-mono"
+      playSpan.textContent = "Let's Play ";
+
       chatHeader.appendChild(span);
       chatHeader.appendChild(nameSpane);
+      chatHeader.appendChild(icon);
+      chatHeader.appendChild(playSpan);
+
     }
 
     // enable the button and the input field
@@ -245,6 +258,15 @@ export class ChatPage extends BaseComponent {
     }
 
     btn?.addEventListener('click', sendMessage);
+
+    if (input)
+    { 
+      input.addEventListener('keydown', (e) => 
+      {
+        if (e.key === 'Enter')
+          sendMessage();    
+      });
+    }
 
     // search for friends
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
