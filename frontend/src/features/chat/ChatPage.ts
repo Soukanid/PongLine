@@ -1,6 +1,5 @@
 import { BaseComponent } from '../../core/Component';
 import { chatService , Message} from './ChatServices';
-import { API_GATEWAY_URL } from '../../config' 
 import contactIcon from '../../../public/contact.png'
 import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
@@ -102,7 +101,9 @@ export class ChatPage extends BaseComponent {
         
 
         friendItem.innerHTML = `
-          <img class="m-2 w-10 h-10 rounded-full avatar-img"> </div>
+          <a href="/profile?id=${f.username}" data-link class="avatar-link z-10 relative">
+             <img class="m-2 w-10 h-10 rounded-full avatar-img hover:scale-110 "> 
+          </a>
           <div class="m-2 flex-1">
             <div class=" font-bold  font-mono username-text"></div>
           </div>
@@ -133,9 +134,17 @@ export class ChatPage extends BaseComponent {
   }
 
   async loadFriend() {
-
     try {
-      const res = await fetch(`${API_GATEWAY_URL}/api/user-management/friends`);
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
+      
+      url.searchParams.append('myId', this.myUserId.toString());
+
+      const res = await fetch(`${url}`.toString(),
+                                { method: 'GET',
+                                  headers: {
+                                    'content-Type': 'application/json'
+                                  }
+                                });
 
       if (!res.ok)
         throw new Error("Failed to load friends");
@@ -165,7 +174,7 @@ export class ChatPage extends BaseComponent {
         senderName = 'Someone else'; 
     }
 
-    const date = msg.sent_at ? new Date(msg.sent_at) : new Date();
+    const date = msg.created_at ? new Date(msg.created_at) : new Date();
     const timeStr = date.toLocaleTimeString('en-GB', { 
         hour12: false, 
         hour: '2-digit', 

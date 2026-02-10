@@ -6,8 +6,9 @@ const chatController = new ChatController();
 
 export async function chatRoutes(server: FastifyInstance) {
 
-  // HTTP Routes
   server.get('/messages', chatController.getHistory);
+
+  server.get('/chat_friends', chatController.getChatFriends);
 
   await server.register(websocket);
   // WebSocket Route

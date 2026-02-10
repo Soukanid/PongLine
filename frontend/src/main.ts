@@ -7,6 +7,7 @@ import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
 import "./components/Header";
+import "./features/user/ProfilePage"
 
 const routes = {
   "/": "login-page",
@@ -14,6 +15,7 @@ const routes = {
   "/game": "page-game",
   "/chat": "page-chat",
   "/demo": "page-demo",
+  "/profile": "page-profile"
 };
 
 export const router = new Router(routes);

@@ -11,16 +11,16 @@ export class Header extends BaseComponent {
         <a href="/"> 
           <img src="${pongLineImage}" class="h-8 w-40" > </img>
         </a>
-        <div class="h-12 ml-20  w-100 flex border-b border-retro/50">
-          <img src="${searchIcon}" class="items-center m-2  w-8 h-8" alt="Search" />
-          <input 
-            id="friend-search" 
-            type="text" 
-            autocomplete=off
-            class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
-          >
-        </div>
         <div class="flex flex-row ml-auto items-center gap-6">
+          <div class="w-100 flex border-b border-retro/50">
+            <img src="${searchIcon}" class="items-center m-2  w-8 h-8" alt="Search" />
+            <input 
+              id="friend-search" 
+              type="text" 
+              autocomplete=off
+              class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
+            >
+          </div>
           <img src="${chatIcon}" class="h-8 w-8" > </img>
           <img src="${notifIcon}" class="h-8 w-8" > </img>
         </div>

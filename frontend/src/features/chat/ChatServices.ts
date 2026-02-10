@@ -1,11 +1,10 @@
-import { API_GATEWAY_URL } from '../../config'
 
 export interface Message {
   id: number;
   sender_id: number;
   receiver_id: number;
   content: string;
-  sent_at: string;
+  created_at: string;
 }
 
 class ChatService {
@@ -22,7 +21,7 @@ class ChatService {
       return ;
 
     this.myUserId = userId;
-    const url = `${API_GATEWAY_URL}/api/chat/ws?userId=${userId}`;
+    const url = `${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/ws?userId=${userId}`;
     this.socket = new WebSocket(url);
 
     this.socket.onmessage = (event) => {
@@ -90,7 +89,7 @@ class ChatService {
 
   async getMessageHistory(friendId: number, ): Promise<Message[]> {
 
-    const url = new URL(`${API_GATEWAY_URL}/api/chat/messages`);
+    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/messages`);
 
     url.searchParams.append('user1', this.myUserId.toString());
     url.searchParams.append('user2', friendId.toString());
@@ -108,6 +107,8 @@ class ChatService {
     }
     return await response.json();
   }
+
 }
+
 
 export const chatService = new ChatService();

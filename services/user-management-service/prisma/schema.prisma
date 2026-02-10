@@ -17,6 +17,9 @@ model User {
   
   sentRequests     Friendship[] @relation("sender")
   receivedRequests Friendship[] @relation("receiver")
+
+  blocksInitiated     Block[] @relation("blocker")
+  blocksReceived      Block[] @relation("blocked")
 }
 
 model Friendship {
@@ -33,4 +36,16 @@ model Friendship {
 
   //It Prevent duplicate friend requests
   @@unique([senderId, receiverId]) 
+}
+
+model Block {
+  id          Int       @id @default(autoincrement())
+
+  blockerId   Int 
+  blocker User  @relation("blocker", fields: [blockerId], references: [id])
+
+  blockedId   Int 
+  blocked User  @relation("blocked", fields: [blockedId], references: [id])
+
+  @@unique([blockerId, blockedId]) 
 }

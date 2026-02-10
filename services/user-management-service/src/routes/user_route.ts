@@ -7,6 +7,10 @@ export async function userRoutes(server: FastifyInstance) {
 
   // controller to get all friends
   server.get('/friends', userController.getFriends);
+
+  // controller to get user, friend, mine profile
+  server.get('/profile', userController.getProfileWithRelationship);
   
+  server.post('/chat_friends', userController.getChatFriends);
 
 }

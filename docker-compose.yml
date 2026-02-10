@@ -23,6 +23,7 @@ services:
       - ./services/auth-service/data:/app/data
     networks:
       - app-network
+    env_file: ".env"
 
   chat-service:
     container_name: chat-service
@@ -33,6 +34,7 @@ services:
       - /app/node_modules
     networks:
       - app-network
+    env_file: ".env"
 
   game-service:
     container_name: game-service
@@ -42,6 +44,7 @@ services:
       - ./services/game-service/data:/app/data
     networks:
       - app-network
+    env_file: ".env"
 
   tournament-service:
     container_name: tournament-service
@@ -51,6 +54,7 @@ services:
       - ./services/tournament-service/data:/app/data
     networks:
       - app-network
+    env_file: ".env"
 
   user-management-service:
     container_name: user-management-service
@@ -61,6 +65,7 @@ services:
       - ./services/user-management-service/data:/app/data
     networks:
       - app-network
+    env_file: ".env"
 
   frontend:
     container_name: frontend
@@ -75,6 +80,7 @@ services:
       - tournament-service
       - user-management-service
       - game-service
+    env_file: ".env"
 
 
 networks:
