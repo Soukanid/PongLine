@@ -25,8 +25,5 @@ export const router = new Router(routes);
 const savedUserId = 1;
 //[soukaina] for know we will asume that the user is already logged in
 
-if (savedUserId) {
-
-  chatService.connectSocket(savedUserId);
-}
+chatService.connectSocket(savedUserId);
 

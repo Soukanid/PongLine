@@ -11,6 +11,7 @@ declare module 'fastify' {
     };
   }
 }
+
 export class ChatController {
 
 
@@ -139,7 +140,11 @@ export class ChatController {
     });
 
     socket.on('close', () => {
-       activeUsers.delete(userId);
+       const currentSocket = activeUsers.get(userId);
+       
+       if (currentSocket === socket) {
+           activeUsers.delete(userId);
+       }
     });
   }
 }

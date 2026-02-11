@@ -21,7 +21,8 @@ class ChatService {
       return ;
 
     this.myUserId = userId;
-    const url = `${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/ws?userId=${userId}`;
+    const url = `${import.meta.env.VITE_WSSURL}/api/chat/ws?userId=${userId}`;
+    
     this.socket = new WebSocket(url);
 
     this.socket.onmessage = (event) => {
