@@ -1,35 +1,51 @@
-import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
-import * as sqlite3 from 'sqlite3';
+import 'dotenv/config'
+import {fastify} from './server.ts'
+import { prismaPlugin } from './plugins/prisma.ts'
+import { authPlugin } from './plugins/auth.ts'
+import authRoutes from './authRoutes.ts'
 
-const fastify = Fastify({ logger: true });
+const PORT = parseInt(process.env.PORT || '3000')
+const HOST = process.env.HOST || '0.0.0.0'
 
-const db = new sqlite3.Database('/app/data/database.sqlite', (err: Error | null) => {
-  if (err)
-    console.error('Could not connect to database', err);
-});
-
-
-fastify.get('/api/auth/users', (request: FastifyRequest, reply: FastifyReply) => {
-  db.all("SELECT * FROM users", [], (err: Error | null, rows: any[]) => {
-    if (err) {
-      reply.status(500).send({ error: err.message });
-      return;
-    }
-    reply.send(rows);
-  });
-});
-
-fastify.get('/test', async (request, reply) => {
-  return { message: 'this si the auth Service via the API Gateway'}
-});
-
-const start = async () => {
+async function main () {
   try {
-    await fastify.listen({ port: 3001, host: '0.0.0.0'});
-  } catch (err) {
-    fastify.log.error(err);
+    //register plugins
+    await fastify.register(prismaPlugin);
+    await fastify.register(authPlugin);
+
+    //register routes
+    await fastify.register(authRoutes);
+
+  /*
+  //prisma test
+  const user = await fastify.prisma.userAuth.create({
+    data: {
+      username: 'Alice',
+      email: 'alice@prisma.io',
+      passwordHash: 'Hello World',
+      }
+  })
+  console.log('Created user:', user)
+
+  // Fetch all users with their posts
+  const allUsers = await fastify.prisma.UserAuth.findMany()
+  console.log('All users:', JSON.stringify(allUsers, null, 2))
+*/
+    //start server
+    await fastify.listen({ port: PORT, host: HOST });
+    console.log(`🚀 Auth service running on http://${HOST}:${PORT}`);
+
+    // Graceful shutdown
+    process.on("SIGTERM", async () => {
+      console.log("🛑 Shutting down auth service...");
+      await fastify.prisma.$disconnect();
+      await fastify.close();
+      process.exit(0);
+    });
+  } catch (error) {
+    console.error("❌ Error starting auth service:", error);
     process.exit(1);
   }
-};
+}
 
-start();
+main()
