@@ -13,4 +13,5 @@ export async function userRoutes(server: FastifyInstance) {
   
   server.post('/chat_friends', userController.getChatFriends);
 
+  server.get('/search', userController.searchUser);
 }

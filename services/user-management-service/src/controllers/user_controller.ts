@@ -64,6 +64,36 @@ export class UserController {
 
   }
 
+  async searchUser(req: FastifyRequest<{ Querystring: {str: string}}>, reply: FastifyReply)
+  {
+    var searchStr = req.query.str;
+
+    if (!searchStr)  
+      return reply.send([]);
+    searchStr = searchStr.trim();
+    try {
+      const matchedUsers = await prisma.user.findMany({
+        where: {
+          username: {
+            contains: searchStr,
+          },
+        },
+        take: 10,
+        select: {
+          id: true,
+          username: true
+        },
+      });
+
+      return reply.send(matchedUsers);
+    } catch (error)
+    {
+      console.error(error);
+      return reply.status(500).send({ error: 'The search failed'});
+    }
+    
+  }
+
   async getProfileWithRelationship(req: FastifyRequest<{ Querystring: {myId: string, targetId: string}}>, reply: FastifyReply) {
     
     const me = parseInt(req.query.myId);

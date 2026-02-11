@@ -99,7 +99,6 @@ export class ChatPage extends BaseComponent {
         if (f.isOnline)
           statusHTML = `<span class="mr-3 text-[20px] font-mono text-retro animate-pulse"> ONLINE </span>`;
         
-
         friendItem.innerHTML = `
           <a href="/profile?id=${f.username}" data-link class="avatar-link z-10 relative">
              <img class="m-2 w-10 h-10 rounded-full avatar-img hover:scale-110 "> 
@@ -134,6 +133,7 @@ export class ChatPage extends BaseComponent {
   }
 
   async loadFriend() {
+
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
       
