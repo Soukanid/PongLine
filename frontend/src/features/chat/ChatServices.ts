@@ -7,6 +7,13 @@ export interface Message {
   created_at: string;
 }
 
+interface Friend {
+  id: number;
+  username: string;
+  avatar: string;
+  isOnline: boolean;
+}
+
 class ChatService {
 
   private socket: WebSocket | null  = null;
@@ -109,6 +116,41 @@ class ChatService {
     return await response.json();
   }
 
+  async getFriends(): Promise<Friend[]> {
+
+    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/friends`);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'content-Type': 'application/json',
+      }
+    });
+  
+    if (!response.ok)
+    {
+      console.error("Failed to load Friends");
+    }
+    return await response.json();
+  }
+
+  async getBlockedUsers(): Promise<Friend[]> {
+
+    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/blocked_users`);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'content-Type': 'application/json',
+      }
+    });
+  
+    if (!response.ok)
+    {
+      console.error("Failed to load Blocked Users");
+    }
+    return await response.json();
+  }
 }
 
 

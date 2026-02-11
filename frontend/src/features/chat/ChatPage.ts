@@ -4,6 +4,10 @@ import contactIcon from '../../../public/contact.png'
 import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
 import sendIcon from '../../../public/sent.png'
+import blockIcon from '../../../public/block.png'
+import inviteIcon from '../../../public/invite.png'
+import personIcon from '../../../public/person.png'
+
 
 interface Friend {
   id: number;
@@ -16,6 +20,7 @@ export class ChatPage extends BaseComponent {
 
   // private attribute 
   private friends: Friend[] = [];
+  private currentList: Friend[] = [];
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
   private myUserId: number = 0;
@@ -51,7 +56,7 @@ export class ChatPage extends BaseComponent {
 
         </div>
         <div class="w-1/4 flex border border-retro/50 rounded-xl flex-col ml-4">
-          <div class="h-12 flex  text-white border-b border-retro/50">
+          <div class="h-12 flex  text-white border-b border-retro/50 shrink-0">
             <img src="${searchIcon}" class="items-center m-2  w-8 h-8" alt="Search" />
             <input 
               id="friend-search" 
@@ -61,7 +66,20 @@ export class ChatPage extends BaseComponent {
               placeholder="Search friends..." 
             >
           </div>
-          <div id="friends-list" class=" flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div id="friends-list" class="min-h-0 flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          </div>
+          <div class="border-t border-retro/50 flex justify-between items-center px-4 py-2">
+            <button id="friends-contact" class="cursor-pointer px-4 py-2 on hover:">
+              <img src="${contactIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+            </button>
+
+            <button id="blocked_user" class="cursor-pointer px-4 py-2">
+              <img src="${blockIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+            </button>
+
+            <button id="friend-chat" class="cursor-pointer px-4 py-2">
+              <img src="${inviteIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+            </button>
           </div>
         </div>
       </div>
@@ -72,7 +90,7 @@ export class ChatPage extends BaseComponent {
   
   }
 
-  renderFriendList(listToRender: Friend[] = this.friends) {
+  renderFriendList(listToRender: Friend[] = this.currentList) {
     const div = this.querySelector('#friends-list');
 
     if (!div)
@@ -115,7 +133,10 @@ export class ChatPage extends BaseComponent {
         const imgEl = friendItem.querySelector('.avatar-img') as HTMLImageElement;
         const nameEl = friendItem.querySelector('.username-text') as HTMLElement;
 
-        imgEl.src = f.avatar;
+        if (!f.avatar)
+          imgEl.src = personIcon;
+        else
+          imgEl.src = f.avatar;
         nameEl.textContent = f.username;
         
         friendItem.addEventListener('click', () => {
@@ -150,10 +171,10 @@ export class ChatPage extends BaseComponent {
         throw new Error("Failed to load friends");
     
       this.friends = await res.json();
-      this.renderFriendList();
+      this.currentList = this.friends;
+      this.renderFriendList(this.friends);
     } catch (e) {
         console.error(e);
-        //[soukaina] I should add what will show if an error happens
     }
     
   }
@@ -162,7 +183,6 @@ export class ChatPage extends BaseComponent {
     const area = this.querySelector('#message-area');
     if (!area) return;
 
-    const isFriend = msg.sender_id === this.activeFriendId;
     let senderName = 'Unknown';
 
     if (msg.sender_id === this.myUserId) {
@@ -170,7 +190,6 @@ export class ChatPage extends BaseComponent {
     } else if (msg.sender_id === this.activeFriendId) {
         senderName = this.activeFriendUsername || 'Friend';
     } else {
-        // If we implement group chat or notifications later
         senderName = 'Someone else'; 
     }
 
@@ -245,6 +264,28 @@ export class ChatPage extends BaseComponent {
 
   }
 
+  async showContact()
+  {
+    const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
+      if (searchInput)
+        searchInput.value = '';
+    this.friends = await chatService.getFriends();
+    this.currentList = this.friends;
+    this.renderFriendList(this.currentList);
+  }
+    
+  async showBlocked()
+  {
+    const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
+      if (searchInput)
+        searchInput.value = '';
+
+    this.friends = await chatService.getBlockedUsers();
+
+    this.currentList = this.friends;
+    this.renderFriendList(this.currentList);
+  }
+
   addEvents() {
     const btn = this.querySelector('#send-btn');
     const input = this.querySelector('#msg-input') as HTMLInputElement;
@@ -277,6 +318,17 @@ export class ChatPage extends BaseComponent {
 
     btn?.addEventListener('click', sendMessage);
 
+    const contactBtn = this.querySelector('#friends-contact');
+    contactBtn?.addEventListener('click', () => this.showContact());
+
+    const blockListBtn = this.querySelector('#blocked_user');
+    blockListBtn?.addEventListener('click', () => this.showBlocked());
+
+    const chatListBtn = this.querySelector('#friend-chat');
+    chatListBtn?.addEventListener('click', () => this.loadFriend());
+
+    btn?.addEventListener('click', sendMessage);
+
     if (input)
     { 
       input.addEventListener('keydown', (e) => 
@@ -293,7 +345,7 @@ export class ChatPage extends BaseComponent {
     searchInput?.addEventListener('input', (e) => {
         const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
         
-        const filtered = this.friends.filter(f => 
+        const filtered = this.currentList.filter(f => 
             f.username.toLowerCase().includes(query)
         );
 

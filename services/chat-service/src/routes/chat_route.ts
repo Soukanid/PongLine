@@ -23,7 +23,6 @@ export async function chatRoutes(server: FastifyInstance) {
     }
   }, (connection, req) => {
 
-      console.log("Connection object:", connection);
       chatController.handleConnection(connection, req); 
   });
 }

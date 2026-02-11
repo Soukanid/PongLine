@@ -24,8 +24,25 @@ export class UserController {
       // [soukaina ] here we do a loop into the friendships array
       // and pick the friend info and remove our info cause we don't need it
     
+
       const friends = friendships.map(f => {
-        return f.senderId === userId ? f.receiver : f.sender;
+
+        const friendData = f.senderId === userId ? f.receiver : f.sender;
+        
+        let avatarBase64 = null;
+
+        if (friendData.avatar)
+        {
+          const base64String = friendData.avatar.toString('base64');
+          avatarBase64 = `data:image/png;base64,${base64String}`;
+        }
+
+        return {
+          id: friendData.id,
+          username: friendData.username,
+          isOnline: friendData.isOnline,
+          avatar: avatarBase64
+        };
       });
 
       return reply.send(friends);
@@ -33,6 +50,35 @@ export class UserController {
     } catch (error) {
       console.error(error);
       return reply.status(500).send({ error: 'Failed to fetch friends' });
+    }
+  }
+
+  async getBlockedUsers(req: FastifyRequest, reply: FastifyReply) {
+    const userId = 1; //[soukaina] this is hardcoded for now
+
+    try {
+      const blockedUser = await prisma.block.findMany({
+        where: {
+          blockerId: userId ,
+        },
+        include: {
+          blocked: { select: { id: true, username: true, avatar: true, isOnline: true } }
+        }
+      });
+
+      const finalblockedUsers = blockedUser.map(block => {
+        return {
+          id: block.blocked.id,
+          username: block.blocked.username,
+          isOnline: false,
+          avatar: null
+        };
+      });
+      return reply.send(finalblockedUsers);
+
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch Blocked friends' });
     }
   }
 
@@ -56,12 +102,48 @@ export class UserController {
           }
         });
 
-        return reply.send(users);
+        const newUsers = users.map(f => {
+
+        let avatarBase64 = null;
+
+        if (f.avatar)
+        {
+          const base64String = f.avatar.toString('base64');
+          avatarBase64 = `data:image/png;base64,${base64String}`;
+        }
+
+        return {
+          id: f.id,
+          username: f.username,
+          isOnline: f.isOnline,
+          avatar: avatarBase64
+        };
+      });
+
+        return reply.send(newUsers);
       } catch (error) {
         console.error(error);
         return reply.status(500).send({ error: 'Failed to fetch users'});
       }
 
+  }
+
+  async createUser(req: FastifyRequest< { Body: { email: string, username: string }}>, reply: FastifyReply) {
+    
+    try {
+      const user = await prisma.user.create({
+        data : {
+          email: req.body.email,
+          username: req.body.username,
+          avatar: Buffer.alloc(0)
+        },
+      });
+      return reply.status(201).send( {userId: user.id });
+    } catch (error)
+    {
+      console.error(error);
+      return reply.status(500).send({ error: 'Failed to create the user'});
+    }
   }
 
   async searchUser(req: FastifyRequest<{ Querystring: {str: string}}>, reply: FastifyReply)
@@ -145,9 +227,15 @@ export class UserController {
           relationship = 'blocked_by_me';
       }
     }
-    
+   
+    let avatarString = null;
+
+    if (targetUser.avatar) {
+      const base64String = targetUser.avatar.toString('base64');
+      avatarString = `data:image/png;base64,${base64String}`;
+    }
     const dataToSend = {email: targetUser.email, id: targetUser.id, username: targetUser.username
-                        , avatar: targetUser.avatar, isOnline: targetUser.isOnline, relationship};
+                        , avatar: avatarString, isOnline: targetUser.isOnline, relationship};
 
     return ( dataToSend );
   }

@@ -12,7 +12,7 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   username  String   @unique
-  avatar    String   @default("https://i.pravatar.cc/150?u=default")
+  avatar    Bytes
   isOnline  Boolean  @default(false)
   
   sentRequests     Friendship[] @relation("sender")
