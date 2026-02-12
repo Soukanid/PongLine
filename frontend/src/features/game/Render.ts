@@ -21,28 +21,34 @@ export class PongGame {
 	
 	private game!: GameState;
 	private currentGameId!: string;
+	private isPaused: boolean = false;
+	private isStarted: boolean = false;
 	private socket: any;
+	private roomId?: string;
 	private keys: { [key: string]: boolean } = {};
 
 	private ballVelX = 3;
 	private ballVelY = 3;
 	private ballRadius = 7;
 
-	constructor(canvasId: string, mode: string, left?: string, right?: string, socket?: any) {
+	constructor(canvasId: string, mode: string, left?: string, right?: string, socket?: any, room?: string) {
 		this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
 		this.context = this.canvas.getContext('2d')!;
 		this.socket = socket;
+		if (mode === 'remote'){
+			this.roomId = room;
+		}
 
 		this.initializeGameState(mode, left, right);
 		this.setupSocketListeners();
 		this.setupKeyboardListeners();
 	}
 
-	public joinRoom(gameId: string): void {
+	public joinRoom(gameId: string, username: string, nickname: string): void {
 	    if (this.socket) {
-	        this.socket.emit('joinGame', gameId);
+	        this.socket.emit('joinGame', { gameId, username, nickname });
 	        this.currentGameId = gameId;
 	    }
 	}
@@ -108,9 +114,42 @@ export class PongGame {
    			        this.game.score_plr2++;
    			        this.resetBall();
    			    }
+				if (this.game.score_plr1 >= 5 || this.game.score_plr2 >= 5) {
+					this.isPaused = true;
+				}
    			}
 		}
 	}
+
+	private renderWinner(winner: string){
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+		const ctx = this.context;
+    	const midX = this.width / 2;
+    	const midY = this.height / 2;
+
+    	ctx.fillStyle = '#050805';
+    	ctx.fillRect(0, 0, this.width, this.height);
+
+    	ctx.textAlign = 'center';
+    	ctx.fillStyle = '#1BFB08';
+    	ctx.font = '50px VT323, monospace';
+    	ctx.fillText("GAME OVER", midX, midY - 40);
+
+    	ctx.fillRect(midX - 100, midY - 20, 200, 2);
+
+    	ctx.font = '28px VT323, monospace';
+    	ctx.fillText("CHAMPION", midX, midY + 30);
+		
+    	ctx.font = '40px VT323, monospace';
+    	ctx.fillText(winner.toUpperCase(), midX, midY + 80);
+
+    	ctx.fillStyle = 'rgba(5, 8, 5, 0.2)';
+    	for (let i = 0; i < this.height; i += 4) {
+    	    ctx.fillRect(0, i, this.width, 1);
+    	}
+	}
+
 	private resetBall(): void {
 		this.game.ballX = this.width / 2;
 		this.game.ballY = this.height / 2;
@@ -161,14 +200,32 @@ export class PongGame {
 		this.socket.on('gameState', (state: Partial<GameState>) => {
 			this.game = {...this.game, ...state};
 		});
+		this.socket.on('gameOver', () => {
+			this.isPaused = true; 
+		});
+		this.socket.on('gameStart', (data: any) => {
+		    console.log("Game Starting with players:", data.players);
+		    this.isStarted = true;
+		});
 		this.socket.on('connect', () => {
 			console.log('Connected to game server');
 		});
-		this.socket.on('disconnect', () => {
-			console.log('Disconnected from game server');
+		this.socket.on('playerDisconnected', (data: any) => {
+			console.log('Disconnected from game server', data.playerId);
+			this.isPaused = true;
+			this.context.fillStyle = 'rgba(0, 0, 0, 0.85)';
+		    this.context.fillRect(0, 0, this.width, this.height);
+
+		    this.context.fillStyle = '#1BFB08';
+		    this.context.font = '28px VT323, monospace';
+		    this.context.textAlign = 'center';
+		    this.context.fillText("OPPONENT DISCONNECTED", this.width / 2, this.height / 2 - 20);
+		    this.context.fillText("YOU WIN BY DEFAULT!", this.width / 2, this.height / 2 + 30);
+
 		});
 		this.socket.on('error', (error: any) => {
 			console.error('Socket error:', error);
+			this.isPaused = true;
 		});
 	}
 	
@@ -237,10 +294,42 @@ export class PongGame {
 		ctx.fillStyle = '#1BFB08';
 		ctx.fillRect(x, y, width, height);
 	}
-	
+	private renderRoomId(room: string){
+    	this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    	this.context.fillRect(0, 0, this.width, this.height);
+
+    	this.context.fillStyle = '#1BFB08';
+    	this.context.font = 'bold 24px VT323, monospace';
+    	this.context.textAlign = 'center';
+    	this.context.textBaseline = 'middle';
+
+    	this.context.fillText('WAITING FOR OPPONENT...', this.width / 2, this.height / 2 - 40);
+		
+    	this.context.font = 'italic 32px VT323, monospace';
+    	this.context.fillText(`ROOM ID: ${room}`, this.width / 2, this.height / 2 + 10);
+
+    	this.context.font = '14px VT323, monospace';
+    	this.context.fillText('SHARE THIS CODE TO START', this.width / 2, this.height / 2 + 60);
+	}
 	public loop(): void {
-		this.update();
-		this.render();
-		requestAnimationFrame(() => this.loop());
+		if (this.isPaused){
+			if (this.game.score_plr1 >= 5) {
+				this.renderWinner(this.game.player1)
+			} else if(this.game.score_plr2 >= 5) {
+				this.renderWinner(this.game.player2)
+			}
+			return;
+		}
+		if (this.game.mode === 'remote' && this.isStarted === false) {
+			if (this.roomId){
+				this.renderRoomId(this.roomId);
+			}
+	        requestAnimationFrame(() => this.loop());
+        	return;
+		} else {
+			this.update();
+			this.render();
+			requestAnimationFrame(() => this.loop());
+		}
 	}
 }

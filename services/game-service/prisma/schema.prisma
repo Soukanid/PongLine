@@ -1,25 +1,56 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "sqlite"
-  url      = "file:../data/game.db.sqlite" 
+model Player {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  total_wins    Int      @default(0) 
+  total_games   Int      @default(0) 
+  
+  matchesAsPlr1 Match[]  @relation("player1")
+  matchesAsPlr2 Match[]  @relation("player2")
 }
 
-model player {
-  use_id          Int       @id @default(autoincrement())
+model Match {
+  id          Int      @id @default(autoincrement())
+  room_id     String
+  username1   String?
+  username2   String?
+  score_plr1  Int?
+  score_plr2  Int?
+  winnerName  String?
+  playedAt    DateTime @default(now())
 
-  sender_id   Int
-  receiver_id Int
+  player1     Player   @relation("player1", fields: [username1], references: [username])
+  player2     Player   @relation("player2", fields: [username2], references: [username])
 
-  type        String
-  content     String
-
-  delivered   Boolean   @default(false) 
-  read        Boolean   @default(false)
-
-  sent_at      DateTime  @default(now())
+  tournamentId Int?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
 }
 
+model Participant {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  nick_name   String
+
+  tournamentId Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model Tournament {
+  id          Int      @id @default(autoincrement())
+  tour_id     String   @unique
+  tour_name   String
+  player      Participant[] 
+  tour_state  String   @default("Pending")// "Pending", "In-progress", "Finished"
+  startedAt   DateTime @default(now())
+
+  matches     Match[]
+}
