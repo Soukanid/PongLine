@@ -4,9 +4,9 @@ services:
   api-gateway:
     build: ./api-gateway
     ports:
-      - "8080:80"
+      - "443:80"
     depends_on:
-      - auth-service
+      # - auth-service
       - chat-service
       - tournament-service
       - user-management-service
@@ -75,7 +75,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - auth-service
+      # - auth-service
       - chat-service
       - tournament-service
       - user-management-service

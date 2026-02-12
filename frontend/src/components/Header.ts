@@ -35,7 +35,9 @@ export class Header extends BaseComponent {
             </div>
 
           </div> <div class="flex gap-4">
-             <img src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform"> 
+            <a href="/chat" data-link> 
+              <img src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+            </a>
              <img src="${notifIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform"> 
           </div>
 
@@ -129,7 +131,13 @@ export class Header extends BaseComponent {
         resultsContainer.classList.add('hidden');
 
     });
+const ponglineLink = this.querySelector('#pongLine') as HTMLImageElement;
 
+ponglineLink.addEventListener('click', () => {
+    // Instead of manual pushState + PopStateEvent, 
+    // just let the router handle the lifecycle.
+    window.router.navigateTo("/"); 
+});
   }
 }
 

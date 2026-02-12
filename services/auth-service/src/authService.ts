@@ -4,10 +4,17 @@ import { type FastifyInstance } from 'fastify'
 //import * as speakeasy from 'speakeasy' 2FA
 
 export class AuthService {
+
+  private prisma: PrismaClient;
+  private fastify: FastifyInstance;
+
   constructor(
-    private prisma: PrismaClient,
-    private fastify: FastifyInstance,
-  ) {}
+    prisma: PrismaClient,
+    fastify: FastifyInstance
+  ) {
+      this.prisma = prisma;
+      this.fastify = fastify;
+    }
 
   private readonly SALT_ROUNDS = 10;
   private readonly USER_SERVICE_URL =

@@ -7,7 +7,13 @@ import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
 import "./components/Header";
-import "./features/user/ProfilePage"
+import "./features/profile/profile.ts"
+
+declare global {
+  interface Window {
+    router: Router;
+  }
+}
 
 const routes = {
   "/": "login-page",
@@ -18,12 +24,12 @@ const routes = {
   "/profile": "page-profile"
 };
 
-export const router = new Router(routes);
-
+export const routerInstance = new Router(routes);
+export const router = routerInstance;
+window.router = routerInstance;
 //const savedUserId = localStorage.getItem('userId');
 
 const savedUserId = 1;
 //[soukaina] for know we will asume that the user is already logged in
-
 chatService.connectSocket(savedUserId);
 

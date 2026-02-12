@@ -6,7 +6,6 @@ export class Router {
 
     // handle the 'Back' button
     window.addEventListener('popstate', () => this.loadRoute());
-
     document.body.addEventListener('click', e => {
       const target = e.target as HTMLElement;
       if (target.matches('[data-link]')) {

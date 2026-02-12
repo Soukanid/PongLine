@@ -7,7 +7,7 @@ up:
 up_foreground:
 	docker  compose up
 
-re: fclean build up
+re: down build up
 
 down:
 	docker compose down 

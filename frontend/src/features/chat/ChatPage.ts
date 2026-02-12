@@ -24,6 +24,7 @@ export class ChatPage extends BaseComponent {
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
   private myUserId: number = 0;
+  private isBlockedView: boolean = false;
 
 
   async render() {
@@ -154,7 +155,7 @@ export class ChatPage extends BaseComponent {
   }
 
   async loadFriend() {
-
+    this.isBlockedView = false
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
       
@@ -246,10 +247,23 @@ export class ChatPage extends BaseComponent {
     // enable the button and the input field
     const input = this.querySelector('#msg-input') as HTMLInputElement;
     const btn = this.querySelector('#send-btn') as HTMLButtonElement;
-    
-    input.disabled = false;
-    btn.disabled = false;
-    input.focus();
+
+    if (this.isBlockedView)
+    {
+        input.disabled = true;
+        btn.disabled = true;
+        input.value = ""; 
+        input.placeholder = "You have blocked this user";
+        input.classList.add("cursor-not-allowed", "opacity-50");
+    } 
+    else
+    {
+        input.disabled = false;
+        btn.disabled = false;
+        input.placeholder = "> Type Message Here...";
+        input.classList.remove("cursor-not-allowed", "opacity-50");
+        input.focus();
+    }
 
     const messageArea = this.querySelector("#message-area");
     if (messageArea)
@@ -266,6 +280,8 @@ export class ChatPage extends BaseComponent {
 
   async showContact()
   {
+    this.isBlockedView = false;
+
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
         searchInput.value = '';
@@ -276,6 +292,8 @@ export class ChatPage extends BaseComponent {
     
   async showBlocked()
   {
+    this.isBlockedView = true;
+
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
         searchInput.value = '';

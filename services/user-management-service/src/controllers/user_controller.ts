@@ -29,7 +29,7 @@ export class UserController {
 
         const friendData = f.senderId === userId ? f.receiver : f.sender;
         
-        let avatarBase64 = null;
+        let avatarBase64 : string | null = null;
 
         if (friendData.avatar)
         {
@@ -78,7 +78,7 @@ export class UserController {
 
     } catch (error) {
       console.error(error);
-      return reply.status(500).send({ error: 'Failed to fetch Blocked friends' });
+      return reply.status(500).send({ error: 'Failed to fetch friends' });
     }
   }
 
@@ -104,7 +104,8 @@ export class UserController {
 
         const newUsers = users.map(f => {
 
-        let avatarBase64 = null;
+
+        let avatarBase64 : string | null = null;
 
         if (f.avatar)
         {
@@ -146,6 +147,27 @@ export class UserController {
     }
   }
 
+  async getUser(req: FastifyRequest<{ Querystring: {id: string}}>, reply: FastifyReply)
+  {
+      var userId = req.query.id;
+
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: Number(userId)}
+        });
+        
+        if (!user)
+          return reply.status(404).send({ error: 'User not found'});
+      
+        return reply.status(200);
+
+      } catch (error)
+      {
+        console.error(error);
+        return reply.status(500).send({ error: 'Failed to fetsh User'});
+      }
+  }
+
   async searchUser(req: FastifyRequest<{ Querystring: {str: string}}>, reply: FastifyReply)
   {
     var searchStr = req.query.str;
@@ -176,68 +198,80 @@ export class UserController {
     
   }
 
-  async getProfileWithRelationship(req: FastifyRequest<{ Querystring: {myId: string, targetId: string}}>, reply: FastifyReply) {
-    
-    const me = parseInt(req.query.myId);
-    const other = parseInt(req.query.targetId);
+  async getProfileWithRelationship(req: FastifyRequest<{ Querystring: { myId: string, targetId: string } }>, reply: FastifyReply) {
+    const myId = parseInt(req.query.myId);
+    const targetId = parseInt(req.query.targetId);
 
-    if (me === other)
-    {
-      const user = await prisma.user.findUnique({ where: { id: me }});
-      const rela_user = {...user, relationship: 'me'}
-      return reply.send(rela_user);
+    if (myId === targetId) {
+        const user = await prisma.user.findUnique({ where: { id: myId } });
+        if (!user) throw new Error("User not found");
+        return this.formatUserResponse(user, 'me');
     }
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: other },
-
-      include: {
-        receivedRequests: {
-          where: { senderId: me }
-        },
-
-        sentRequests: {
-          where: { receiverId: me }
-        },
-      }
+        where: { id: targetId },
+        include: {
+            receivedRequests: {
+                where: { senderId: myId },
+            },
+            sentRequests: {
+                where: { receiverId: myId },
+            },
+            blocksReceived: {
+                where: { blockerId: myId },
+            },
+            blocksInitiated: {
+                where: { blockedId: myId },
+            }
+        }
     });
-    
+
     if (!targetUser)
-      throw new Error("User not found");
+        throw new Error("User not found");
 
     let relationship = 'none';
 
-    const friendship = targetUser.receivedRequests[0] || targetUser.sentRequests[0];
+    const iBlockedThem = targetUser.blocksReceived.length > 0;
+    const theyBlockedMe = targetUser.blocksInitiated.length > 0;
 
-    if (friendship) 
-    {
-      if (friendship.status === "ACCEPTED")
-        relationship = 'friend';
-      else if (friendship.status === 'PENDING')
-      {
-        if (friendship.senderId === me)
-            relationship = 'sent';
-        else
-            relationship = 'received';
-      }
-      else if (friendship.status === 'BLOCKED')
-      {
-        // who blocked who ?
-        // [soukaina] to be fixed 
-          relationship = 'blocked_by_me';
-      }
+    if (iBlockedThem) {
+        relationship = 'blocked_by_me';
+    } else if (theyBlockedMe) {
+        relationship = 'blocked_by_other'; 
+    } 
+    else {
+        const friendship = targetUser.receivedRequests[0] || targetUser.sentRequests[0];
+
+        if (friendship) {
+            if (friendship.status === "ACCEPTED") {
+                relationship = 'friend';
+            } else if (friendship.status === "PENDING") {
+                if (friendship.senderId === myId) {
+                    relationship = 'sent';
+                } else {
+                    relationship = 'received';
+                }
+            }
+        }
     }
-   
-    let avatarString = null;
 
-    if (targetUser.avatar) {
-      const base64String = targetUser.avatar.toString('base64');
-      avatarString = `data:image/png;base64,${base64String}`;
+    return this.formatUserResponse(targetUser, relationship);
+}
+
+
+formatUserResponse(user: any, relationship: string) {
+    let avatarBase64: string | null = null;
+    if (user.avatar) {
+        avatarBase64 = `data:image/png;base64,${user.avatar.toString('base64')}`;
     }
-    const dataToSend = {email: targetUser.email, id: targetUser.id, username: targetUser.username
-                        , avatar: avatarString, isOnline: targetUser.isOnline, relationship};
 
-    return ( dataToSend );
-  }
+    return {
+        id: user.id,
+        username: user.username,
+        avatar: avatarBase64,
+        isOnline: user.isOnline,
+        relationship: relationship
+    };
+}
 
 }

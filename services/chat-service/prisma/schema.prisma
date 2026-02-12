@@ -1,11 +1,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../data/chat.db.sqlite" 
+  url      =  "file:../data/chat.db.sqlite" 
 }
 
 model Message {

@@ -12,15 +12,6 @@
     "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true,
 
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,

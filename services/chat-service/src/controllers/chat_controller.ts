@@ -56,7 +56,7 @@ export class ChatController {
           created_at: true
         },
 
-        orderBy: { created_at: 'desc' }
+        orderBy: { created_at: 'asc' }
       });
 
       // to remove duplicated users and fetsh them
