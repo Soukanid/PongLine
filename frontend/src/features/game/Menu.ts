@@ -133,7 +133,6 @@ export class Menu extends BaseComponent {
           const input = document.createElement('input');
           input.className = 'pl-input';
           input.placeholder = ph;
-          input.maxLength = 8;
           dialog.appendChild(input);
           inputs.push(input);
         });

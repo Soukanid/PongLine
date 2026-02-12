@@ -17,7 +17,7 @@ export class Game extends BaseComponent {
 
         setTimeout(() => {
             this.initGame();
-        }, 0);
+        }, 100);
     }
 
     private initGame() {
@@ -31,12 +31,12 @@ export class Game extends BaseComponent {
 
         const params = new URL(window.location.href).searchParams;
         const mode = params.get('mode') || 'local';
-        const nick = params.get('nick') || 'Anonymous';
+        const nick = params.get('nick') || undefined;
         const left = params.get('left') || undefined;
         const right = params.get('right') || undefined;
-        const room = params.get('room');
+        const room = params.get('room') || undefined;
 
-        this.socket = io("http://localhost:8080", {
+        this.socket = io("ws://localhost:8080", {
             path:"/api/game/socket.io",
             transports: ['websocket'],
             reconnection: true
@@ -45,13 +45,14 @@ export class Game extends BaseComponent {
         this.socket.on('connect', () => console.log("Connected to Backend on 3003:", this.socket?.id));
         this.socket.on('connect_error', (err) => console.error("Socket Connection Error:", err));
 
-        this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket);
-
+        
+        this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
+            const username: string = "username"; // || Guest
+            const nickname: string = "nickname"; // || Guest
             console.log(`Attempting to join room: ${room}`);
-            this.game.joinRoom(room);
+            this.game.joinRoom(room, username, nickname);// send user data to the backend and fetch them from the user-management
         }
-
         this.game.loop();
     }
 

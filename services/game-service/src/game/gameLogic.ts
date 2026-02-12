@@ -7,8 +7,14 @@ interface GameState {
   scores: { left: number; right: number };
 }
 
+interface PlayerInfo {
+  username: string;
+  nickname: string;
+  socketId: string;
+}
+
 interface Room {
-  players: string[];
+  players: PlayerInfo[];
   gameState: GameState;
 }
 
@@ -62,8 +68,8 @@ export function updateRoom(gameId: string, io: any) {
   const state = room.gameState;
   
   const syncData = {
-    player1: room.players[1] || 'Waiting...',
-    player2: room.players[0] || 'Waiting...',
+    player1: room.players[1]?.username || 'Waiting...',
+    player2: room.players[0]?.nickname || 'Waiting...',
     paddle1Y: state.paddles.right.y,
     paddle2Y: state.paddles.left.y,
     score_plr1: state.scores.right,
@@ -94,5 +100,8 @@ export function updateRoom(gameId: string, io: any) {
     state.scores.left += 1;
     resetBall(state);
   }
-
+  if (state.scores.right >= 5 || state.scores.left >= 5) {
+    io.to(gameId).emit("gameOver");
+    delete rooms[gameId];
+  }
 }

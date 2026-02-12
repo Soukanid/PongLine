@@ -2,18 +2,21 @@ import path from "path";
 import { createInitialState, rooms, updateRoom} from "./game/gameLogic";
 import { Server, Socket } from "socket.io";
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
+import tournamentRoutes from './tournament/tour'; 
+
 
 const fastify = Fastify({
   logger: true
 });
 
-
 const start = async () => {
   try {
-    // This keeps the server alive!
+    
     console.log('Server is running...');
     await fastify.ready();
-    
+
+    await fastify.register(tournamentRoutes);
+
     const io = new Server(fastify.server, {
       cors: { origin: "*" },
       path: "/api/game/socket.io"
@@ -28,37 +31,26 @@ const start = async () => {
     io.on("connection", (socket: Socket) => {
       console.log("A user connected:", socket.id);
 
-      socket.on("joinGame", (gameId: string) => {
-        socket.join(gameId);
-        
-        if (!rooms[gameId]) {
-          console.log(`Room ${gameId} is not found. Creating new room.`);
-          rooms[gameId] = { 
-            players: [], 
-            gameState: createInitialState() 
+      socket.on("joinRoom", (data) => {
+          const { roomId, username, nickname } = data;
+
+          const playerUpdate = {
+              username: username,
+              nickname: nickname || username, // Fallback to username if no nick
+              socketId: socket.id
           };
-        }
         
-        rooms[gameId].players.push(socket.id);
-        
-        console.log(`User ${socket.id} joined game ${gameId}`);
-        
-        if (rooms[gameId].players.length === 2) {
-          io.to(gameId).emit("gameStart", {
-            players: rooms[gameId].players,
-          });
-        }
-        if (rooms[gameId].players.length > 2) {
-          socket.leave(gameId);
-          socket.emit("gameFull");
-        }
+          if (!rooms[roomId]) {
+              rooms[roomId] = { players: [], gameState: createInitialState() };
+          }
+          rooms[roomId].players.push(playerUpdate);
       });
       
       socket.on("playerInput", (data: { gameId: string; up: boolean; down: boolean }) => {
         const room = rooms[data.gameId];
         const speed = 5;
         if (room) {
-          const isPlayer1 = room.players[0] === socket.id;
+          const isPlayer1 = room.players[0]?.socketId === socket.id;
           if (isPlayer1) {
             if (data.up) {
               room.gameState.paddles.left.y = Math.max(0, room.gameState.paddles.left.y - speed);
@@ -78,21 +70,27 @@ const start = async () => {
       });
       socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
-        
+
         for (const gameId in rooms) {
           const room = rooms[gameId];
           if (!room) continue;
-          const playerIndex = room.players.indexOf(socket.id);
+        
+          const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
           if (playerIndex !== -1) {
             room.players.splice(playerIndex, 1);
-            socket.to(gameId).emit("playerDisconnected", {
+          
+            io.to(gameId).emit("playerDisconnected", {
               playerId: socket.id,
+              message: "Opponent left the game."
             });
+          
+            console.log(`Player ${socket.id} left room ${gameId}. Remaining: ${room.players.length}`);
+          
             if (room.players.length === 0) {
               delete rooms[gameId];
-              console.log(`Room ${gameId} deleted due to no players.`);
+              console.log(`Room ${gameId} deleted.`);
             }
-            break;
+            break; 
           }
         }
       });
