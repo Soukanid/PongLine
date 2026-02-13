@@ -38,8 +38,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
     // Validate token (for API Gateway)
   fastify.post('/validate', { schema: ValidateSchema }, async (request, reply) => {
     try {
-      const { token } = request.body as {token: string}
+      const  token  = request.headers.authorization
       const result = await authService.validateToken(token)
+
+      reply.header("X-User-Id", result.user?.id)
+      reply.header("X-User-Username", result.user?.username)
+      reply.header("X-User-Alias", result.user?.username)
+      reply.header("X-User-Role", result.user?.role)
+
       return result
     } catch (error: any) {
       return { valid: false, reason: 'validation_error' }
