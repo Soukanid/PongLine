@@ -12,10 +12,10 @@ const fastify = Fastify({
 const start = async () => {
   try {
     
+    await fastify.register(tournamentRoutes);
     console.log('Server is running...');
     await fastify.ready();
 
-    await fastify.register(tournamentRoutes);
 
     const io = new Server(fastify.server, {
       cors: { origin: "*" },

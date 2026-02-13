@@ -36,7 +36,7 @@ export class Game extends BaseComponent {
         const right = params.get('right') || undefined;
         const room = params.get('room') || undefined;
 
-        this.socket = io("ws://localhost:8080", {
+        this.socket = io("wss://localhost", {
             path:"/api/game/socket.io",
             transports: ['websocket'],
             reconnection: true

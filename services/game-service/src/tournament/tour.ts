@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export default async function tournamentRoutes(fastify: FastifyInstance) {
 
-  fastify.post('/api/tournaments/create', async (request, reply) => {
+  fastify.post('/create', async (request, reply) => {
       const { tour_name, creator_username, creator_nickname } = request.body as any;
       const tourId = uuidv4().substring(0, 8).toUpperCase();
     
@@ -18,7 +18,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             tour_name,
             tour_state: "Pending",
             
-            participants: {
+            participant: {
               create: { 
                 username: creator_username, 
                 nick_name: creator_nickname 
@@ -34,7 +34,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             }
           },
           include: { 
-            participants: true,
+            participant: true,
             matches: true 
           }
         });
@@ -46,24 +46,24 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
       }
     });
 
-  fastify.post('/api/tournaments/join', async (request, reply) => {
+  fastify.post('/join', async (request, reply) => {
     const { tour_id, username, nickname } = request.body as any;
     
     try {
         const tour = await prisma.tournament.findUnique({
             where: { tour_id: tour_id },
-            include: { participants: true }
+            include: { participant: true }
         });
 
         if (!tour) {
             return reply.status(404).send({ error: "Tournament not found" });
         }
 
-        if (tour.participants.length >= 4) {
+        if (tour.participant.length >= 4) {
             return reply.status(400).send({ error: "Tournament is already full" });
         }
 
-        const alreadyJoined = tour.participants.some((p: any) => p.username === username);
+        const alreadyJoined = tour.participant.some((p: any) => p.username === username);
         if (alreadyJoined) {
             return reply.status(400).send({ error: "You are already in this tournament" });
         }
@@ -71,12 +71,12 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         const updatedTour = await prisma.tournament.update({
             where: { tour_id: tour_id },
             data: {
-                participants: {
+                participant: {
                     create: { username: username, nick_name: nickname }
                 },
-                tour_state: tour.participants.length === 3 ? "In-progress" : "Pending"
+                tour_state: tour.participant.length === 3 ? "In-progress" : "Pending"
             },
-            include: { participants: true }
+            include: { participant: true }
         });
 
         return reply.status(200).send(updatedTour);
@@ -86,7 +86,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         return reply.status(500).send({ error: "Internal server error during join" });
     }
   });
-  fastify.delete('/api/tournaments/delete/:tour_id', async (request, reply) => {
+  fastify.delete('/delete/:tour_id', async (request, reply) => {
     const { tour_id } = request.params as { tour_id: string };
 
     try {

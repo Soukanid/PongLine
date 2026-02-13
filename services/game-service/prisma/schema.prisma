@@ -28,8 +28,8 @@ model Match {
   winnerName  String?
   playedAt    DateTime @default(now())
 
-  player1     Player   @relation("player1", fields: [username1], references: [username])
-  player2     Player   @relation("player2", fields: [username2], references: [username])
+  player1     Player?   @relation("player1", fields: [username1], references: [username])
+  player2     Player?   @relation("player2", fields: [username2], references: [username])
 
   tournamentId Int?
   tournament   Tournament? @relation(fields: [tournamentId], references: [id])
