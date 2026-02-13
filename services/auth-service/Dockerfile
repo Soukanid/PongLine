@@ -14,4 +14,4 @@ RUN npx prisma generate
 
 ENTRYPOINT ["npm", "run"]
 
-CMD ["dev"]
+CMD ["start"]

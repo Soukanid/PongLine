@@ -8,10 +8,8 @@ export const RegisterSchema = {
   }),
   response: {
     200: Type.Object({
-      tokens: Type.Object({
-        accessToken: Type.String()
-      })
-    }),
+      token: Type.String()
+      }),
     400: Type.Object({
       error: Type.String()
     })
@@ -26,9 +24,7 @@ export const LoginSchema = {
   }),
   response: {
     200: Type.Object({
-     tokens: Type.Object({
-        accessToken: Type.String()
-      })
+     token: Type.String()
     }),
     401: Type.Object({
       error: Type.String()
@@ -37,17 +33,15 @@ export const LoginSchema = {
 }
 
 export const ValidateSchema = {
-  body: Type.Object({
-    token: Type.String()
+  headers: Type.Object({
+    authorization: Type.String({
+      pattern: '^Bearer .+$',
+      description: 'Bearer token'
+    })
   }),
   response: {
     200: Type.Object({
       valid: Type.Boolean(),
-      user: Type.Optional(Type.Object({
-        id: Type.String(),
-        email: Type.String(),
-        username: Type.String()
-      })),
       reason: Type.Optional(Type.String())
     })
   }

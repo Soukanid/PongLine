@@ -15,7 +15,7 @@ model UserAuth {
   email String @unique
   username String @unique
   passwordHash String
-  userId String
+  userId Int
   isTFAEnabled Boolean @default(false)
   TFASecret String?
   backupCodes String?

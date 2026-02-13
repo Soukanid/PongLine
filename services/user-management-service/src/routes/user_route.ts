@@ -1,5 +1,5 @@
 import { UserController } from '../controllers/user_controller';
-import { FastifyRequest, FastifyInstance } from 'fastify';
+import { type FastifyRequest, type FastifyInstance } from 'fastify';
 
 const userController = new UserController();
 

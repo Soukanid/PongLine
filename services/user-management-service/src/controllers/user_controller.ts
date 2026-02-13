@@ -139,7 +139,7 @@ export class UserController {
           avatar: Buffer.alloc(0)
         },
       });
-      return reply.status(201).send( {userId: user.id });
+      return reply.status(201).send( {id: user.id });
     } catch (error)
     {
       console.error(error);
@@ -273,5 +273,4 @@ formatUserResponse(user: any, relationship: string) {
         relationship: relationship
     };
 }
-
 }

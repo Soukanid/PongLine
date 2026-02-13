@@ -4,9 +4,7 @@ import fastify, { type FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 
 export const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development"
-      ? ["query", "info", "warn", "error"]
-      : ["error"],
+  log:["query", "info", "warn", "error"]
 });
 
 export const prismaPlugin = fp(async (fastify: FastifyInstance)=>{

@@ -12,7 +12,7 @@
     "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true,
 
-    "strict": true,
+   "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
