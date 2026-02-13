@@ -48,7 +48,7 @@ model Tournament {
   id          Int      @id @default(autoincrement())
   tour_id     String   @unique
   tour_name   String
-  player      Participant[] 
+  participant Participant[] 
   tour_state  String   @default("Pending")// "Pending", "In-progress", "Finished"
   startedAt   DateTime @default(now())
 

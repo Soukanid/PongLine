@@ -8,20 +8,43 @@ const prisma = new PrismaClient();
 export default async function tournamentRoutes(fastify: FastifyInstance) {
 
   fastify.post('/api/tournaments/create', async (request, reply) => {
-    const { tour_name, creator_username, creator_nickname } = request.body as any;
+      const { tour_name, creator_username, creator_nickname } = request.body as any;
+      const tourId = uuidv4().substring(0, 8).toUpperCase();
     
-    const tour = await prisma.tournament.create({
-      data: {
-        tour_id: uuidv4().substring(0, 8).toUpperCase(),
-        tour_name,
-        participants: {
-          create: { username: creator_username, nick_name: creator_nickname }
-        }
-      },
-      include: { participants: true }
+      try {
+        const tour = await prisma.tournament.create({
+          data: {
+            tour_id: tourId,
+            tour_name,
+            tour_state: "Pending",
+            
+            participants: {
+              create: { 
+                username: creator_username, 
+                nick_name: creator_nickname 
+              }
+            },
+            
+            matches: {
+              create: [
+                { room_id: `${tourId}_SEMI_1` },
+                { room_id: `${tourId}_SEMI_2` },
+                { room_id: `${tourId}_FINAL`  }
+              ]
+            }
+          },
+          include: { 
+            participants: true,
+            matches: true 
+          }
+        });
+    
+        return reply.status(201).send(tour);
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.status(500).send({ error: "Failed to create tournament bracket" });
+      }
     });
-    return tour;
-  });
 
   fastify.post('/api/tournaments/join', async (request, reply) => {
     const { tour_id, username, nickname } = request.body as any;
@@ -61,6 +84,38 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     } catch (error) {
         fastify.log.error(error);
         return reply.status(500).send({ error: "Internal server error during join" });
+    }
+  });
+  fastify.delete('/api/tournaments/delete/:tour_id', async (request, reply) => {
+    const { tour_id } = request.params as { tour_id: string };
+
+    try {
+        const tournament = await prisma.tournament.findUnique({
+            where: { tour_id: tour_id },
+            select: { id: true, tour_state: true }
+        });
+
+        if (!tournament) {
+            return reply.status(404).send({ error: "Tournament not found" });
+        }
+
+        if (tournament.tour_state !== "Pending") {
+            return reply.status(400).send({ 
+                error: "Cannot delete a tournament that has already started or finished" 
+            });
+        }
+
+        await prisma.$transaction([
+            prisma.match.deleteMany({ where: { tournamentId: tournament.id } }),
+            prisma.participant.deleteMany({ where: { tournamentId: tournament.id } }),
+            prisma.tournament.delete({ where: { id: tournament.id } })
+        ]);
+
+        return reply.status(200).send({ message: "Tournament deleted successfully" });
+
+    } catch (error) {
+        fastify.log.error(error);
+        return reply.status(500).send({ error: "Internal server error during deletion" });
     }
   });
 }
