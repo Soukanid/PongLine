@@ -12,11 +12,7 @@
     "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true,
 
-<<<<<<< HEAD
-    "strict": true,
-=======
    "strict": true,
->>>>>>> 088b782 (auth service fixed and /validate added)
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
