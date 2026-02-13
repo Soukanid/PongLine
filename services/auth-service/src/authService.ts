@@ -19,6 +19,7 @@ export class AuthService {
   private async callUserService<T>(
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     endpoint: string,
+    token: string,
     data?: unknown,
   ): Promise<T> {
     const url = `${this.USER_SERVICE_URL}${endpoint}`;
@@ -28,6 +29,7 @@ export class AuthService {
         "Content-Type": "application/json",
         "X-Internal-Request": "true",
         "X-Service-Name": "auth-service",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -64,10 +66,14 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, this.SALT_ROUNDS);
 
     try {
+      //generate temp token
+      const tempToken = this.fastify.auth.generateToken(
+        0,
+        "warrior",
+        username,
+      );
       //create user in User service
-      const user = await this.callUserService<{
-        id: number;
-      }>("POST", "create_user", { email, username });
+      const user = await this.callUserService<{id: number;}>("POST", "create_user", tempToken, { email, username });
 
       //create user in Auth service
       await this.prisma.userAuth.create({
@@ -83,7 +89,7 @@ export class AuthService {
       //generate token
       const accessToken = this.fastify.auth.generateToken(
         user.id,
-        'warior',
+        "warior",
         username,
       );
 

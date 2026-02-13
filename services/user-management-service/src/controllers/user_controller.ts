@@ -139,7 +139,7 @@ export class UserController {
           avatar: Buffer.alloc(0)
         },
       });
-      return reply.status(201).send( {userId: user.id });
+      return reply.status(201).send( {id: user.id });
     } catch (error)
     {
       console.error(error);
@@ -273,42 +273,4 @@ formatUserResponse(user: any, relationship: string) {
         relationship: relationship
     };
 }
-
-  async createUser(req: FastifyRequest< { Body: { email: string, username: string }}>, reply: FastifyReply) {
-    
-    try {
-      const user = await prisma.user.create({
-        data : {
-          email: req.body.email,
-          username: req.body.username,
-        },
-      });
-      return reply.status(201).send({id : user.id});
-    } catch (error)
-    {
-      console.error(error);
-      return reply.status(500).send({ error: 'Failed to create the user'});
-    }
-  }
-
-  async getUser(req: FastifyRequest<{ Querystring: {id: string}}>, reply: FastifyReply)
-  {
-      var userId = req.query.id;
-
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: Number(userId)}
-        });
-        
-        if (!user)
-          return reply.status(404).send({ error: 'User not found'});
-      
-        return reply.status(200);
-
-      } catch (error)
-      {
-        console.error(error);
-        return reply.status(500).send({ error: 'Failed to fetsh User'});
-      }
-  }
 }
