@@ -33,16 +33,19 @@ export const LoginSchema = {
 }
 
 export const ValidateSchema = {
-  headers: Type.Object({
-    authorization: Type.String({
-      pattern: '^Bearer .+$',
-      description: 'Bearer token'
-    })
-  }),
+  // headers: Type.Object({
+  //   authorization: Type.String({
+  //     pattern: '^Bearer .+$',
+  //     description: 'Bearer token'
+  //   })
+  // }),
   response: {
     200: Type.Object({
       valid: Type.Boolean(),
       reason: Type.Optional(Type.String())
+    }),
+    401: Type.Object({
+      error: Type.String()
     })
   }
 }

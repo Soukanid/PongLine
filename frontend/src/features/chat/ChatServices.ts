@@ -105,6 +105,7 @@ class ChatService {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
+        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });
@@ -123,6 +124,7 @@ class ChatService {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
+        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });
@@ -141,6 +143,7 @@ class ChatService {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
+        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });

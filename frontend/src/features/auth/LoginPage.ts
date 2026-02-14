@@ -1,5 +1,7 @@
 import "../../css/login.css";
 import { BaseComponent } from "../../core/Component";
+import { authService } from "./authService"
+import  { userCreateData } from "./types"
 
 export class LoginPage extends BaseComponent {
   render() {
@@ -198,8 +200,8 @@ export class LoginPage extends BaseComponent {
     `;
     this.appendTerminalOutput("Enter your credentials");
     this.appendTerminalElement(form);
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
+    const username = document.getElementById("username") as HTMLInputElement;
+    const password = document.getElementById("password") as HTMLInputElement;
     const passdiv = document.getElementById("passwordiv");
     if (username) {
       username.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -213,46 +215,120 @@ export class LoginPage extends BaseComponent {
       });
     }
 
-    if (password) {
-      password.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (password && username) {
+      password.addEventListener("keydown", async (e: KeyboardEvent) => {
         if (e.key == "Enter") {
           if (!password.value) {
             this.appendTerminalOutput("Password required");
             return;
           }
           this.appendTerminalOutput("Authenticating________");
-          this.appendTerminalOutput("Welcome back Warrior");
-          this.appendTerminalOutput("");
+          const res = await authService.login(username.value, password.value);
+          
+          // set token in localStorage
+          if (res && res.success)
+          {
+            this.appendTerminalOutput("Welcome back Warrior");
+            this.appendTerminalOutput("");
+
+            // localStorage.setItem("accessToken", res.token);
+          }
           line.classList.remove("hidden");
         }
       });
     }
   }
 
-  private showRegister(): void {
+private showRegister(): void {
     this.appendTerminalOutput("");
     this.appendTerminalOutput("REGISTER - Create New Account");
     this.appendTerminalOutput("━━━━━━━━━━");
-    this.appendTerminalOutput("");
-    this.appendTerminalOutput("Account creation wizard starting...");
+
+    const commandLine = document.getElementById("command-line") as HTMLElement;
+    if (commandLine) commandLine.classList.add("hidden");
+
+    const container = document.createElement("div");
+    container.className = "flex flex-col gap-2 mb-4"; 
+
+    container.innerHTML = `
+      <div class="flex flex-row" id="reg-step-1">
+        <span class="mr-2 text-retro">Username:</span>
+        <input type="text" id="reg-username" class="flex-1 bg-transparent border-none outline-none text-green-200" autocomplete="off" autofocus />
+      </div>
+
+      <div class="flex flex-row hidden" id="reg-step-2">
+        <span class="mr-2 text-retro">Email:</span>
+        <input type="email" id="reg-email" class="flex-1 bg-transparent border-none outline-none text-green-200" autocomplete="off" />
+      </div>
+
+      <div class="flex flex-row hidden" id="reg-step-3">
+        <span class="mr-2 text-retro">Password:</span>
+        <input type="password" id="reg-pass" class="flex-1 bg-transparent border-none outline-none text-green-200" />
+      </div>
+    `;
+
+    this.appendTerminalElement(container);
+
+    const userRow = container.querySelector("#reg-step-1") as HTMLElement;
+    const userInput = container.querySelector("#reg-username") as HTMLInputElement;
+    
+    const emailRow = container.querySelector("#reg-step-2") as HTMLElement;
+    const emailInput = container.querySelector("#reg-email") as HTMLInputElement;
+    
+    const passRow = container.querySelector("#reg-step-3") as HTMLElement;
+    const passInput = container.querySelector("#reg-pass") as HTMLInputElement;
+
+    setTimeout(() => userInput?.focus(), 50);
+
+    userInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const val = userInput.value.trim();
+        if (!val) {
+             return; 
+        }
+        userInput.disabled = true;
+        emailRow.classList.remove("hidden");
+        emailInput.focus();
+      }
+    });
+
+    emailInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const val = emailInput.value.trim();
+        if (!val) return;
+
+        emailInput.disabled = true;
+        passRow.classList.remove("hidden");
+        passInput.focus();
+      }
+    });
+
+
+passInput?.addEventListener("keydown", async (e) => {
+  if (e.key === "Enter") {
+
+    this.appendTerminalOutput(">> Processing...");
+
+    const data = { 
+        email: emailInput.value, 
+        username: userInput.value, 
+        password: passInput.value 
+    };
+
+    const res = await authService.createUser(data);
+
+    if (res && res.ok) {
+      this.appendTerminalOutput(">> [SUCCESS] Account created!");
+      this.appendTerminalOutput(">> Please type 'LOGIN' to continue.");
+      
+      document.getElementById("command-line")?.classList.remove("hidden");
+    } else {
+      this.appendTerminalOutput(">> [ERROR] Registration failed.");
+      passInput.disabled = false;
+      passInput.focus();
+    }
   }
-
-  private show42Intra(): void {
-    this.appendTerminalOutput("");
-    this.appendTerminalOutput("42 INTRA - OAuth Authentication");
-    this.appendTerminalOutput("━━━━━━━━━━");
-    this.appendTerminalOutput("");
-    this.appendTerminalOutput("Redirecting to 42 Intra authentication...");
-    this.appendTerminalOutput("Please wait while we connect securely.");
-
-    // Simulate loading
-    setTimeout(() => {
-      this.appendTerminalOutput("");
-      this.appendTerminalOutput("[•] Establishing secure connection...");
-      this.appendTerminalOutput("[••] Contacting 42 Intra API...");
-      this.appendTerminalOutput("[•••] Requesting authorization...");
-      this.appendTerminalOutput("[✓] Ready for authentication");
-    }, 800);
+  });
   }
 
   private goBack(): void {

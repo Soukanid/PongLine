@@ -72,8 +72,9 @@ export class AuthService {
         "warrior",
         username,
       );
+
       //create user in User service
-      const user = await this.callUserService<{id: number;}>("POST", "create_user", tempToken, { email, username });
+      const user = await this.callUserService<{id: number;}>("POST", "/create_user", tempToken, { email, username });
 
       //create user in Auth service
       await this.prisma.userAuth.create({
@@ -81,7 +82,7 @@ export class AuthService {
           email,
           username,
           passwordHash,
-          userId: user.id,
+          userId: Number(user.id),
           createdAt: new Date(),
         },
       });
@@ -89,7 +90,7 @@ export class AuthService {
       //generate token
       const accessToken = this.fastify.auth.generateToken(
         user.id,
-        "warior",
+        "warrior",
         username,
       );
 
@@ -100,6 +101,7 @@ export class AuthService {
           where: { email },
         })
         .catch(() => {});
+          console.error("Registration failed");
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
@@ -152,7 +154,7 @@ export class AuthService {
 
     // 6. Generate token
     const accessToken = this.fastify.auth.generateToken(
-      authUser.userId,
+      Number(authUser.userId),
       'warrior',
       authUser.username,
     );
@@ -161,10 +163,10 @@ export class AuthService {
   }
 
   //validate token controller
-  async validateToken(AuthHeader: string | undefined) {
+  //
+  async validateToken(token: string) {
     try {
-      const accessToken = this.fastify.auth.extractToken(AuthHeader);
-      const payload = this.fastify.auth.verifyToken(accessToken);
+      const payload = this.fastify.auth.verifyToken(token);
 
       // Check if auth user still exists
       const authUser = await this.prisma.userAuth.findUnique({
@@ -195,4 +197,38 @@ export class AuthService {
       return { valid: false, reason: "invalid_token" };
     }
   }
+  // async validateToken(AuthHeader: string | undefined) {
+  //   try {
+  //     const accessToken = this.fastify.auth.extractToken(AuthHeader);
+  //     const payload = this.fastify.auth.verifyToken(accessToken);
+  //
+  //     // Check if auth user still exists
+  //     const authUser = await this.prisma.userAuth.findUnique({
+  //       where: { username: payload.username },
+  //       select: {
+  //         userId: true,
+  //         username: true,
+  //       },
+  //     });
+  //
+  //     if (!authUser) {
+  //       return { valid: false, reason: "user_not_found" };
+  //     }
+  //
+  //     return {
+  //       valid: true,
+  //       user: {
+  //         id: authUser.userId,
+  //         role: 'warrior',
+  //         username: authUser.username,
+  //         alias: authUser.username,
+  //       },
+  //     };
+  //   } catch (error: any) {
+  //     if (error.name === "TokenExpiredError") {
+  //       return { valid: false, reason: "token_expired" };
+  //     }
+  //     return { valid: false, reason: "invalid_token" };
+  //   }
+  // }
 }

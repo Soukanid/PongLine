@@ -29,6 +29,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
               twoFactorCode : string
             }
             const result = await authService.login(email, password, twoFactorCode)
+
+            reply.setCookie('access_token', result.token, {
+              path: '/',        
+              httpOnly: true,
+              secure: true,       
+              sameSite: 'strict', 
+              maxAge: 86400   
+            });
+
             return result
         } catch (error: any) {
             reply.code(401).send({error: error.message})
@@ -36,11 +45,33 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
     
     // Validate token (for API Gateway)
-  fastify.post('/validate', { schema: ValidateSchema }, async (request, reply) => {
-    try {
-      const  token  = request.headers.authorization
-      const result = await authService.validateToken(token)
+  // fastify.get('/validate', { schema: ValidateSchema }, async (request, reply) => {
+  //   try {
+  //     const  token  = request.headers.authorization
+  //     const result = await authService.validateToken(token)
+  //
+  //     console.log(" i was here once");
+  //     reply.header("X-User-Id", result.user?.id)
+  //     reply.header("X-User-Username", result.user?.username)
+  //     reply.header("X-User-Alias", result.user?.username)
+  //     reply.header("X-User-Role", result.user?.role)
+  //
+  //     return result
+  //   } catch (error: any) {
+  //     return { valid: false, reason: 'validation_error' }
+  //   }
+  // })
 
+  fastify.get('/validate', { schema: ValidateSchema }, async (request, reply) => {
+    try {
+      const  token  = request.cookies?.access_token
+      if (!token)
+        return reply.code(401);
+
+      const result = await authService.validateToken(token)
+      if (!result.valid) {
+          return reply.code(401).send(result);
+      }
       reply.header("X-User-Id", result.user?.id)
       reply.header("X-User-Username", result.user?.username)
       reply.header("X-User-Alias", result.user?.username)

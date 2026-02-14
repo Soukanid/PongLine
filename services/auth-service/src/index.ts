@@ -3,16 +3,22 @@ import {fastify} from './server.ts'
 import { prismaPlugin } from './plugins/prisma.ts'
 import { authPlugin } from './plugins/auth.ts'
 import authRoutes from './authRoutes.ts'
+import cookie from '@fastify/cookie';
 
 const PORT =  3001
 const HOST =  '0.0.0.0'
 
 async function main () {
   try {
+
+    fastify.register(cookie, {
+      secret: process.env.COOKIE_SECRET || "change-me-in-prod", 
+      parseOptions: {} 
+    });
+  
     //register plugins
     await fastify.register(prismaPlugin);
     await fastify.register(authPlugin);
-
     //register routes
     await fastify.register(authRoutes);
 
