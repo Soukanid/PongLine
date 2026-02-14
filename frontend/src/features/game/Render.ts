@@ -71,11 +71,11 @@ export class PongGame {
 	private update(): void {
 		const speed = 5;
 		if (this.game.mode === 'remote') {
-        this.socket.emit('playerInput', {
-            gameId: this.currentGameId,
-            up: this.keys['ArrowUp'] || this.keys['w'] || this.keys['W'],
-            down: this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']
-        });
+        	this.socket.emit('playerInput', {
+        	    gameId: this.currentGameId,
+        	    up: this.keys['ArrowUp'] || this.keys['w'] || this.keys['W'],
+        	    down: this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']
+        	});
     	} else {
     		if (this.game.mode === 'local') {
         		if (this.keys['w'] || this.keys['W']) this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
@@ -200,12 +200,28 @@ export class PongGame {
 		this.socket.on('gameState', (state: Partial<GameState>) => {
 			this.game = {...this.game, ...state};
 		});
-		this.socket.on('gameOver', () => {
+		this.socket.on('gameOver', (winner: string) => {
 			this.isPaused = true; 
+			this.renderWinner(winner);
 		});
-		this.socket.on('gameStart', (data: any) => {
-		    console.log("Game Starting with players:", data.players);
+		this.socket.on('gameNotFound', () => {
+			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			this.context.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    	    this.context.fillRect(0, 0, this.width, this.height);
+
+    	    this.context.fillStyle = '#1BFB08';
+    	    this.context.font = 'bold 32px VT323, monospace';
+    	    this.context.textAlign = 'center';
+    	    this.context.fillText('ROOM NOT FOUND', this.width / 2, this.height / 2);
+		
+    	    this.context.font = '16px VT323, monospace';
+    	    this.context.fillText('PLEASE CHECK THE CODE AND TRY AGAIN', this.width / 2, this.height / 2 + 40);
+		
+			this.roomId = '';
+		});
+		this.socket.on('gameStart', () => {
 		    this.isStarted = true;
+			requestAnimationFrame(() => this.loop());
 		});
 		this.socket.on('connect', () => {
 			console.log('Connected to game server');
@@ -221,7 +237,6 @@ export class PongGame {
 		    this.context.textAlign = 'center';
 		    this.context.fillText("OPPONENT DISCONNECTED", this.width / 2, this.height / 2 - 20);
 		    this.context.fillText("YOU WIN BY DEFAULT!", this.width / 2, this.height / 2 + 30);
-
 		});
 		this.socket.on('error', (error: any) => {
 			console.error('Socket error:', error);
@@ -295,6 +310,9 @@ export class PongGame {
 		ctx.fillRect(x, y, width, height);
 	}
 	private renderRoomId(room: string){
+    	if (room === '' || !room) {
+    	    return;
+    	}
     	this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
     	this.context.fillRect(0, 0, this.width, this.height);
 
@@ -312,7 +330,7 @@ export class PongGame {
     	this.context.fillText('SHARE THIS CODE TO START', this.width / 2, this.height / 2 + 60);
 	}
 	public loop(): void {
-		if (this.isPaused){
+		if (this.isPaused) {
 			if (this.game.score_plr1 >= 5) {
 				this.renderWinner(this.game.player1)
 			} else if(this.game.score_plr2 >= 5) {

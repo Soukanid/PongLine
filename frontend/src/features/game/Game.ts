@@ -30,7 +30,7 @@ export class Game extends BaseComponent {
         }
 
         const params = new URL(window.location.href).searchParams;
-        const mode = params.get('mode') || 'local';
+        const mode = params.get('mode') || 'remote';
         const nick = params.get('nick') || undefined;
         const left = params.get('left') || undefined;
         const right = params.get('right') || undefined;
@@ -43,15 +43,14 @@ export class Game extends BaseComponent {
         });
 
         this.socket.on('connect', () => console.log("Connected to Backend on 3003:", this.socket?.id));
-        this.socket.on('connect_error', (err) => console.error("Socket Connection Error:", err));
+        this.socket.on('connect_error', (err: any) => console.error("Socket Connection Error:", err));
 
         
         this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
-            const username: string = "username"; // || Guest
-            const nickname: string = "nickname"; // || Guest
+            const name: string = Math.random().toString(36).substring(2, 8).toUpperCase();
             console.log(`Attempting to join room: ${room}`);
-            this.game.joinRoom(room, username, nickname);// send user data to the backend and fetch them from the user-management
+            this.game.joinRoom(room, `${name}_u`, `${name}_n`);// send user data to the backend and fetch them from the user-management
         }
         this.game.loop();
     }

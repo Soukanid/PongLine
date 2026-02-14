@@ -1,4 +1,5 @@
 // prisma/schema.prisma
+
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
@@ -19,14 +20,14 @@ model Player {
 }
 
 model Match {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   room_id     String
   username1   String?
   username2   String?
   score_plr1  Int?
   score_plr2  Int?
   winnerName  String?
-  playedAt    DateTime @default(now())
+  playedAt    DateTime  @default(now())
 
   player1     Player?   @relation("player1", fields: [username1], references: [username])
   player2     Player?   @relation("player2", fields: [username2], references: [username])
@@ -52,5 +53,9 @@ model Tournament {
   tour_state  String   @default("Pending")// "Pending", "In-progress", "Finished"
   startedAt   DateTime @default(now())
 
+  semifinal1  String?
+  semifinal2  String?
+  final       String?
+  
   matches     Match[]
 }

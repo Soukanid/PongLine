@@ -1,3 +1,4 @@
+import { saveMatch } from "./database";
 
 interface GameState {
   canvas: { width: number; height: number }; 
@@ -67,9 +68,29 @@ export function updateRoom(gameId: string, io: any) {
   if (!room) return;
   const state = room.gameState;
   
+  if (room.players.length < 2) return;
+  
+  state.ballPosition.x += state.ballVelocity.x;
+  state.ballPosition.y += state.ballVelocity.y;
+
+  checkPaddleCollision(state, "left");
+  checkPaddleCollision(state, "right");
+  
+  if (state.ballPosition.y <= 0 || state.ballPosition.y >= state.canvas.height) {
+    state.ballVelocity.y = -state.ballVelocity.y;
+  }
+  
+  if (state.ballPosition.x <= 0) {
+    state.scores.right += 1;
+    resetBall(state);
+  } else if (state.ballPosition.x >= state.canvas.width) {
+    state.scores.left += 1;
+    resetBall(state);
+  }
+    
   const syncData = {
-    player1: room.players[1]?.username || 'Waiting...',
-    player2: room.players[0]?.nickname || 'Waiting...',
+    player1: room.players[1]?.nickname,
+    player2: room.players[0]?.nickname,
     paddle1Y: state.paddles.right.y,
     paddle2Y: state.paddles.left.y,
     score_plr1: state.scores.right,
@@ -78,30 +99,24 @@ export function updateRoom(gameId: string, io: any) {
     ballY: state.ballPosition.y,
     timestamp: Date.now()
   };
-  
+
   io.to(gameId).emit("gameState", syncData);
-  
-  if (room.players.length < 2) return;
 
-  state.ballPosition.x += state.ballVelocity.x;
-  state.ballPosition.y += state.ballVelocity.y;
-
-  checkPaddleCollision(state, "left");
-  checkPaddleCollision(state, "right");
-
-  if (state.ballPosition.y <= 0 || state.ballPosition.y >= state.canvas.height) {
-    state.ballVelocity.y = -state.ballVelocity.y;
-  }
-
-  if (state.ballPosition.x <= 0) {
-    state.scores.right += 1;
-    resetBall(state);
-  } else if (state.ballPosition.x >= state.canvas.width) {
-    state.scores.left += 1;
-    resetBall(state);
-  }
   if (state.scores.right >= 5 || state.scores.left >= 5) {
-    io.to(gameId).emit("gameOver");
+    const winner = state.scores.right >= 5 ? room.players[0] : room.players[1];
+
+    const matchResult = {
+      room_id: gameId,
+      username1: room.players[0]?.username,
+      username2: room.players[1]?.username,
+      score_plr1: state.scores.right,
+      score_plr2: state.scores.left,
+      winnerName: winner?.username,
+    };
+    
+    saveMatch(matchResult, winner);
+
+    io.to(gameId).emit("gameOver", { winner: winner?.nickname });
     delete rooms[gameId];
   }
 }

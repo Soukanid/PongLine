@@ -107,7 +107,7 @@ export class Menu extends BaseComponent {
         });
       });
     }
-     private remotePrompt(opts: { title?: string; message?: string; placeholders: string[]; }): Promise<string | string[] | null> {
+    private remotePrompt(opts: { title?: string; message?: string; placeholders: string[]; }): Promise<string | string[] | null> {
       return new Promise(resolve => {
         const overlay = document.createElement('div');
         overlay.className = 'pl-overlay';
@@ -150,10 +150,26 @@ export class Menu extends BaseComponent {
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
         setTimeout(() => inputs[0]?.focus(), 0);
-        createRoom.addEventListener('click', () => {
-          const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-          cleanup(roomId);
-        } );
+        createRoom.addEventListener('click', async () => {
+          try {
+            const response = await fetch('https://localhost/api/game/create-room', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({})
+            });
+          
+            const res = await response.json();
+          
+            if (res.success && res.roomId) {
+              cleanup(res.roomId); 
+            } else {
+              alert('Server failed to create room.');
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Network error. Is the Game Service running?');
+          }
+        });
         Join.addEventListener('click', () => {
           if (inputs.length === 1) cleanup(inputs[0].value.trim() || '');
           else cleanup(inputs.map(i => i.value.trim() || ''));

@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 export default async function tournamentRoutes(fastify: FastifyInstance) {
 
@@ -17,6 +17,9 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             tour_id: tourId,
             tour_name,
             tour_state: "Pending",
+            semifinal1: uuidv4().substring(0, 12).toUpperCase(),
+            semifinal2: uuidv4().substring(0, 12).toUpperCase(),
+            final: uuidv4().substring(0, 12).toUpperCase(),
             
             participant: {
               create: { 
@@ -25,17 +28,9 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
               }
             },
             
-            matches: {
-              create: [
-                { room_id: `${tourId}_SEMI_1` },
-                { room_id: `${tourId}_SEMI_2` },
-                { room_id: `${tourId}_FINAL`  }
-              ]
-            }
           },
           include: { 
             participant: true,
-            matches: true 
           }
         });
     
@@ -76,9 +71,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
                 },
                 tour_state: tour.participant.length === 3 ? "In-progress" : "Pending"
             },
-            include: { participant: true }
+            include: { participant: true, matches: true }
         });
-
         return reply.status(200).send(updatedTour);
 
     } catch (error) {
@@ -86,6 +80,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         return reply.status(500).send({ error: "Internal server error during join" });
     }
   });
+
   fastify.delete('/delete/:tour_id', async (request, reply) => {
     const { tour_id } = request.params as { tour_id: string };
 
