@@ -9,7 +9,6 @@ export class Header extends BaseComponent {
     this.setHtml(`
       <div class="flex-1 flex flex-row items-center h-20 w-full px-6">
         
-        <!-- [soukaina] here the userId should be -->
         <a href="/" data-link> 
           <img src="${pongLineImage}" class="h-8 w-40 hover:opacity-80 transition-opacity" > 
         </a>

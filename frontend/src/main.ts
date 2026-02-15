@@ -27,9 +27,6 @@ const routes = {
 export const routerInstance = new Router(routes);
 export const router = routerInstance;
 window.router = routerInstance;
-//const savedUserId = localStorage.getItem('userId');
 
-const savedUserId = 1;
-//[soukaina] for know we will asume that the user is already logged in
-chatService.connectSocket(savedUserId);
+chatService.connectSocket();
 

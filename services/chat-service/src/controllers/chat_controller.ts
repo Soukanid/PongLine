@@ -14,13 +14,15 @@ declare module 'fastify' {
 
 export class ChatController {
 
+  async getHistory(req: FastifyRequest<{ Querystring: { friendId: string } }>, reply: FastifyReply) {
+    const { friendId } = req.query;
+    const myId = req.headers['x-user-id']?.toString();
 
-  async getHistory(req: FastifyRequest<{ Querystring: { user1: string, user2: string } }>, reply: FastifyReply) {
-    const { user1, user2 } = req.query;
-    if (!user1 || !user2) return reply.code(400);
+    if (!myId || !friendId)
+      return reply.code(400);
 
-    const id1 = parseInt(user1);
-    const id2 = parseInt(user2);
+    const id1 = parseInt(myId);
+    const id2 = parseInt(friendId);
 
     try {
       const messages = await prisma.message.findMany({
@@ -32,22 +34,33 @@ export class ChatController {
         },
         orderBy: { created_at: 'asc' }
       });
-      return reply.send(messages);
+
+      const messageswithId = messages.map(msg => ({
+        ...msg,
+        myId: id1
+      }));
+
+      return reply.send(messageswithId);
     } catch (error) {
       return reply.code(500).send({ error: 'Fetch failed' });
     }
   }
 
-  async getChatFriends(req: FastifyRequest<{ Querystring: {myId: string}}>, reply: FastifyReply)
+  async getChatFriends(req: FastifyRequest, reply: FastifyReply)
   {
-    const myId = parseInt(req.query.myId);
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400);
+
+    const userId = parseInt(myId);
 
     try {
       const users = await prisma.message.findMany({
         where: {
           OR: [
-            { sender_id: myId },
-            { receiver_id: myId }
+            { sender_id: userId },
+            { receiver_id: userId }
           ]
         },
         select: {
@@ -60,12 +73,11 @@ export class ChatController {
       });
 
       // to remove duplicated users and fetsh them
-      const allIds = users.map(msg => msg.sender_id === myId ? msg.receiver_id : msg.sender_id);
+      const allIds = users.map(msg => msg.sender_id === userId ? msg.receiver_id : msg.sender_id);
       const contactIds = [...new Set(allIds)];
 
       if (contactIds.length === 0)
         return reply.send([]);
-
 
       const userServiceResponse = await fetch(`${process.env.USER_SERVICE_URL}/chat_friends`,
       {
@@ -89,7 +101,12 @@ export class ChatController {
 
   handleConnection(connection: any, req: FastifyRequest) {
     const socket: WebSocket = connection.socket || connection;
-    const userId = req.user.id;
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return ;
+
+    const userId = parseInt(myId);
 
     activeUsers.set(userId, socket);
 
@@ -128,6 +145,7 @@ export class ChatController {
         // send the message to myself
         socket.send(JSON.stringify({
           id: savedMsg.id,
+          myId: userId,
           sender_id: savedMsg.sender_id,
           receiver_id: savedMsg.receiver_id,
           content: savedMsg.content,

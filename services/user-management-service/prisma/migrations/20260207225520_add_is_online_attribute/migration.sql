@@ -6,8 +6,7 @@ CREATE TABLE "new_User" (
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "avatar" TEXT NOT NULL DEFAULT 'https://i.pravatar.cc/150?u=default',
-    "isOnline" BOOLEAN NOT NULL DEFAULT true
-    --[soukaina] for testing purpose should be again false 
+    "isOnline" BOOLEAN NOT NULL DEFAULT false
 );
 INSERT INTO "new_User" ("avatar", "email", "id", "username") SELECT "avatar", "email", "id", "username" FROM "User";
 DROP TABLE "User";

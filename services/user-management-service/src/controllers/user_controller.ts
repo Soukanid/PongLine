@@ -4,7 +4,12 @@ import { prisma } from '../utils/prisma_init';
 export class UserController {
 
   async getFriends(req: FastifyRequest, reply: FastifyReply) {
-    const userId = 1; //[soukaina] this is hardcoded for now
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400);
+
+    const userId = parseInt(myId);
 
     try {
       const friendships = await prisma.friendship.findMany({
@@ -20,10 +25,6 @@ export class UserController {
           receiver: { select: { id: true, username: true, avatar: true, isOnline: true } }
         }
       });
-
-      // [soukaina ] here we do a loop into the friendships array
-      // and pick the friend info and remove our info cause we don't need it
-    
 
       const friends = friendships.map(f => {
 
@@ -54,8 +55,12 @@ export class UserController {
   }
 
   async getBlockedUsers(req: FastifyRequest, reply: FastifyReply) {
-    const userId = 1; //[soukaina] this is hardcoded for now
+    const myId = req.headers['x-user-id']?.toString();
 
+    if (!myId)
+      return reply.code(400);
+
+    const userId = parseInt(myId);
     try {
       const blockedUser = await prisma.block.findMany({
         where: {
