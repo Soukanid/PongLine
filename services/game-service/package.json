@@ -18,6 +18,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@fastify/cors": "^11.2.0",
     "@prisma/client": "^5.22.0",
     "fastify": "^5.6.2",
     "socket.io": "^4.8.3",
