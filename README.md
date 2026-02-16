@@ -42,13 +42,7 @@ The system is decomposed into the following microservices:
 
 ### DevOps & Observability
 * **Microservices:** Independent deployment and scaling of backend components.
-* **Monitoring Stack:** Real-time metrics collection with **Prometheus** and visualization dashboards via **Grafana**.
-* **Log Management:** Centralized logging infrastructure.
 
-### Accessibility
-* **Multi-language Support:** Interface available in English, French, and Spanish.
-* **Visual Accessibility:** High-contrast mode and screen reader support for visually impaired users.
-* **Responsive Design:** Seamless experience across Desktop, Tablet, and Mobile.
 
 ## Technology Stack
 
@@ -67,7 +61,7 @@ The system is decomposed into the following microservices:
 * Docker Engine
 * Docker Compose
 * Make
-* Node.js (Optional, for running CLI client locally)
+* Node.js (for running CLI client locally)
 
 ### Quick Start
 
