@@ -1,6 +1,7 @@
 
 export interface Message {
   id: number;
+  myId: number;
   sender_id: number;
   receiver_id: number;
   content: string;
@@ -18,17 +19,15 @@ class ChatService {
 
   private socket: WebSocket | null  = null;
   private timeToReconnect = 3000; // to reconect every 3 seconds
-  private myUserId : number = 0; // should be updated
 
   private messageHandler: ((msg: Message) => void) | null = null;
 
-  connectSocket(userId: number)
+  connectSocket()
   {
     if (this.socket && this.socket.readyState === WebSocket.OPEN)
       return ;
 
-    this.myUserId = userId;
-    const url = `${import.meta.env.VITE_WSSURL}/api/chat/ws?userId=${userId}`;
+    const url = `${import.meta.env.VITE_WSSURL}/api/chat/ws`;
     
     this.socket = new WebSocket(url);
 
@@ -56,11 +55,12 @@ class ChatService {
         this.socket.close();
         this.socket = null;
       }
-      setTimeout(() => {
-        if (this.myUserId) {
-          this.connectSocket(this.myUserId);
-        }
-      }, this.timeToReconnect);
+      // [soukaina] to be updated
+      // setTimeout(() => {
+      //   if (this.myUserId) {
+      //     this.connectSocket(this.myUserId);
+      //   }
+      // }, this.timeToReconnect);
     };
 
   }
@@ -70,7 +70,6 @@ class ChatService {
   }
   
   disconnectSocket() {
-    this.myUserId = 0;
     if (this.socket)
     {
       this.socket.close();
@@ -84,7 +83,6 @@ class ChatService {
     if (this.socket && this.socket.readyState == WebSocket.OPEN)
     {
       const data= {
-        sender_id: this.myUserId,
         receiver_id: friendId,
         content: text
       };
@@ -99,8 +97,7 @@ class ChatService {
 
     const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/messages`);
 
-    url.searchParams.append('user1', this.myUserId.toString());
-    url.searchParams.append('user2', friendId.toString());
+    url.searchParams.append('friendId', friendId.toString());
   
     const response = await fetch(url.toString(), {
       method: 'GET',

@@ -23,13 +23,11 @@ export class ChatPage extends BaseComponent {
   private currentList: Friend[] = [];
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
-  private myUserId: number = 0;
   private isBlockedView: boolean = false;
 
 
   async render() {
 
-    this.myUserId = 1; //[soukaina] hard coded for now
 
     this.setHtml(`
     <div id="grandparent" class="h-full w-full   flex flex-col">
@@ -88,7 +86,6 @@ export class ChatPage extends BaseComponent {
     `);
     this.addEvents();
     await this.loadFriend();
-  
   }
 
   renderFriendList(listToRender: Friend[] = this.currentList) {
@@ -159,11 +156,10 @@ export class ChatPage extends BaseComponent {
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
       
-      url.searchParams.append('myId', this.myUserId.toString());
-
       const res = await fetch(`${url}`.toString(),
                                 { method: 'GET',
                                   headers: {
+                                    'Authorization': "include",
                                     'content-Type': 'application/json'
                                   }
                                 });
@@ -186,7 +182,7 @@ export class ChatPage extends BaseComponent {
 
     let senderName = 'Unknown';
 
-    if (msg.sender_id === this.myUserId) {
+    if (msg.sender_id === msg.myId) {
         senderName = 'You';
     } else if (msg.sender_id === this.activeFriendId) {
         senderName = this.activeFriendUsername || 'Friend';
@@ -220,6 +216,7 @@ export class ChatPage extends BaseComponent {
   async openChat(friendId: number, name:string) {
     
     this.activeFriendId = friendId;
+    this.activeFriendUsername = name;
 
     const chatHeader = this.querySelector('#chat-header');
     
@@ -309,12 +306,11 @@ export class ChatPage extends BaseComponent {
     const input = this.querySelector('#msg-input') as HTMLInputElement;
 
     chatService.onMessageReceived((msg: Message) => {
-        //[soukaina] this is hardcoded for now
         if (msg.sender_id === this.activeFriendId )
         {
             this.addMessageToUI(msg);
         }
-        else if (msg.sender_id === this.myUserId) {
+        else if (msg.sender_id === msg.myId) {
            if (msg.receiver_id === this.activeFriendId) {
               this.addMessageToUI(msg);
            }

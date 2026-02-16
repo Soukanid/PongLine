@@ -29,7 +29,7 @@ export class AuthService {
         "Content-Type": "application/json",
         "X-Internal-Request": "true",
         "X-Service-Name": "auth-service",
-        "Authorization": `Bearer ${token}`,
+        "Cookie": `access_token=${token}`,
       },
       body: JSON.stringify(data),
     });
