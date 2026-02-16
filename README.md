@@ -1,120 +1,133 @@
-ft_transcendence
+# PongLine...
 
-A real-time multiplayer Pong platform built with a microservices architecture. This project implements a full-stack web application featuring live gameplay, chat, matchmaking, and a standalone CLI client that interacts with web users.
+**ft_transcendence** is the final project of the Common Core curriculum at 42. It is a robust, real-time multiplayer online Pong contest platform.
 
-Overview
-The application is designed as a distributed system rather than a monolith. It uses Fastify (Node.js) for high-performance backend services, Nginx as a reverse proxy/API gateway, and TypeScript for a unified codebase across frontend and backend.
+Unlike a traditional monolithic web application, this project is architected as a distributed system using **Microservices**. It features a high-performance backend built with **Fastify**, a responsive **TypeScript** frontend, and a standalone **CLI Game Client** that allows terminal users to compete against web players in real-time.
 
-Services are containerized using Docker, ensuring consistency across development and deployment environments. Real-time communication (game state and chat) is handled via WebSockets.
+## Overview
 
-Architecture
-The system is split into distinct microservices:
+The application is designed to simulate a production-grade environment. All services are containerized using **Docker** and orchestrated via **Docker Compose**. Traffic is managed by an **Nginx** API Gateway/Reverse Proxy, ensuring secure and efficient communication between the client and the microservices swarm.
 
-Auth Service: Handles JWT issuance, validation, OAuth (42/Google), and 2FA.
+## Architecture
 
-User Service: Manages profiles, friend relationships, and stats.
+The system is decomposed into the following microservices:
 
-Chat Service: Handles global/private messaging and persistent history.
+* **API Gateway (Nginx):** Single entry point handling SSL termination, load balancing, and route dispatching.
+* **Auth Service:** Manages Identity, JWT issuance (HttpOnly Cookies), OAuth (42/Google), and Two-Factor Authentication (2FA).
+* **User Service:** Handles user profiles, friend relationships, blocking, and social stats.
+* **Chat Service:** persistent real-time messaging, global channels, and private DMs using WebSockets.
+* **Game Service:** The core authoritative game server. Handles physics simulation, matchmaking queues, and state synchronization.
+* **Notification Service:** Real-time event dispatching (game invites, friend requests).
 
-Game Service: core game engine, matchmaking queue, and state synchronization.
+## Features
 
-Frontend: A Single Page Application (SPA) built with Vanilla TypeScript and Tailwind CSS.
+### Gameplay & Experience
+* **Real-Time Pong:** Server-authoritative physics ensuring a cheat-free, lag-compensated experience.
+* **Matchmaking:** Automated queue system to pair players of similar skill levels.
+* **Tournament System:** Support for creating and managing bracket-style tournaments (4+ players).
+* **Cross-Platform CLI:** A fully functional terminal client allowing users to play against web opponents via API integration.
+* **Game Customization:** Options for different map skins and power-ups.
 
-CLI Client: A terminal-based interface allowing cross-platform play against web users.
+### Social & User Management
+* **Live Chat:** Global chat rooms and direct private messaging.
+* **Friend System:** Send/Accept requests, view online status, and invite friends to games.
+* **User Profiles:** Detailed statistics, match history, and win/loss ratios.
+* **Blocking:** Ability to block users to prevent messages and game invites.
 
-Features
-Core Functionality
-Real-Time Multiplayer: Low-latency Pong gameplay using WebSockets.
+### Security
+* **Authentication:** Secure JWT implementation using HttpOnly/Secure cookies (XSS protection).
+* **2FA:** Time-based One-Time Password (TOTP) integration (Google Authenticator).
+* **WAF:** ModSecurity integration for protection against common web attacks.
+* **GDPR Compliance:** Features for user data anonymization and account deletion.
 
-Authentication: Secure login via JWT (stored in HttpOnly cookies) and Two-Factor Authentication (2FA).
+### DevOps & Observability
+* **Microservices:** Independent deployment and scaling of backend components.
+* **Monitoring Stack:** Real-time metrics collection with **Prometheus** and visualization dashboards via **Grafana**.
+* **Log Management:** Centralized logging infrastructure.
 
-Live Chat: Global channels, private messaging, and user blocking.
+### Accessibility
+* **Multi-language Support:** Interface available in English, French, and Spanish.
+* **Visual Accessibility:** High-contrast mode and screen reader support for visually impaired users.
+* **Responsive Design:** Seamless experience across Desktop, Tablet, and Mobile.
 
-Matchmaking: Automated queue system to pair players.
+## Technology Stack
 
-Stat Tracking: Match history, win/loss ratios, and leaderboards.
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | TypeScript, Tailwind CSS, Vite |
+| **Backend Framework** | Node.js, Fastify |
+| **Database** | PostgreSQL (Production), SQLite (Dev), Prisma ORM |
+| **Real-Time** | WebSockets (ws), Socket.io |
+| **Infrastructure** | Docker, Docker Compose, Nginx |
+| **Monitoring** | Prometheus, Grafana |
 
-Advanced Modules
-Microservices: Independent scaling and deployment of backend components.
+## Installation & Usage
 
-CLI Game Client: Play directly from the terminal against web opponents.
+### Prerequisites
+* Docker Engine
+* Docker Compose
+* Make
+* Node.js (Optional, for running CLI client locally)
 
-Infrastructure Monitoring: Real-time metrics collection with Prometheus and visualization via Grafana.
+### Quick Start
 
-Security: ModSecurity/WAF rules and strict content security policies.
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/your-username/ft_transcendence.git](https://github.com/your-username/ft_transcendence.git)
+    cd ft_transcendence
+    ```
 
-Technology Stack
-Frontend: TypeScript, Vite, Tailwind CSS
+2.  **Environment Configuration**
+    Create the necessary `.env` file from the example template.
+    ```bash
+    cp .env.example .env
+    ```
+    *Edit `.env` to add your API keys (42 API, Google OAuth) and database secrets.*
 
-Backend: Node.js, Fastify, Prisma ORM
+3.  **Launch Application**
+    Use the Makefile to build and start the container swarm.
+    ```bash
+    make up
+    ```
+    *Alternatively:* `docker-compose up --build -d`
 
-Database: PostgreSQL (Production) / SQLite (Dev)
+4.  **Access Points**
+    * **Web Application:** `https://localhost`
+    * **Grafana Dashboards:** `https://localhost/grafana` *(Default: admin/admin)*
+    * **Prometheus:** `https://localhost/prometheus`
 
-Infrastructure: Docker, Nginx, Redis
+    *> Note: The application runs on HTTPS with a self-signed certificate. Please accept the security warning in your browser.*
 
-Monitoring: Prometheus, Grafana
+## CLI Client Guide
 
-Installation & Usage
-Prerequisites
-Docker Engine
+To access the game via the terminal:
 
-Docker Compose
+1.  **Navigate to the CLI directory:**
+    ```bash
+    cd cli-client
+    ```
 
-Make
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
 
-Running the Application
-Clone the repository:
+3.  **Commands:**
+    * `npm run start login` - Authenticate with the web platform.
+    * `npm run start play` - Join the matchmaking queue.
+    * `npm run start chat` - Open the terminal chat interface.
 
-Bash
-git clone https://github.com/your-username/ft_transcendence.git
-cd ft_transcendence
-Environment Setup:
-Create a .env file in the root directory. You can use the provided example as a template:
+## Project Structure
 
-Bash
-cp .env.example .env
-Build and Start:
-Use Docker Compose to build images and start the services.
-
-Bash
-make up
-# Or manually: docker-compose up --build -d
-Access the App:
-
-Web Interface: https://localhost
-
-Grafana Dashboards: https://localhost/grafana (Default login: admin/admin)
-
-Note: The application uses a self-signed SSL certificate. You will need to accept the browser security warning locally.
-
-CLI Client Usage
-The project includes a terminal-based client for headless gameplay.
-
-Navigate to the CLI directory:
-
-Bash
-cd cli-client
-Install dependencies:
-
-Bash
-npm install
-Login and Play:
-
-Bash
-# Log in to your account
-npm run start login
-
-# Join the matchmaking queue
-npm run start play
-Project Structure
-Bash
+```text
 .
 ├── src/
-│   ├── auth-service/     # Authentication & Authorization logic
-│   ├── chat-service/     # WebSocket chat handlers
-│   ├── game-service/     # Physics engine and game loops
-│   └── user-service/     # User data management
-├── frontend/             # SPA source code
-├── cli/                  # Terminal game client
-├── nginx/                # Gateway configuration
-└── monitoring/           # Prometheus & Grafana config
+│   ├── auth-service/     # JWT, OAuth, 2FA Logic
+│   ├── chat-service/     # WebSocket Handlers
+│   ├── game-service/     # Physics Engine & Matchmaking
+│   └── user-service/     # Profile & Social Management
+├── frontend/             # SPA Source Code
+├── cli-client/           # Terminal Game Client
+├── nginx/                # API Gateway Configuration
+├── monitoring/           # Prometheus & Grafana Configuration
+└── docker-compose.yml    # Orchestration
