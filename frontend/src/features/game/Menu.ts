@@ -6,31 +6,21 @@ import "../../css/prompt.css";
 
 export class Menu extends BaseComponent {
     render() {
-        this.setHtml(`
-  <div class="button-container">
-    <button class="pl-btn-icon">
-      <img src="blackLocal.png" class="default-img">
-      <img src="greenLocal.png" class="hover-img">
-    </button>
-<button class="btn" data-mode="remote">
-    <pre class="ascii">
-██████╗  ███████╗███╗   ███╗ ██████╗ ████████╗███████╗
-██╔══██╗ ██╔════╝████╗ ████║██╔═══██╗╚══██╔══╝██╔════╝
-██████╔╝ █████╗  ██╔████╔██║██║   ██║   ██║   █████╗  
-██╔══██╗ ██╔══╝  ██║╚██╔╝██║██║   ██║   ██║   ██╔══╝  
-██║  ██║ ███████╗██║ ╚═╝ ██║╚██████╔╝   ██║   ███████╗
-╚═╝  ╚═╝ ╚══════╝╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚══════╝
-  </pre><div class="btn-label" style="font-size: 24px;">Game</div></button>
-  <button class="btn" data-mode="bot">
-    <pre class="ascii">
-██████╗   ██████╗  ████████╗
-██╔══██╗ ██╔═══██╗ ╚══██╔══╝
-██████╔╝ ██║   ██║    ██║   
-██╔══██╗ ██║   ██║    ██║   
-██████╔╝ ╚██████╔╝    ██║   
-╚═════╝   ╚═════╝     ╚═╝   
-  </pre><div class="btn-label" style="font-size: 24px;">Game</div></button>
-  </div>
+      this.setHtml(`
+        <div class="button-container">
+          <button data-mode="local" class="btn group border border-[#1BFB08] p-3 cursor-pointer outline-none overflow-hidden leading-none">
+            <img src="blackLocal.png" class="block group-hover:hidden w-full h-full object-cover">     
+            <img src="greenLocal.png" class="hidden group-hover:block w-full h-full object-cover">
+          </button>
+          <button data-mode="remote" class="btn group border border-[#1BFB08] p-3 cursor-pointer outline-none overflow-hidden leading-none">
+            <img src="blackRemote.png" class="block group-hover:hidden w-full h-full object-cover">     
+            <img src="greenRemote.png" class="hidden group-hover:block w-full h-full object-cover">
+          </button>
+          <button data-mode="bot" class="btn group border border-[#1BFB08] p-3 cursor-pointer outline-none overflow-hidden leading-none">
+            <img src="blackBot.png" class="block group-hover:hidden w-full h-full object-cover">     
+            <img src="greenBot.png" class="hidden group-hover:block w-full h-full object-cover">
+          </button>
+        </div>
      `);
     }
 
@@ -147,7 +137,9 @@ export class Menu extends BaseComponent {
         setTimeout(() => inputs[0]?.focus(), 0);
         createRoom.addEventListener('click', async () => {
           try {
-            const response = await fetch('https://localhost/api/game/create-room', {
+            const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/create-room`);
+
+            const response = await fetch(`${url}`.toString(), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({})
