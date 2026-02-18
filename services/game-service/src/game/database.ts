@@ -3,15 +3,21 @@ import { prisma } from '../tournament/database'
 import { rooms, createInitialState } from './gameLogic';
 import { v4 as uuidv4 } from 'uuid';
 
+export async function createGameRoom() {
+    const roomId = uuidv4().substring(0, 12).toUpperCase();
+    
+    rooms[roomId] = {
+        players: [],
+        gameState: createInitialState(),
+    };
+    
+    return roomId;
+}
+
 export default async function gameRoutes(fastify: FastifyInstance) {
     fastify.post('/create-room', async (request, reply) => {
         try {
-            const roomId = uuidv4().substring(0, 12).toUpperCase();
-
-            rooms[roomId] = {
-                players: [],
-                gameState: createInitialState(),
-            };
+            const roomId = createGameRoom();
 
             return reply.status(201).send({
                 success: true,

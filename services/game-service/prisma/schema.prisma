@@ -52,10 +52,6 @@ model Tournament {
   participant Participant[] 
   tour_state  String   @default("Pending")// "Pending", "In-progress", "Finished"
   startedAt   DateTime @default(now())
-
-  semifinal1  String?
-  semifinal2  String?
-  final       String?
   
   matches     Match[]
 }
