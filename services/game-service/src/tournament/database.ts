@@ -46,6 +46,24 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   });
 
+  async function startTournamentBrackets(tournament: any) {
+    const players = tournament.participant;
+    const matches = tournament.matches; 
+
+    await prisma.$transaction([
+      prisma.match.update({
+          where: { id: matches[0].id },
+          data: { username1: players[0].username, username2: players[1].username }
+      }),
+      prisma.match.update({
+          where: { id: matches[1].id },
+          data: { username1: players[2].username, username2: players[3].username }
+      })
+    ]);
+
+    console.log(`Tournament ${tournament.tour_id} brackets initialized!`);
+  }
+
   fastify.post('/join', async (request, reply) => {
     const { tour_id } = request.body as any;
     const username = request.headers['username'] as string;
@@ -69,16 +87,20 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         if (tour.participant.some(p => p.username === username)) 
             return reply.code(400).send({ error: "Already joined" });
 
-        const isStarting = tour._count.participant === 3;
+        const isFull = tour._count.participant === 3;
 
-        await prisma.tournament.update({
+        const updated = await prisma.tournament.update({
             where: { tour_id },
             data: {
                 participant: { create: { username, nick_name: nickname } },
-                tour_state: isStarting ? "In-progress" : "Pending"
+                tour_state: isFull ? "In-progress" : "Pending"
             },
             include: { participant: true, matches: true }
         });
+
+        if (updated.tour_state === "In-progress") {
+          startTournamentBrackets(updated);
+        }
 
         return reply.code(200).send({ success: true });
 
