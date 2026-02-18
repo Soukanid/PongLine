@@ -1,4 +1,4 @@
-import  { userCreateData } from "./types"
+import  { userCreateData } from "./../types"
 
 class AuthService {
     

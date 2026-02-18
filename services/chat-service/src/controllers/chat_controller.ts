@@ -99,6 +99,69 @@ export class ChatController {
 
   }
 
+  async notify(req: FastifyRequest<{Body: {userId: string, type: string, payload: string}}>, reply: FastifyReply)
+  {
+    const { userId, type, payload } = req.body;
+
+    const targetId = parseInt(userId);
+
+    try {
+        // save the notification 
+        const savedNotif = await prisma.notification.create({
+           data: {
+             userId: targetId,
+             type: type,
+             content: payload,
+             read: false
+         }
+       });
+
+       const socket = activeUsers.get(targetId);
+
+       // send the notification
+       if (socket && socket.readyState)
+       {
+         socket.send(JSON.stringify({
+           type: "NOTIFICATION",
+           id: savedNotif.id,
+           subType: type,
+           data: payload
+         }));
+         return { status: "deliverd" }
+       }
+       return { status: "saved for later"};
+    } catch (error)
+    {
+      console.error("Failed to save or notify the user", error);
+      return reply.status(500).send({ error: 'Internal Server Error'});
+    }
+  }
+
+  async getNotifications(req: FastifyRequest, reply: FastifyReply)
+  {
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400);
+
+    const userId = parseInt(myId);
+    try {
+      const notifications = await prisma.notification.findMany({
+        where: {
+          userId: userId,
+          read: false
+        },
+        orderBy: { createdAt: 'desc'}
+      });
+
+      return notifications;
+    } catch (error)
+    {
+      console.error("Failed to fetch user notifications", error);
+      return reply.status(500).send({ error: 'Internal Server Error'});
+    }
+  }
+
   handleConnection(connection: any, req: FastifyRequest) {
     const socket: WebSocket = connection.socket || connection;
     const myId = req.headers['x-user-id']?.toString();
@@ -107,7 +170,6 @@ export class ChatController {
       return ;
 
     const userId = parseInt(myId);
-
     activeUsers.set(userId, socket);
 
     socket.on('message', async (rawMsg) => {

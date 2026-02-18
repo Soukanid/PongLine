@@ -1,26 +1,15 @@
+import { Message , Friend } from "./../types"
 
-export interface Message {
-  id: number;
-  myId: number;
-  sender_id: number;
-  receiver_id: number;
-  content: string;
-  created_at: string;
-}
-
-interface Friend {
-  id: number;
-  username: string;
-  avatar: string;
-  isOnline: boolean;
-}
+type ChatHandler = (msg: Message) => void;
+type NotificationHandler = (notif: any) => void;
 
 class ChatService {
 
   private socket: WebSocket | null  = null;
   private timeToReconnect = 3000; // to reconect every 3 seconds
 
-  private messageHandler: ((msg: Message) => void) | null = null;
+  private chatListeners: ChatHandler[] = [];
+  private notificationListeners: NotificationHandler[] = []
 
   connectSocket()
   {
@@ -33,12 +22,13 @@ class ChatService {
 
     this.socket.onmessage = (event) => {
       try {
-        const mesg: Message = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
 
-        // the moment the message been arrived ,show it on the UI
-        if (this.messageHandler) {
-            this.messageHandler(mesg);
-        }
+        if (data.type === 'NOTIFICATION')
+          this.notificationListeners.forEach(cb => cb(data));
+        else
+          this.chatListeners.forEach(cb => cb(data));  
+
       } catch {
         console.error("Failed to parse the message ", event.data);
       }
@@ -65,8 +55,20 @@ class ChatService {
 
   }
 
-  onMessageReceived(callback: (msg: Message) => void) {
-      this.messageHandler = callback;
+  onChatUpdate(callback: ChatHandler) {
+    this.chatListeners.push(callback);
+  }
+
+  offChatUpdate(callback: ChatHandler) {
+    this.chatListeners = this.chatListeners.filter(cb => cb !== callback);
+  }
+
+  onNotification(callback: NotificationHandler) {
+    this.notificationListeners.push(callback);
+  }
+
+  offNotification(callback: NotificationHandler) {
+    this.notificationListeners = this.notificationListeners.filter(cb => cb !== callback);
   }
   
   disconnectSocket() {
@@ -101,8 +103,8 @@ class ChatService {
   
     const response = await fetch(url.toString(), {
       method: 'GET',
+      credentials: 'include',
       headers: {
-        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });
@@ -121,7 +123,6 @@ class ChatService {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
-        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });
@@ -140,7 +141,6 @@ class ChatService {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
-        'Authorization': "include",
         'content-Type': 'application/json',
       }
     });
