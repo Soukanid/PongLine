@@ -11,14 +11,11 @@ render() {
       <div class="flex-1 flex flex-col gap-6 h-full pb-30">
         
         <div class="border border-retro p-4 flex items-start gap-8 relative shrink-0">
-          <div class="text-xs leading-none whitespace-pre animate-pulse hidden md:block">
-((_ , ... , _))
-  |  o  o  |
-   \\  /  /
-    ^ _ ^
+          <div class="leading-none whitespace-pre animate-pulse hidden md:block">
+              <img 
           </div>
-          <
-
+      
+    
           <div class="flex-1 space-y-2">
             <div class="flex justify-between items-end">
               <h2 class="text-xl font-bold tracking-widest truncate">THE LEGEND Soukaina</h2>
@@ -91,16 +88,15 @@ render() {
               </div>
           </div>
         </div>
+
         <div id="tournament-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
         
-        <div class="border-2 border-retro  p-8 w-[400px] shadow-[0_0_20px_rgba(0,255,0,0.2)] relative">
+        <div class="border-2 border-retro  p-8 w-[400px] relative">
           
-          <button id="close-modal" class="absolute top-2 right-4 text-retro/50 hover:text-retro text-xl font-bold">[X]</button>
-          
-          <h2 class="text-xl font-bold mb-6 text-center animate-pulse">> ACCESS_TOURNAMENT</h2>
+          <button id="close-modal" class="absolute top-2 cursor-pointer right-4 text-retro/50 hover:text-retro text-xl font-bold">[X]</button>
+          <h2 class="text-xl font-bold font-mono  mb-6 text-center animate-pulse">> ACCESS_TOURNAMENT</h2>
           
           <div class="mb-6">
-            <label class="block text-xs text-retro/70 mb-2 uppercase tracking-widest">Target Identifier</label>
             <input id="tournament-input" type="text" 
               class="w-full bg-transparent border-b border-retro py-2 text-center text-lg focus:outline-none placeholder-retro/30"
               placeholder="ENTER NAME OR CODE">
@@ -108,10 +104,10 @@ render() {
           </div>
 
           <div class="flex gap-4">
-            <button id="btn-create" class="flex-1 border border-retro py-3 hover:bg-retro hover:text-black transition-colors font-bold uppercase">
+            <button id="btn-create" class="cursor-pointer flex-1 border border-retro py-3 hover:bg-retro hover:text-black transition-colors font-bold uppercase">
               [ CREATE ]
             </button>
-            <button id="btn-join" class="flex-1 border border-retro/50 py-3 text-retro/70 hover:border-retro hover:text-retro hover:bg-retro/10 transition-colors font-bold uppercase">
+            <button id="btn-join" class="cursor-pointer flex-1 border border-retro/50 py-3 text-retro/70 hover:border-retro hover:text-retro hover:bg-retro/10 transition-colors font-bold uppercase">
               [ JOIN ]
             </button>
           </div>
@@ -135,48 +131,40 @@ render() {
     if (btnTournament && modal) {
       btnTournament.addEventListener('click', () => {
         modal.classList.remove('hidden');
-        input.focus(); // Auto-focus input for better UX
+        input.focus();
       });
     }
 
-    // 3. Close Modal Logic
     const hideModal = () => {
       modal.classList.add('hidden');
-      input.value = ''; // Reset input
+      input.value = '';
     };
 
     if (closeModal) closeModal.addEventListener('click', hideModal);
     
-    // Close if clicking outside the box (optional but nice)
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) hideModal();
+      if (e.target === modal)
+        hideModal();
     });
 
-    // 4. Handle CREATE Action
-    if (btnCreate) {
+    if (btnCreate)
+    {
       btnCreate.addEventListener('click', () => {
         const value = input.value.trim();
-        if (!value) {
-          alert(">> ERROR: INPUT_EMPTY");
+        if (!value)
           return;
-        }
-        console.log(`Creating Tournament with Name: ${value}`);
-        // TODO: Call your backend API to create
-        // window.router.navigateTo(`/tournament/setup?name=${value}`);
+        //[soukaina] add the entry point here 
         hideModal();
       });
     }
 
-    // 5. Handle JOIN Action
     if (btnJoin) {
       btnJoin.addEventListener('click', () => {
         const value = input.value.trim();
-        if (!value) {
-          alert(">> ERROR: INPUT_EMPTY");
+        //[soukaina] i have to correct this and decide what if the value is null
+        if (!value)
           return;
-        }
-        console.log(`Joining Tournament with Code: ${value}`);
-        // TODO: Call your backend API to join
+        //[soukaina] add the entry point here 
         hideModal();
       });
     }

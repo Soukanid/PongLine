@@ -1,5 +1,6 @@
 import { BaseComponent } from '../../core/Component';
-import { chatService , Message} from './ChatServices';
+import { chatService} from './ChatServices';
+import { Message, Friend } from '../types'
 import contactIcon from '../../../public/contact.png'
 import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
@@ -8,13 +9,6 @@ import blockIcon from '../../../public/block.png'
 import inviteIcon from '../../../public/invite.png'
 import personIcon from '../../../public/person.png'
 
-
-interface Friend {
-  id: number;
-  username: string;
-  avatar: string;
-  isOnline: boolean;
-}
 
 export class ChatPage extends BaseComponent {
 
@@ -86,6 +80,26 @@ export class ChatPage extends BaseComponent {
     `);
     this.addEvents();
     await this.loadFriend();
+  }
+
+  private handleIncomingMessage = (msg: Message) => {
+    const isFromContact = msg.sender_id === this.activeFriendId;
+    const isMyMessage = msg.sender_id === msg.myId && msg.receiver_id === this.activeFriendId;
+
+    if (isFromContact || isMyMessage) {
+        this.addMessageToUI(msg);
+    }
+  }
+
+  connectedCallback()
+  {   
+      super.connectedCallback();
+      chatService.onChatUpdate(this.handleIncomingMessage);
+  }
+
+  disconnectedCallback()
+  {
+      chatService.offChatUpdate(this.handleIncomingMessage);
   }
 
   renderFriendList(listToRender: Friend[] = this.currentList) {
@@ -305,18 +319,6 @@ export class ChatPage extends BaseComponent {
     const btn = this.querySelector('#send-btn');
     const input = this.querySelector('#msg-input') as HTMLInputElement;
 
-    chatService.onMessageReceived((msg: Message) => {
-        if (msg.sender_id === this.activeFriendId )
-        {
-            this.addMessageToUI(msg);
-        }
-        else if (msg.sender_id === msg.myId) {
-           if (msg.receiver_id === this.activeFriendId) {
-              this.addMessageToUI(msg);
-           }
-        }
-    }); 
-
     const sendMessage = () =>
     {
       const msg = input.value.trim();
@@ -341,7 +343,6 @@ export class ChatPage extends BaseComponent {
     const chatListBtn = this.querySelector('#friend-chat');
     chatListBtn?.addEventListener('click', () => this.loadFriend());
 
-    btn?.addEventListener('click', sendMessage);
 
     if (input)
     { 

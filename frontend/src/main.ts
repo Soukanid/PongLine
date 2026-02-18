@@ -7,7 +7,7 @@ import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
 import "./components/Header";
-import "./features/profile/profile.ts"
+import "./features/profile/ProfilePage.ts"
 
 declare global {
   interface Window {

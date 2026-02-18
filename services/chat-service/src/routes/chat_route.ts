@@ -16,4 +16,10 @@ export async function chatRoutes(server: FastifyInstance) {
 
       chatController.handleConnection(connection, req); 
   });
+
+  server.post('/notify', chatController.notify);
+
+  server.get('/notifications', chatController.getNotifications);
+
 }
+
