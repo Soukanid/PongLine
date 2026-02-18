@@ -36,7 +36,7 @@ export class Game extends BaseComponent {
         const right = params.get('right') || undefined;
         const room = params.get('room') || undefined;
 
-        this.socket = io("wss://localhost", {
+        this.socket = io(import.meta.env.VITE_WSSURL, {
             path:"/api/game/socket.io",
             transports: ['websocket'],
             reconnection: true
@@ -44,7 +44,6 @@ export class Game extends BaseComponent {
 
         this.socket.on('connect', () => console.log("Connected to Backend on 3003:", this.socket?.id));
         this.socket.on('connect_error', (err: any) => console.error("Socket Connection Error:", err));
-
         
         this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
@@ -67,3 +66,10 @@ export class Game extends BaseComponent {
 }
 
 customElements.define('page-game', Game);
+
+
+// fix backend connection problem
+// get nickname and username of site user
+// .env variables
+// test APIs
+// tournament backend 

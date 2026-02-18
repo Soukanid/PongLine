@@ -19,7 +19,6 @@
     width: min(550px, 100vw);
     aspect-ratio: 12 / 10;
 
-    padding: 0;
     background-color: var(--color2);
     border: 0.5px solid var(--color);
     border-radius: 6px;

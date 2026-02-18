@@ -27,8 +27,8 @@ export class PongGame {
 	private roomId?: string;
 	private keys: { [key: string]: boolean } = {};
 
-	private ballVelX = 3;
-	private ballVelY = 3;
+	private ballVelX = 4;
+	private ballVelY = 4;
 	private ballRadius = 7;
 
 	constructor(canvasId: string, mode: string, left?: string, right?: string, socket?: any, room?: string) {
@@ -66,6 +66,9 @@ export class PongGame {
 			mode: _mode,
 			timestamp: Date.now()
 		};
+		if (this.game.mode === 'bot') {
+			this.game.player2 = 'Bot';
+		}
 	}
 	
 	private update(): void {
@@ -82,10 +85,10 @@ export class PongGame {
         		if (this.keys['s'] || this.keys['S']) this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
     		} else if (this.game.mode === 'bot') {
     		    const paddleCenter = this.game.paddle2Y + 40;
-    		    if (this.game.ballX < this.width / 4) {
-					if (paddleCenter < this.game.ballY - 20) {
+    		    if (this.game.ballX < (this.width * 2) / 7) {
+					if (paddleCenter + 30 < this.game.ballY ) {
 						this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
-					} else if (paddleCenter > this.game.ballY + 20) {
+					} else if (paddleCenter - 30 > this.game.ballY ) {
 						this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
 					}
 				}
