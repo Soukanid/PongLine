@@ -137,9 +137,7 @@ export class Menu extends BaseComponent {
         setTimeout(() => inputs[0]?.focus(), 0);
         createRoom.addEventListener('click', async () => {
           try {
-            const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/create-room`);
-
-            const response = await fetch(`${url}`.toString(), {
+            const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/create-room`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({})

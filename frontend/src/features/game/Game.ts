@@ -31,9 +31,9 @@ export class Game extends BaseComponent {
 
         const params = new URL(window.location.href).searchParams;
         const mode = params.get('mode') || 'remote';
-        const nick = params.get('nick') || undefined;
-        const left = params.get('left') || undefined;
-        const right = params.get('right') || undefined;
+        const nick = params.get('nick') || 'Guest';
+        const left = params.get('left') || 'Guest1';
+        const right = params.get('right') || 'Guest2';
         const room = params.get('room') || undefined;
 
         this.socket = io(import.meta.env.VITE_WSSURL, {
@@ -68,8 +68,6 @@ export class Game extends BaseComponent {
 customElements.define('page-game', Game);
 
 
-// fix backend connection problem
 // get nickname and username of site user
-// .env variables
 // test APIs
 // tournament backend 
