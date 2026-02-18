@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../core/Component";
 import tournIcon from "./../../../public/tourn.png";
 import gameIcon from "./../../../public/game.png";
+import { profileService } from "./ProfileService";
 
 export class ProfilePage extends BaseComponent {
 
@@ -11,8 +12,11 @@ render() {
       <div class="flex-1 flex flex-col gap-6 h-full pb-30">
         
         <div class="border border-retro p-4 flex items-start gap-8 relative shrink-0">
-          <div class="leading-none whitespace-pre animate-pulse hidden md:block">
-              <img 
+          <div class="text-xs leading-none whitespace-pre animate-pulse hidden md:block">
+((_ , ... , _))
+  |  o  o  |
+   \\  /  /
+    ^ _ ^
           </div>
       
     
@@ -119,6 +123,8 @@ render() {
   this.addEvents();
   }
 
+
+
   addEvents() : void
   {
     const btnTournament = this.querySelector('#btn-tournament') as HTMLButtonElement;
@@ -153,7 +159,7 @@ render() {
         const value = input.value.trim();
         if (!value)
           return;
-        //[soukaina] add the entry point here 
+        profileService.createTourn(value);
         hideModal();
       });
     }

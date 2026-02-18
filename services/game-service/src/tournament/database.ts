@@ -2,7 +2,7 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { createGameRoom } from '../game/database';
+import { createGameRoom } from './../game/database';
 export const prisma = new PrismaClient();
 
 export default async function tournamentRoutes(fastify: FastifyInstance) {

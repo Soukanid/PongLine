@@ -1,9 +1,9 @@
-import { BaseComponent } from "../core/Component";
-import { chatService } from "../features/chat/ChatServices";
-import  pongLineImage  from "../../public/pongline.png";
-import  searchIcon  from "../../public/search.png";
-import  notifIcon  from "../../public/notif.png";
-import  chatIcon  from "../../public/chat.png";
+import { BaseComponent } from "../../core/Component";
+import { chatService } from "./../chat/ChatServices";
+import  pongLineImage  from "../../../public/pongline.png";
+import  searchIcon  from "../../../public/search.png";
+import  notifIcon  from "../../../public/notif.png";
+import  chatIcon  from "../../../public/chat.png";
 
 export class Header extends BaseComponent {
 

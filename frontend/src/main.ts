@@ -6,7 +6,7 @@ import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
-import "./components/Header";
+import "./features/Header/Header";
 import "./features/profile/ProfilePage.ts"
 
 declare global {
