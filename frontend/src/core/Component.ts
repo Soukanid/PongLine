@@ -1,6 +1,8 @@
- import { appStore } from './Store';
+import { appStore } from "./Store";
 
 export abstract class BaseComponent extends HTMLElement {
+  private unsubscribe?: ()=>void;
+
   constructor() {
     super();
   }
@@ -8,6 +10,14 @@ export abstract class BaseComponent extends HTMLElement {
   connectedCallback() {
     this.render();
     this.addEvents();
+    this.unsubscribe = appStore.subscribe(()=>{
+      this.render();
+      this.addEvents();
+    })
+  }
+
+  disconnectedCallback(){
+    this.unsubscribe?.();
   }
 
   protected setHtml(html: string) {

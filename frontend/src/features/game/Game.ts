@@ -67,4 +67,4 @@ export class Game extends BaseComponent {
     addEvents(): void {}
 }
 
-customElements.define('page-game', Game);
+customElements.define('game-page', Game);

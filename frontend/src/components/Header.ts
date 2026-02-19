@@ -136,7 +136,7 @@ const ponglineLink = this.querySelector('#pongLine') as HTMLImageElement;
 ponglineLink.addEventListener('click', () => {
     // Instead of manual pushState + PopStateEvent, 
     // just let the router handle the lifecycle.
-    window.router.navigateTo("/"); 
+    window.location.href = "/"; 
 });
   }
 }

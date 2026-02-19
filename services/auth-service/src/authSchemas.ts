@@ -8,7 +8,7 @@ export const RegisterSchema = {
   }),
   response: {
     200: Type.Object({
-      token: Type.String()
+      success: Type.String()
       }),
     400: Type.Object({
       error: Type.String()
@@ -24,7 +24,7 @@ export const LoginSchema = {
   }),
   response: {
     200: Type.Object({
-     token: Type.String()
+     success: Type.String()
     }),
     401: Type.Object({
       error: Type.String()

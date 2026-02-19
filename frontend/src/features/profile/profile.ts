@@ -183,4 +183,4 @@ render() {
   }
 }
 
-customElements.define('page-profile', ProfilePage);
+customElements.define('profile-page', ProfilePage);

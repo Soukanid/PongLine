@@ -1,14 +1,15 @@
 //import "./style.css";
-import { Router } from "./core/Router";
+import { router } from "./core/Router";
+import { appStore } from "./core/Store.ts";
 import { chatService } from "./features/chat/ChatServices"
-
+import { AuthService } from "./features/auth/authService.ts"
+/*
 import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
 import "./components/Header";
 import "./features/profile/profile.ts"
-
 declare global {
   interface Window {
     router: Router;
@@ -33,3 +34,53 @@ const savedUserId = 1;
 //[soukaina] for know we will asume that the user is already logged in
 chatService.connectSocket(savedUserId);
 
+//initialize app
+*/
+class App {
+  private currentPage: HTMLElement | null = null;
+
+  constructor() {
+    this.init();
+  }
+
+  private async init() {
+    //Check authentication
+    await AuthService.init();
+
+    //setup router
+    window.addEventListener("popstate", () => this.render());
+    document.body.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.matches("[data-link]")) {
+        e.preventDefault();
+        router.navigate((target as HTMLAnchorElement).href);
+      }
+      if (target.matches("button[data-url]")) {
+        e.preventDefault();
+        router.navigate(target.dataset.url!);
+      }
+    });
+
+    //websocket setup
+    const id = Number(appStore.getUser()?.id);
+   id?chatService.connectSocket(id):chatService.connectSocket(1);
+
+    //initial render
+    this.render();
+  }
+
+  private async render() {
+    const path = new URL(window.location.href);
+    const page = await router.resolve(path);
+
+    if (this.currentPage) {
+      this.currentPage.remove();
+    }
+
+    this.currentPage = page;
+    document.getElementById("app")?.appendChild(page);
+  }
+}
+
+//Start app
+new App()

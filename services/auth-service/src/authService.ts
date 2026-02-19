@@ -29,7 +29,7 @@ export class AuthService {
         "Content-Type": "application/json",
         "X-Internal-Request": "true",
         "X-Service-Name": "auth-service",
-        "Authorization": `Bearer ${token}`,
+        Cookie: `access_token=${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -67,14 +67,15 @@ export class AuthService {
 
     try {
       //generate temp token
-      const tempToken = this.fastify.auth.generateToken(
-        0,
-        "warrior",
-        username,
-      );
+      const tempToken = this.fastify.auth.generateToken(0, "warrior", username);
 
       //create user in User service
-      const user = await this.callUserService<{id: number;}>("POST", "/create_user", tempToken, { email, username });
+      const user = await this.callUserService<{ id: number }>(
+        "POST",
+        "create_user",
+        tempToken,
+        { email, username },
+      );
 
       //create user in Auth service
       await this.prisma.userAuth.create({
@@ -101,7 +102,7 @@ export class AuthService {
           where: { email },
         })
         .catch(() => {});
-          console.error("Registration failed");
+      console.error("Registration failed");
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
@@ -155,7 +156,7 @@ export class AuthService {
     // 6. Generate token
     const accessToken = this.fastify.auth.generateToken(
       Number(authUser.userId),
-      'warrior',
+      "warrior",
       authUser.username,
     );
 
@@ -185,7 +186,7 @@ export class AuthService {
         valid: true,
         user: {
           id: authUser.userId,
-          role: 'warrior',
+          role: "warrior",
           username: authUser.username,
           alias: authUser.username,
         },
@@ -197,38 +198,4 @@ export class AuthService {
       return { valid: false, reason: "invalid_token" };
     }
   }
-  // async validateToken(AuthHeader: string | undefined) {
-  //   try {
-  //     const accessToken = this.fastify.auth.extractToken(AuthHeader);
-  //     const payload = this.fastify.auth.verifyToken(accessToken);
-  //
-  //     // Check if auth user still exists
-  //     const authUser = await this.prisma.userAuth.findUnique({
-  //       where: { username: payload.username },
-  //       select: {
-  //         userId: true,
-  //         username: true,
-  //       },
-  //     });
-  //
-  //     if (!authUser) {
-  //       return { valid: false, reason: "user_not_found" };
-  //     }
-  //
-  //     return {
-  //       valid: true,
-  //       user: {
-  //         id: authUser.userId,
-  //         role: 'warrior',
-  //         username: authUser.username,
-  //         alias: authUser.username,
-  //       },
-  //     };
-  //   } catch (error: any) {
-  //     if (error.name === "TokenExpiredError") {
-  //       return { valid: false, reason: "token_expired" };
-  //     }
-  //     return { valid: false, reason: "invalid_token" };
-  //   }
-  // }
 }

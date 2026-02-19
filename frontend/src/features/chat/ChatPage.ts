@@ -7,6 +7,7 @@ import sendIcon from '../../../public/sent.png'
 import blockIcon from '../../../public/block.png'
 import inviteIcon from '../../../public/invite.png'
 import personIcon from '../../../public/person.png'
+import { appStore } from '../../core/Store';
 
 
 interface Friend {
@@ -23,14 +24,14 @@ export class ChatPage extends BaseComponent {
   private currentList: Friend[] = [];
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
-  private myUserId: number = 0;
+  private myUserId: number = Number(appStore.getUser()?.id);
   private isBlockedView: boolean = false;
 
 
   async render() {
 
-    this.myUserId = 1; //[soukaina] hard coded for now
-
+   // this.myUserId = 1; //[soukaina] hard coded for now
+//[fbbot] fixed whith the store. P.S you should disable the send button if no friend is selected to talk to
     this.setHtml(`
     <div id="grandparent" class="h-full w-full   flex flex-col">
       <div class="flex-1 flex overflow-hidden ">
@@ -373,6 +374,6 @@ export class ChatPage extends BaseComponent {
   }
 }
 
-customElements.define('page-chat', ChatPage);
+customElements.define('chat-page', ChatPage);
 
 

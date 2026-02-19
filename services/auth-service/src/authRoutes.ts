@@ -21,7 +21,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
     
     //login
-    fastify.post('/login', {schema: LoginSchema}, async (request, reply)=>{
+    fastify.post('/login', {schema: LoginSchema}, async (request: FastifyRequest, reply: FastifyReply)=>{
         try {
             const {email, password, twoFactorCode} = request.body as {
               email : string
@@ -37,8 +37,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
               sameSite: 'strict', 
               maxAge: 86400   
             });
-
-            return result
+            reply.send({success: true});
         } catch (error: any) {
             reply.code(401).send({error: error.message})
         }
@@ -62,11 +61,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
   //   }
   // })
 
-  fastify.get('/validate', { schema: ValidateSchema }, async (request, reply) => {
+  fastify.get('/validate', { schema: ValidateSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const  token  = request.cookies?.access_token
       if (!token)
-        return reply.code(401);
+        return reply.code(401).send();
 
       const result = await authService.validateToken(token)
       if (!result.valid) {
