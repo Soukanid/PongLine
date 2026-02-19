@@ -7,10 +7,13 @@ up:
 up_foreground:
 	docker  compose up
 
-re: down build up
+re: 
+	$(MAKE) down
+	$(MAKE) build
+	$(MAKE) up
 
 down:
-	docker compose down 
+	docker compose down -v
 
 logs:
 	docker compose logs -f

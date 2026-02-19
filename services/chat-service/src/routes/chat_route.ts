@@ -20,6 +20,7 @@ export async function chatRoutes(server: FastifyInstance) {
   server.post('/notify', chatController.notify);
 
   server.get('/notifications', chatController.getNotifications);
-
+  
+  server.post('/mark-read', chatController.markAsRead);
 }
 

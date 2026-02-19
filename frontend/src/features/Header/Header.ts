@@ -4,6 +4,7 @@ import  pongLineImage  from "../../../public/pongline.png";
 import  searchIcon  from "../../../public/search.png";
 import  notifIcon  from "../../../public/notif.png";
 import  chatIcon  from "../../../public/chat.png";
+import { headerService } from "./HeaderService"
 
 export class Header extends BaseComponent {
 
@@ -11,9 +12,7 @@ export class Header extends BaseComponent {
     this.setHtml(`
       <div class="flex-1 flex flex-row items-center h-20 w-full px-6">
         
-        <a href="/" data-link> 
-          <img src="${pongLineImage}" class="h-8 w-40 hover:opacity-80 transition-opacity" > 
-        </a>
+        <img id="pongLine" src="${pongLineImage}" class="h-8 w-40 cursor-pointer hover:opacity-80 transition-opacity" > 
 
         <div class="ml-auto flex flex-row items-center gap-6">
           
@@ -36,15 +35,19 @@ export class Header extends BaseComponent {
             </div>
 
           </div> <div class="flex gap-4">
-            <a href="/chat" data-link> 
-              <img src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
-            </a>
-             <img src="${notifIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform"> 
+            <img id="chatPage" src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+            <div class="relative" id="notif-container">
+               <button id="notif-btn" class="relative hover:scale-110 transition-transform">
+                  <img src="${notifIcon}" class="h-8 w-8 cursor-pointer">
+               </button>
+
+               <div id="notif-dropdown" class="absolute right-0 top-full mt-4 w-80 bg-black border border-retro z-50 hidden flex-col">
+                  <div id="notif-list" class="max-h-80 overflow-y-auto"> </div>
+               </div>
           </div>
 
         </div> </div>
     `);
-    this.addEvents();
   }
 
   private  debounceTimer: any = null;
@@ -53,86 +56,58 @@ export class Header extends BaseComponent {
 
   private handleNotification = (data: any) => {
       this.notifcounter++;
-      this.updateRedDot();
+      //[soukaina] I am gonna use Numbers
+      // this.updateRedDot();
 
   }
 
-  connectedCallback()
+  async connectedCallback()
   {
       super.connectedCallback?.();
       
       chatService.onNotification(this.handleNotification);
-      this.fetchUnreadNotifications();
+      const list = await headerService.fetchUnreadNotifications();
+
+      if (list)
+      {
+         this.notifcounter = list.length;
+      }
   }
 
-  // disconnectedCallback()
-  // {
+  // disconnectedCallback() {
+  //
   //     chatService.notificationListeners = chatService.notificationListeners.filter(cb => cb !== this.handleNotification);
   // }
   
-  updateRedDot() {
-      const ping = this.querySelector('#red-dot span:first-child');
-      const dot = this.querySelector('#red-dot span:last-child');
-      
-      if (this.notifcounter > 0) {
-          ping?.classList.remove('hidden');
-          dot?.classList.remove('hidden');
-      } else {
-          ping?.classList.add('hidden');
-          dot?.classList.add('hidden');
-      }
-  }
 
-  async fetchUnreadNotifications() {
-      try {
-          const res = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/notifications`, {
-             headers: { 'Authorization': 'include' }
-          });
-          if (res.ok) {
-              const list = await res.json();
-              this.notifcounter = list.length;
-              this.updateRedDot();
-          }
-      } catch (e) {
-          console.error("Failed to fetch notifications", e);
-      }
-  }
 
-  async toggleNotifications() {
-      const dropdown = this.querySelector('#notif-dropdown');
-      const listContainer = this.querySelector('#notif-list');
+  async toggleNotifications()
+  {
+      const dropdown = this.querySelector('#notif-dropdown') as HTMLElement;
+      const listContainer = this.querySelector('#notif-list') as HTMLElement;
       
-      if (!dropdown || !listContainer) return;
+      if (!dropdown || !listContainer)
+        return;
 
       this.isNotifOpen = !this.isNotifOpen;
 
-      if (this.isNotifOpen) {
+      if (this.isNotifOpen)
+      {
           dropdown.classList.remove('hidden');
           
-          // 1. Load actual data
-          listContainer.innerHTML = '<div class="p-4 text-center text-retro/50 text-xs animate-pulse">Loading...</div>';
-          
-          try {
-              // Fetch latest list
-              const res = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/notifications`); // Endpoint to get last 10 notifs
-              const notifs = await res.json();
-              this.renderNotificationItems(notifs, listContainer);
-              
-              this.notifcounter = 0;
-              this.updateRedDot();
-              await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/notifications/mark-read`, { method: 'POST' });
-
-          } catch (e) {
-              listContainer.innerHTML = '<div class="p-4 text-center text-red-500 text-xs">Failed to load</div>';
-          }
-
-      } else {
-          dropdown.classList.add('hidden');
+          const notifList = await headerService.fetchUnreadNotifications();
+          this.renderNotificationItems(notifList, listContainer);
+          this.notifcounter = 0;
+          headerService.maskAsRead();
       }
+      else 
+          dropdown.classList.add('hidden');
   }
 
-  renderNotificationItems(notifs: any[], container: HTMLElement) {
-      if (notifs.length === 0) {
+  renderNotificationItems(notifs: any[], container: HTMLElement)
+  {
+      if (notifs.length === 0)
+      {
           container.innerHTML = '<div class="p-4 text-center text-retro/50 text-xs font-mono">No new notifications</div>';
           return;
       }
@@ -140,37 +115,18 @@ export class Header extends BaseComponent {
       container.innerHTML = '';
       notifs.forEach(n => {
           const item = document.createElement('div');
-          item.className = "p-3 border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col gap-2";
+          item.className = "border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col gap-2";
           
-          // Parse content if it's JSON string, or use directly
           let message = n.content;
-          let extraData = {};
-          try { 
-             const parsed = JSON.parse(n.content); 
-             if (parsed.message) message = parsed.message;
-             extraData = parsed;
-          } catch(e) {}
 
           item.innerHTML = `
-             <div class="text-sm text-retro font-mono break-words">${message}</div>
-             <div class="text-[10px] text-retro/50 text-right">${new Date(n.created_at).toLocaleTimeString()}</div>
+             <div class="text-sm text-retro font-mono">${message}</div>
+             <div class="text-sm text-retro text-right">${new Date(n.createdAt).toLocaleTimeString()}</div>
           `;
-
-          // Add Buttons for Friend Requests / Game Invites
-          if (n.type === 'FRIEND_REQ') {
-             const btnGroup = document.createElement('div');
-             btnGroup.className = "flex gap-2 justify-end mt-1";
-             btnGroup.innerHTML = `
-                <button class="text-xs bg-green-900/50 text-green-400 px-2 py-1 rounded border border-green-500/30 hover:bg-green-800">Accept</button>
-                <button class="text-xs bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-800">Decline</button>
-             `;
-             // Add click listeners for Accept/Decline here...
-             item.appendChild(btnGroup);
-          }
-
           container.appendChild(item);
       });
   }
+
   async searchUser(str: String, container: HTMLElement)
   {
     try {
@@ -184,7 +140,6 @@ export class Header extends BaseComponent {
   
   renderFriendList(results: {id: number, username: string}[], container: HTMLElement)
   {
-    // remove tha data from the last one
     container.innerHTML = '';
 
     if (results.length === 0)
@@ -221,14 +176,14 @@ export class Header extends BaseComponent {
   }
 
 
-  addEvents(): void {
+  addEvents(): void
+  {
     const searchInput = this.querySelector('#user-search') as HTMLInputElement;
     const resultsContainer = this.querySelector('#search-results') as HTMLElement;
 
     searchInput.addEventListener('input', (e) => {
       const query = (e.target as HTMLInputElement).value.trim();
 
-      //if the previous times is still active clear it
       if (this.debounceTimer)
         clearTimeout(this.debounceTimer);
 
@@ -244,32 +199,34 @@ export class Header extends BaseComponent {
         this.debounceTimer = setTimeout(() => {
           this.searchUser(query, resultsContainer);}
           , 300);
-      } });
-
-    // to close the search dropdown when u click outside
-    document.addEventListener('click', (e) => {
-    // we avoid clicks inside the parent dev "header"
-    if (!this.contains(e.target as Node))
-        resultsContainer.classList.add('hidden');
-
-    const notifDropdown = this.querySelector('#notif-dropdown');
-    const notifContainer = this.querySelector('#notif-container');
-    if (this.isNotifOpen && notifContainer && !notifContainer.contains(target))
-    {
-      notifDropdown?.classList.add('hidden');
-      this.isNotifOpen = false;
-    }
-  });
-
-  const ponglineLink = this.querySelector('#pongLine') as HTMLImageElement;
-
-    ponglineLink.addEventListener('click', () => {
-    // Instead of manual pushState + PopStateEvent, 
-    // just let the router handle the lifecycle.
-      window.router.navigateTo("/"); 
+      }
     });
 
-    // notification button
+    document.addEventListener('click', (e) => {
+      if (!this.contains(e.target as Node))
+        resultsContainer.classList.add('hidden');
+
+      const notifDropdown = this.querySelector('#notif-dropdown');
+      const notifContainer = this.querySelector('#notif-container');
+      if (this.isNotifOpen && notifContainer)
+      {
+        notifDropdown?.classList.add('hidden');
+        this.isNotifOpen = false;
+      }
+    });
+
+    const ponglineLink = this.querySelector('#pongLine') as HTMLImageElement;
+
+    ponglineLink.addEventListener('click', () => {
+      window.router.navigateTo("/profile"); 
+    });
+
+    const chatLink = this.querySelector('#chatPage') as HTMLImageElement;
+
+    chatLink.addEventListener('click', () => {
+      window.router.navigateTo("/chat"); 
+    });
+
     const notifBtn = this.querySelector('#notif-btn');
       notifBtn?.addEventListener('click', (e) => {
         e.stopPropagation(); 

@@ -19,7 +19,7 @@ export class ChatController {
     const myId = req.headers['x-user-id']?.toString();
 
     if (!myId || !friendId)
-      return reply.code(400);
+      return reply.code(400).send();
 
     const id1 = parseInt(myId);
     const id2 = parseInt(friendId);
@@ -51,7 +51,7 @@ export class ChatController {
     const myId = req.headers['x-user-id']?.toString();
 
     if (!myId)
-      return reply.code(400);
+      return reply.code(400).send();
 
     const userId = parseInt(myId);
 
@@ -136,13 +136,40 @@ export class ChatController {
       return reply.status(500).send({ error: 'Internal Server Error'});
     }
   }
+  
+  async markAsRead(req: FastifyRequest, reply: FastifyReply)
+  {
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400).send();
+
+    const userId = parseInt(myId);
+    try {
+      await prisma.notification.updateMany({
+        where: {
+          userId: userId,
+          read: false
+        },
+        data: {
+          read: true
+        }
+    });
+
+      return reply.code(200).send();
+
+    } catch (error) {
+      console.error("Failed to update the notification state");
+      return reply.status(500).send();
+    }
+  }
 
   async getNotifications(req: FastifyRequest, reply: FastifyReply)
   {
     const myId = req.headers['x-user-id']?.toString();
 
     if (!myId)
-      return reply.code(400);
+      return reply.code(400).send();
 
     const userId = parseInt(myId);
     try {
