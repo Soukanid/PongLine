@@ -7,11 +7,36 @@ export const prisma = new PrismaClient();
 
 export default async function tournamentRoutes(fastify: FastifyInstance) {
 
+  fastify.get('/activeTournaments', async (request, reply) => {
+    
+    try {
+      const activeTour = await prisma.tournament.findMany({
+        where: {
+          tour_state : "Pending"
+        },
+        select : {
+          id : true,
+          tour_name: true,
+        }
+      });
+
+      reply.code(200).send(activeTour);
+    } catch (error)
+    {
+      console.error(error);
+      reply.code(400).send([]);
+    }
+  });
+
   fastify.post('/create', async (request, reply) => {
     const { tour_name } = request.body as any;
-    const creator_username = request.headers['username'] as string;
-    const creator_nickname = request.headers['nickname'] as string;
+    const creator_username = request.headers['x-user-username']?.toString();
+    const creator_nickname = request.headers['x-user-alias']?.toString();
     const tourId = uuidv4().substring(0, 8).toUpperCase();
+
+    // we are sure that is there but yeah typescript :{
+    if (!creator_username)
+      return reply.status(400);
 
     try {
       const roomIds = await Promise.all([
@@ -19,15 +44,19 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           createGameRoom(),
           createGameRoom()
       ]);
+
       const tour = await prisma.tournament.create({
           data: {
               tour_id: tourId,
-              tour_name,
+              tour_name: tour_name,
               tour_state: "Pending",
               participant: {
-                  create: { 
-                      username: creator_username, 
-                      nick_name: creator_nickname 
+                  connectOrCreate: { 
+                      where : { username: creator_username },
+                      create: {
+                        username: creator_username, 
+                        nick_name: creator_nickname  || "Anonymous"
+                      }
                   }
               },
               matches: {
@@ -39,6 +68,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           include: { matches: true, participant: true }
       });
   
+      console.log(tour);
       return reply.status(201).send({ success: true });
     } catch (error) {
       fastify.log.error(error);

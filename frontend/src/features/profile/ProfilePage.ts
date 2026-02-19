@@ -2,10 +2,11 @@ import { BaseComponent } from "../../core/Component";
 import tournIcon from "./../../../public/tourn.png";
 import gameIcon from "./../../../public/game.png";
 import { profileService } from "./ProfileService";
+import { Tournament } from "./../types";
 
 export class ProfilePage extends BaseComponent {
 
-render() {
+async render() {
   this.setHtml(`
     <div class="h-screen text-retro font-mono p-6 flex gap-6 select-none overflow-hidden">
       
@@ -83,14 +84,9 @@ render() {
 
         <div class="flex-1 border-t border-retro/30 pt-4 flex flex-col overflow-hidden min-h-0">
           <h3 class="text-xs text-retro/70 uppercase mb-3 flex items-center gap-2 shrink-0">
-            <span class="animate-pulse">●</span> Active_Brackets
+            <span class="animate-pulse">●</span> Active_Tournament
           </h3>
-          <div id="tournament-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-              <div class="flex justify-between items-center text-[10px] border border-retro/20 p-3 hover:border-retro cursor-pointer">
-                  <span>Alpha Cup</span>
-                  <span class="animate-pulse text-retro">LIVE</span>
-              </div>
-          </div>
+          <div id="tournament-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar"></div>
         </div>
 
         <div id="tournament-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -121,9 +117,56 @@ render() {
     </div>
   `);
   this.addEvents();
+  await this.loadTournaments();
   }
 
+  async loadTournaments() {
+    const list = await profileService.getActiveTournaments();
 
+    if (list)
+      this.renderTournamentList(list);
+  }
+
+  renderTournamentList(tourn: Tournament[])
+  {
+    const container = this.querySelector('#tournament-list');
+    if (!container)
+      return ;
+    
+    container.innerHTML = '';
+
+    if (tourn.length === 0)
+    {
+      container.innerHTML = 
+        `<div class="text-retro/30 text-center mt-4 border border-retro/10 p-2">
+          NO ACTIVE TOURNAMENTS
+        </div>`;
+      return ;
+    }
+
+    tourn.forEach(t => {
+      const item = document.createElement('div');
+
+      item.className = "flex justify-between items=center border border-retro/20 p-3 hover:bg-retro/10 cursor-pointer transition-colors group"
+
+      item.innerHTML = `
+        <div class="flex-1 flex-col w-full ">
+          <span class="font-bold tracking-wider">${t.tour_name}</span>
+        </div>
+        <button class="join-btn cursor-pointer text-retro font-bold ml-auto" data-id="${t.id}">
+          < --JOIN-- >
+        </button>
+      `
+      const joingBtn = item.querySelector('.joingBtn');
+      joingBtn?.addEventListener('click', (e) =>{
+        e.stopPropagation();
+        // this.handleJoingTournament(t.id);
+      });
+
+      container.appendChild(item);
+    });
+
+  }
 
   addEvents() : void
   {

@@ -20,7 +20,6 @@ interface Room {
 }
 
 export const rooms: Record<string, Room> = {};
-
 export function createInitialState(): GameState {
   return {
     canvas: { width: 800, height: 500 },

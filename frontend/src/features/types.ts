@@ -21,3 +21,7 @@ export interface Friend {
   isOnline: boolean;
 }
 
+export interface Tournament {
+  id: number;
+  tour_name: string;
+}
