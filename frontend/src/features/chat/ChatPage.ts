@@ -78,7 +78,6 @@ export class ChatPage extends BaseComponent {
       </div>
 
     `);
-    this.addEvents();
     await this.loadFriend();
   }
 

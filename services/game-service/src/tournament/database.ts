@@ -68,8 +68,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           include: { matches: true, participant: true }
       });
   
-      console.log(tour);
-      return reply.status(201).send({ success: true });
+      return reply.status(201).send(tour);
     } catch (error) {
       fastify.log.error(error);
       return reply.status(500).send({ error: "Failed to create tournament bracket" });

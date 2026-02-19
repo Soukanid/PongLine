@@ -7,56 +7,42 @@ import  chatIcon  from "../../../public/chat.png";
 
 export class Header extends BaseComponent {
 
-
-render() {
+  render() {
     this.setHtml(`
-      <div class="flex-1 flex flex-row items-center h-20 w-full px-6 bg-black/80 backdrop-blur-md border-b border-retro/20">
+      <div class="flex-1 flex flex-row items-center h-20 w-full px-6">
         
-        <a href="/" data-link id="pongLine-link"> 
+        <a href="/" data-link> 
           <img src="${pongLineImage}" class="h-8 w-40 hover:opacity-80 transition-opacity" > 
         </a>
 
         <div class="ml-auto flex flex-row items-center gap-6">
           
-          <div class="relative group">
-            <div class="flex border-b border-retro/50 items-center w-64 md:w-80 focus-within:border-retro transition-colors">
-              <img src="${searchIcon}" class="m-2 w-5 h-5 opacity-70" alt="Search" />
+          <div class="relative">
+            
+            <div class="flex border-b border-retro/50 items-center w-80 focus-within:border-retro transition-colors">
+              <img src="${searchIcon}" class="m-2 w-7 h-7 " alt="Search" />
               <input 
                 id="user-search" 
                 type="text" 
                 autocomplete="off"
+                spellcheck="false"
                 class="flex-1 focus:outline-none bg-transparent font-mono text-retro placeholder-retro/50 py-2 text-sm" 
                 placeholder="Find a player..."
               >
             </div>
-            <div id="search-results" class="absolute top-full left-0 w-full mt-2 bg-black border border-retro z-50 hidden max-h-60 overflow-y-auto shadow-[0_0_15px_rgba(0,255,0,0.2)]"></div>
-          </div> 
 
-          <div class="flex gap-6 items-center">
-            
-            <a href="/chat" data-link class="relative hover:scale-110 transition-transform"> 
-              <img src="${chatIcon}" class="h-6 w-6 cursor-pointer" > 
-            </a>
-
-            <div class="relative" id="notif-container">
-               <button id="notif-btn" class="relative hover:scale-110 transition-transform focus:outline-none">
-                  <img src="${notifIcon}" class="h-6 w-6 cursor-pointer">
-                  <span id="red-dot" class="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 hidden"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 hidden"></span>
-                  </span>
-               </button>
-
-               <div id="notif-dropdown" class="absolute right-0 top-full mt-4 w-80 bg-black border border-retro z-50 hidden shadow-[0_0_15px_rgba(0,255,0,0.2)] flex flex-col">
-                  <div class="p-3 border-b border-retro/30 text-xs font-mono text-retro/70">NOTIFICATIONS</div>
-                  <div id="notif-list" class="max-h-80 overflow-y-auto">
-                      </div>
-               </div>
+            <div id="search-results"
+                class="absolute top-full left-0 w-full mt-1 bg-black border border-retro z-50 hidden max-h-60 overflow-y-auto shadow-lg">
             </div>
 
+          </div> <div class="flex gap-4">
+            <a href="/chat" data-link> 
+              <img src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+            </a>
+             <img src="${notifIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform"> 
           </div>
-        </div> 
-      </div>
+
+        </div> </div>
     `);
     this.addEvents();
   }

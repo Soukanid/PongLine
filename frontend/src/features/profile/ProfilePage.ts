@@ -86,7 +86,7 @@ async render() {
           <h3 class="text-xs text-retro/70 uppercase mb-3 flex items-center gap-2 shrink-0">
             <span class="animate-pulse">●</span> Active_Tournament
           </h3>
-          <div id="tournament-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar"></div>
+          <div id="tournament-list" class="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"></div>
         </div>
 
         <div id="tournament-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -116,7 +116,6 @@ async render() {
       </div>
     </div>
   `);
-  this.addEvents();
   await this.loadTournaments();
   }
 
@@ -144,28 +143,35 @@ async render() {
       return ;
     }
 
-    tourn.forEach(t => {
-      const item = document.createElement('div');
+    tourn.forEach(t => this.addTrournToUI(t));
 
-      item.className = "flex justify-between items=center border border-retro/20 p-3 hover:bg-retro/10 cursor-pointer transition-colors group"
+  }
+  
+  addTrournToUI(t: Tournament)
+  {
+    const container = this.querySelector('#tournament-list');
+    if (!container)
+      return ;
 
-      item.innerHTML = `
-        <div class="flex-1 flex-col w-full ">
-          <span class="font-bold tracking-wider">${t.tour_name}</span>
-        </div>
-        <button class="join-btn cursor-pointer text-retro font-bold ml-auto" data-id="${t.id}">
-          < --JOIN-- >
-        </button>
-      `
-      const joingBtn = item.querySelector('.joingBtn');
-      joingBtn?.addEventListener('click', (e) =>{
-        e.stopPropagation();
-        // this.handleJoingTournament(t.id);
-      });
+    const item = document.createElement('div');
 
-      container.appendChild(item);
+    item.className = "flex justify-between items-center border border-retro/20 p-3 hover:bg-retro/10 cursor-pointer transition-colors group"
+
+    item.innerHTML = `
+      <div class="flex-1 flex-col w-full ">
+        <span class="font-bold tracking-wider">${t.tour_name}</span>
+      </div>
+      <button class="join-btn cursor-pointer text-retro font-bold ml-auto hover:scale-110" data-id="${t.id}">
+        < -- JOIN -- >
+      </button>
+    `
+    const joingBtn = item.querySelector('.join-btn');
+    joingBtn?.addEventListener('click', (e) =>{
+    e.stopPropagation();
+      // this.handleJoingTournament(t.id);
     });
 
+    container.appendChild(item);
   }
 
   addEvents() : void
@@ -176,6 +182,7 @@ async render() {
     const input = this.querySelector('#tournament-input') as HTMLInputElement;
     const btnCreate = this.querySelector('#btn-create') as HTMLButtonElement;
     const btnJoin = this.querySelector('#btn-join') as HTMLButtonElement;
+    const btnPiPo = this.querySelector('#btn-pingpong') as HTMLButtonElement;
 
     if (btnTournament && modal) {
       btnTournament.addEventListener('click', () => {
@@ -198,12 +205,15 @@ async render() {
 
     if (btnCreate)
     {
-      btnCreate.addEventListener('click', () => {
+      btnCreate.addEventListener('click', async () => {
         const value = input.value.trim();
         if (!value)
           return;
-        profileService.createTourn(value);
+        const tourn = await profileService.createTourn(value);
+        if (tourn)
+          this.addTrournToUI(tourn);
         hideModal();
+        btnCreate.disabled = false;
       });
     }
 
@@ -213,11 +223,20 @@ async render() {
         //[soukaina] i have to correct this and decide what if the value is null
         if (!value)
           return;
+
         //[soukaina] add the entry point here 
         hideModal();
+      });
+    }
+    
+    if (btnPiPo)
+    {
+      btnPiPo.addEventListener('click', () => {
+        window.router.navigateTo("/menu"); 
       });
     }
   }
 }
 
 customElements.define('page-profile', ProfilePage);
+

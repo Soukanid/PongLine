@@ -1,7 +1,7 @@
 
 class ProfileService {
 
-  async createTourn(name : string)
+  async createTourn(name: string)
   {
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/create`);
@@ -17,6 +17,7 @@ class ProfileService {
       if (!response.ok)
         console.log("failed to create the tournament");
        
+      return await response.json();
     } catch (error)
     {
       console.error(error);
