@@ -24,6 +24,28 @@ class ProfileService {
     }
   }
   
+  async joinTourn(tour_id: string)
+  {
+    try {
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/join?${tour_id}`);
+    
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'content-Type': 'application/json'
+        },
+      });
+      
+      const data = await response.json();
+
+      if (!response.ok)
+        throw new Error(data.error || "Failed to joing the Tournament");
+       
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getActiveTournaments() {
     try {
         const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/activeTournaments`);

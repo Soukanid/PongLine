@@ -1,5 +1,5 @@
 
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { createGameRoom } from './../game/database';
@@ -90,8 +90,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     console.log(`Tournament ${tournament.tour_id} brackets initialized!`);
   }
 
-  fastify.post('/join', async (request, reply) => {
-    const { tour_id } = request.body as any;
+  fastify.post('/join', async (request: FastifyRequest<{ Querystring: { tour_id: string }}>, reply: FastifyReply) => {
+    const { tour_id } = request.query;
     const username = request.headers['username'] as string;
     const nickname = request.headers['nickname'] as string;
 
@@ -105,7 +105,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             include: { _count: { select: { participant: true } }, participant: true }
         });
 
-        if (!tour) return reply.code(404).send({ error: "Tournament not found" });
+        if (!tour)
+          return reply.code(404).send({ error: "Tournament not found" });
         
         if (tour._count.participant >= 4) 
             return reply.code(400).send({ error: "Tournament is already full" });

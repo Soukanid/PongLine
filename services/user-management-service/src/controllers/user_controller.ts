@@ -7,7 +7,7 @@ export class UserController {
     const myId = req.headers['x-user-id']?.toString();
 
     if (!myId)
-      return reply.code(400);
+      return reply.code(400).send();
 
     const userId = parseInt(myId);
 

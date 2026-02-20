@@ -162,7 +162,7 @@ async render() {
         <span class="font-bold tracking-wider">${t.tour_name}</span>
       </div>
       <button class="join-btn cursor-pointer text-retro font-bold ml-auto hover:scale-110" data-id="${t.id}">
-        < -- JOIN -- >
+        < JOIN >
       </button>
     `
     const joingBtn = item.querySelector('.join-btn');
@@ -220,11 +220,20 @@ async render() {
     if (btnJoin) {
       btnJoin.addEventListener('click', () => {
         const value = input.value.trim();
-        //[soukaina] i have to correct this and decide what if the value is null
         if (!value)
-          return;
+          return ;
+        if (btnJoin.disabled)
+          return ;
+        btnJoin.disabled = true;
+        
+        try {
+          const updatedTourn = await profileService.joinTourn(value);
 
-        //[soukaina] add the entry point here 
+          if (updatedTourn)
+          {
+            this
+          }
+        }
         hideModal();
       });
     }
