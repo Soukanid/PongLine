@@ -115,7 +115,7 @@ export class Header extends BaseComponent {
       container.innerHTML = '';
       notifs.forEach(n => {
           const item = document.createElement('div');
-          item.className = "border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col gap-2";
+          item.className = "p-2 border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col";
           
           let message = n.content;
 
