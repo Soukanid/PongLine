@@ -38,7 +38,7 @@ model Match {
 
 model Participant {
   id          Int      @id @default(autoincrement())
-  username    String   @unique
+  username    String   
   nick_name   String
 
   tournamentId Int

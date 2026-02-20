@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../core/Component';
+import { router } from '../../main';
 import { io, Socket } from 'socket.io-client'; 
 import { PongGame } from "./Render";
 import "../../css/button.css";
@@ -30,17 +31,23 @@ export class Game extends BaseComponent {
         }
 
         const params = new URL(window.location.href).searchParams;
-        const mode = params.get('mode') || 'remote';
+        const mode = params.get('mode') || 'something';
         const nick = params.get('nick') || 'Guest';
         const left = params.get('left') || 'Guest1';
         const right = params.get('right') || 'Guest2';
         const room = params.get('room') || undefined;
+
+        if ((mode != "remote" && mode != "local" && mode != "bot")
+            || (mode === "remote" && (room === undefined || room === ""))) {
+                router.navigateTo(`/menu`);
+        }
 
         this.socket = io(import.meta.env.VITE_WSSURL, {
             path:"/api/game/socket.io",
             transports: ['websocket'],
             reconnection: true
         });
+
 
         this.socket.on('connect', () => console.log("Connected to Backend on 3003:", this.socket?.id));
         this.socket.on('connect_error', (err: any) => console.error("Socket Connection Error:", err));
