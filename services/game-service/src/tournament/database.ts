@@ -27,6 +27,29 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
       reply.code(400).send([]);
     }
   });
+  
+  const scheduleTournamentCleanup  = (tourId: string) =>  {
+  
+    setTimeout(async () => {
+      try {
+        const tour = await prisma.tournament.findUnique({
+          where: { tour_id: tourId },
+          select: { id: true, tour_state: true }
+        });
+    
+        if (tour && tour.tour_state === "Pending") {
+          await prisma.$transaction([
+            prisma.match.deleteMany({ where: { tournamentId: tour.id } }),
+            prisma.participant.deleteMany({ where: { tournamentId: tour.id } }),
+            prisma.tournament.delete({ where: { id: tour.id } })
+          ]);
+        }
+      } catch (error) {
+        console.error("Error during tournament cleanup:", error);
+      }
+    }, 10 * 60 * 1000);
+  
+  }
 
   fastify.post('/create', async (request, reply) => {
     const { tour_name } = request.body as any;
@@ -64,7 +87,9 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           },
           include: { matches: true, participant: true }
       });
-  
+      
+      scheduleTournamentCleanup(tourId);
+
       return reply.status(201).send(tour);
     } catch (error) {
       fastify.log.error(error);
