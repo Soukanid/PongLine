@@ -231,7 +231,7 @@ async render() {
 
           if (updatedTourn)
           {
-            this
+            this.
           }
         }
         hideModal();
