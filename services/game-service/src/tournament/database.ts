@@ -51,12 +51,9 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
               tour_name: tour_name,
               tour_state: "Pending",
               participant: {
-                  connectOrCreate: { 
-                      where : { username: creator_username },
-                      create: {
-                        username: creator_username, 
-                        nick_name: creator_nickname  || "Anonymous"
-                      }
+                  create: { 
+                    username: creator_username, 
+                    nick_name: creator_nickname  || "Anonymous"
                   }
               },
               matches: {
@@ -128,10 +125,10 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         });
 
         if (updated.tour_state === "In-progress") {
-          startTournamentBrackets(updated);
+          await startTournamentBrackets(updated);
         }
 
-        return reply.code(200).send({ success: true });
+        return reply.code(200).send(tour);
 
     } catch (error) {
         fastify.log.error(error);

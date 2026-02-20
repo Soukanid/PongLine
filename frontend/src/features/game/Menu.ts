@@ -156,8 +156,17 @@ export class Menu extends BaseComponent {
           }
         });
         Join.addEventListener('click', () => {
-          if (inputs.length === 1) cleanup(inputs[0].value.trim() || '');
-          else cleanup(inputs.map(i => i.value.trim() || ''));
+          const values = inputs.map(i => i.value.trim());
+          const allFilled = values.every(val => val.length > 0);
+          if (!allFilled) {
+            inputs.forEach(i => {
+              if (!i.value.trim()) i.style.border = '1px solid #1BFB08';
+              else i.style.border = '';
+            });
+            return;
+          }
+          if (inputs.length === 1) cleanup(values[0]);
+          else cleanup(values);
         });
 
         const cleanup = (result: string | string[] | null) => {
