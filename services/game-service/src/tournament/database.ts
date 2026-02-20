@@ -128,7 +128,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           await startTournamentBrackets(updated);
         }
 
-        return reply.code(200).send(tour);
+        return reply.code(200).send(updated);
 
     } catch (error) {
         fastify.log.error(error);
