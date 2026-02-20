@@ -1,0 +1,48 @@
+async getFriendRequests(req: FastifyRequest, reply: FastifyReply) {
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400).send({ error: 'Missing user ID' });
+
+    const userId = parseInt(myId);
+
+    try {
+      // Find all friendships where the user is the receiver AND the status is PENDING
+      const incomingRequests = await prisma.friendship.findMany({
+        where: {
+          receiverId: userId,
+          status: 'PENDING'
+        },
+        include: {
+          // We only need the data of the person who sent the request
+          sender: { 
+            select: { id: true, username: true, avatar: true, isOnline: true } 
+          }
+        }
+      });
+
+      // Format the data using your existing avatar base64 logic
+      const formattedRequests = incomingRequests.map(request => {
+        let avatarBase64: string | null = null;
+
+        if (request.sender.avatar) {
+          const base64String = request.sender.avatar.toString('base64');
+          avatarBase64 = `data:image/png;base64,${base64String}`;
+        }
+
+        return {
+          requestId: request.id, // The ID of the friendship row (useful for accepting/rejecting)
+          id: request.sender.id, // The ID of the user who sent it
+          username: request.sender.username,
+          isOnline: request.sender.isOnline,
+          avatar: avatarBase64
+        };
+      });
+
+      return reply.send(formattedRequests);
+
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch friend requests' });
+    }
+  }

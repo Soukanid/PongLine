@@ -24,4 +24,5 @@ export interface Friend {
 export interface Tournament {
   id: number;
   tour_name: string;
+  tour_id: string;
 }

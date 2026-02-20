@@ -1,5 +1,4 @@
-
-import { FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { createGameRoom } from './../game/database';
@@ -17,6 +16,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         select : {
           id : true,
           tour_name: true,
+          tour_id: true
         }
       });
 
@@ -27,29 +27,34 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
       reply.code(400).send([]);
     }
   });
-  
-  const scheduleTournamentCleanup  = (tourId: string) =>  {
-  
-    setTimeout(async () => {
-      try {
-        const tour = await prisma.tournament.findUnique({
-          where: { tour_id: tourId },
-          select: { id: true, tour_state: true }
-        });
+
+  fastify.get('/my-tournament', async (request, reply) => {
     
-        if (tour && tour.tour_state === "Pending") {
-          await prisma.$transaction([
-            prisma.match.deleteMany({ where: { tournamentId: tour.id } }),
-            prisma.participant.deleteMany({ where: { tournamentId: tour.id } }),
-            prisma.tournament.delete({ where: { id: tour.id } })
-          ]);
-        }
-      } catch (error) {
-        console.error("Error during tournament cleanup:", error);
-      }
-    }, 10 * 60 * 1000);
-  
-  }
+    const username = request.headers['x-user-username']?.toString();
+    if (!username)
+      return reply.status(400);
+
+    try {
+      const myTour = await prisma.tournament.findFirst({
+        where: {
+          tour_state : { in : ["Pending", "In-progress"]
+        },
+        participant: {
+            some: { username: username}
+          }
+        },
+        include: { participant: true }
+      });
+      
+      if (!myTour)
+        return reply.code(204).send([]);
+      return reply.code(200).send(myTour);
+    } catch (error)
+    {
+      console.error(error);
+      reply.code(400).send([]);
+    }
+  });
 
   fastify.post('/create', async (request, reply) => {
     const { tour_name } = request.body as any;
@@ -87,9 +92,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           },
           include: { matches: true, participant: true }
       });
-      
-      scheduleTournamentCleanup(tourId);
-
+  
       return reply.status(201).send(tour);
     } catch (error) {
       fastify.log.error(error);
@@ -97,9 +100,19 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   });
 
-  async function startTournamentBrackets(tournament: any) {
+  async function startTournamentBrackets(tournament: any)
+  {
     const players = tournament.participant;
     const matches = tournament.matches; 
+    
+    for (const player of players)
+    {
+        await prisma.player.upsert({
+            where: { username: player.username },
+            update: {},
+            create: { username: player.username }
+        });
+    }
 
     await prisma.$transaction([
       prisma.match.update({
@@ -112,21 +125,19 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
       })
     ]);
 
-    console.log(`Tournament ${tournament.tour_id} brackets initialized!`);
   }
 
-  fastify.post('/join', async (request: FastifyRequest<{ Querystring: { tour_id: string }}>, reply: FastifyReply) => {
-    const { tour_id } = request.query;
-    const username = request.headers['username'] as string;
-    const nickname = request.headers['nickname'] as string;
+  fastify.post('/join', async (request, reply) => {
+    const { tour_id } = request.body as any;
+    const username = request.headers['x-user-username'] as string;
+    const nickname = request.headers['x-user-alias'] as string;
 
-    if (!username || !nickname) {
+    if (!username || !nickname)
         return reply.code(400).send({ error: "Missing identity headers" });
-    }
 
     try {
         const tour = await prisma.tournament.findUnique({
-            where: { tour_id },
+            where: { tour_id : tour_id},
             include: { _count: { select: { participant: true } }, participant: true }
         });
 
