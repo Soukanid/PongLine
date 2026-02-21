@@ -1,4 +1,3 @@
-import { userCreateData } from "./types";
 import { api } from "../../core/Client";
 import { appStore } from "../../core/Store";
 import { User } from "../../core/Types";
@@ -8,31 +7,95 @@ export class AuthService {
   static async init() {
     await this.setCurrentUser();
   }
+  static async guest(
+    alias: string,
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      await api.post<{}>("api/auth/guest", {alias});
 
-  static async login(email: string, password: string): Promise<User | null> {
-    await api.post<{}>("api/auth/login", { email, password });
+      appStore.setUser({
+        username: alias,
+        id: '',
+        email:""
+      })
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
+  static async login(
+    email: string,
+    password: string,
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      const result = await api.post<{ tfa?: boolean }>("api/auth/login", {
+        email,
+        password,
+      });
 
-    await this.setCurrentUser();
+      if (result.tfa) return { success: "TFA" };
 
-    return appStore.getUser();
+      await this.setCurrentUser();
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
+
+  static async tfaValidate(
+    email: string,
+    password: string,
+    tfacode: string
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      await api.post<{}>("api/auth/2fa/validate", {
+        email,
+        password,
+        tfacode
+      });
+
+      await this.setCurrentUser();
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
   }
 
   static async register(
     email: string,
     username: string,
     password: string,
-  ): Promise<User> {
-    const response = await api.post<{
-      user: User;
-    }>("api/auth/register", { email, username, password });
-    appStore.setUser(response.user);
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      await api.post<{}>("api/auth/register", {
+        email,
+        username,
+        password,
+      });
+      return {success: "account created"}
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
 
-    return response.user;
+  static async intra(): Promise<{success?: string; error?: string}> {
+    try {
+      await api.get<{}>("api/auth/42/login",{});
+
+      return {success: "42 login successful"}
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
   }
 
   static async logout() {
     appStore.setUser(null);
-    await api.get<{}>("api/auth/logout",{});
+    await api.get<{}>("api/auth/logout", {});
   }
 
   static async setCurrentUser(): Promise<void> {
@@ -47,52 +110,5 @@ export class AuthService {
 
   static isAuthenticated(): boolean {
     return !!appStore.getUser();
-  }
-
-  async createUser(data: userCreateData) {
-    const url = new URL(
-      `${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/register`,
-    );
-
-    try {
-      const response = await fetch(`${url}`.toString(), {
-        method: "POST",
-        headers: {
-          "content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      return response;
-    } catch (error) {
-      console.log("could not fetsh the user data");
-      return null;
-    }
-  }
-
-  async loginUser(identifier: string, password: string) {
-    const url = new URL(
-      `${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/login`,
-    );
-
-    try {
-      const response = await fetch(`${url}`.toString(), {
-        method: "POST",
-        headers: {
-          "content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email: identifier, password: password }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error);
-      }
-      return { success: true };
-    } catch (error) {
-      console.log("Login error", error);
-      return null;
-    }
   }
 }

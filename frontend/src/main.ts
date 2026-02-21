@@ -8,7 +8,6 @@ import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
 import "./features/game/Menu";
 import "./features/game/Game";
-import "./components/Header";
 import "./features/profile/profile.ts"
 declare global {
   interface Window {
@@ -49,6 +48,7 @@ class App {
 
     //setup router
     window.addEventListener("popstate", () => this.render());
+
     document.body.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
       if (target.matches("[data-link]")) {
@@ -62,9 +62,9 @@ class App {
     });
 
     //websocket setup
-    const id = Number(appStore.getUser()?.id);
+   /* const id = Number(appStore.getUser()?.id);
    id?chatService.connectSocket(id):chatService.connectSocket(1);
-
+*/
     //initial render
     this.render();
   }

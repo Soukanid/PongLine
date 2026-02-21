@@ -1,313 +1,91 @@
 import "../../css/login.css";
-import { AuthService } from "./authService"
-import { router } from "../../core/Router"
-import { User } from "../../core/Types"
 import { BaseComponent } from "../../core/Component";
+import { TerminalUI } from "./terminalUI";
+import { CommandController } from "./commandController";
+import { LoginFlow } from "./loginFlow";
+import { RegisterFlow } from "./registerFlow";
 
 export class LoginPage extends BaseComponent {
+  private terminal!: TerminalUI;
+  private controller!: CommandController;
 
-  render(): void{
-  const container = document.createElement('div')
-  container.id = "Login"
+  render(): void {
+    this.setHtml(`
+      <div>
+        <div id="logo-section" class="flex flex-col items-center justify-center mb-8 md:mb-12 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl px-4">
+          <img src="pongline.png" alt="Pongline Logo" class="w-full h-auto" />
+        </div>
+        <div id="terminal-section" class="flex flex-col gap-4 md:gap-6 w-full h-100 max-w-4xl overflow-hidden text-2xl md:text-3xl lg:text-4xl items-center justify-center">
+          <div class="flex flex-col items-center justify-center min-h-0 flex-1">
+            <div id="terminal-output" class="h-full space-y-4  overflow-y-auto">
+              <!-- Terminal content will be injected here -->
 
-  const logoSection = document.createElement('div')
-  logoSection.id = 'logo-section'
-  logoSection.className = 'flex flex-col items-center justify-center mb-8 md:mb-12 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl px-4'
-  logoSection.innerHTML = '<img src="pongline.png" alt="Pongline Logo" class="w-full h-auto" />'
-
-  const terminalSection = document.createElement('div')
-  terminalSection.id = 'terminal-section'
-  terminalSection.className = 'flex flex-col gap-4 md:gap-6 w-full h-100 max-w-4xl overflow-hidden text-2xl md:text-3xl lg:text-4xl items-center justify-center'
-  terminalSection.innerHTML = `<div class="flex flex-col items-center justify-center min-h-0 flex-1"
-    <div id="terminal-output" class="h-full space-y-4  overflow-y-auto">
-      <!-- Terminal content will be injected here -->
-
-      <!-- Command Input -->
-      <div id="command-line" class="flex flex-row">
-        <span class="mr-2">&gt;&gt;</span>
-        <input
-          type="text"
-          id="command-input"
-          placeholder="Type a command or HELP for guidance"
-          class="w-full bg-transparent border-none outline-none "
-          spellcheck="false"
-        />
+              <!-- Command Input -->
+              <div id="command-line" class="flex flex-row">
+                <span class="mr-2">&gt;&gt;</span>
+                <input
+                  type="text"
+                  id="command-input"
+                  placeholder="Type a command or HELP for guidance"
+                  class="w-full bg-transparent border-none outline-none "
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>`
-
-  container.appendChild(logoSection)
-  container.appendChild(terminalSection)
-  this.innerHTML = container.innerHTML
-
+    `);
   }
 
   addEvents(): void {
-   const commandInput = this.querySelector('#command-input') as HTMLElement;
-  commandInput.addEventListener("keydown", (e) =>
-    handleCommandInput(e),
-  );
+    this.terminal = new TerminalUI(this);
+    this.terminal.init();
 
-  function handleCommandInput( event: KeyboardEvent): void {
-    if (event.key === "Enter") {
-      const input = event.target as HTMLInputElement;
-      const command = input.value.trim().toUpperCase();
+    this.controller = new CommandController();
 
-      appendTerminalOutput(`>> ${input.value}`);
-      input.value = "";
+    const loginFlow = new LoginFlow(this.terminal);
+    const registerFlow = new RegisterFlow(this.terminal);
 
-      processCommand(command);
-    }
+    this.controller.register("LOGIN", () => loginFlow.start());
+    this.controller.register("REGISTER", () => registerFlow.start());
+    this.controller.register("CLEAR", () => this.terminal.clear());
+    this.controller.register("INTRA", () => {
+      window.location.assign(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/42/login`)
+      return true;
+    });
+    this.controller.register("GUEST", () => registerFlow.guest());
+    this.controller.register("LS", () => {
+      this.terminal.print("This is not your terminal 😝 ")
+        this.terminal.showCommandLine();
+        return true;
+    })
 
-    // Handle up/down for command history
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      event.preventDefault();
-    }
-  }
-
-  function appendTerminalOutput(text: string): void {
-    const output = document.getElementById("terminal-output");
-    const command = document.getElementById("command-line");
-    if (output) {
-      const line = document.createElement("p");
-      line.className = "animate-fadeIn";
-      line.textContent = text;
-      output.insertBefore(line, command);
-
-      // Auto scroll to bottom
-      output.scrollTop = output.scrollHeight;
-    }
-  }
-
-  function processCommand(command: string): void {
-
-    switch (command) {
-      case "HELP":
-        showHelp();
-        break;
-      case "LOGIN":
-        showLogin();
-        break;
-      case "REGISTER":
-        showRegister();
-        break;
-      case "42":
-      case "INTRA":
-      case "42 INTRA":
-        show42Intra();
-        break;
-      case "BACK":
-        clear();
-        break;
-      case "":
-        // Empty command, do nothing
-        break;
-      default:
-        appendTerminalOutput(`Error: Unknown command '${command}'`);
-        appendTerminalOutput("Type HELP for available commands");
-    }
-  }
-
-  function showHelp(): void {
-    appendTerminalOutput("");
-    appendTerminalOutput("HELP - Command Reference");
-    appendTerminalOutput("━━━━━━━━━━");
-    appendTerminalOutput("");
-    appendTerminalOutput("LOGIN     : Access existing account.");
-    appendTerminalOutput("REGISTER  : Create a new account.");
-    appendTerminalOutput("INTRA  : Login or Register via 42 Intra.");
-    appendTerminalOutput("");
-    appendTerminalOutput("━━━━━━━━━━");
-    appendTerminalOutput("");
-  }
-
-  function showLogin(): void {
-    appendTerminalOutput("");
-    const line = document.getElementById("command-line") as HTMLElement;
-    line.classList.add("hidden");
-
-    const form = document.createElement("form");
-    form.action = "";
-    form.method = "get";
-    form.innerHTML = `
-      <div class="flex flex-row">
-        <label for="username">Username: </label>
-        <input
-          type="text"
-          name="username"
-          id="username"
-          class="w-full bg-transparent border-none outline-none"
-          autofocus
-          required
-        />
-      </div>
-      <div class="flex flex-row hidden" id="passwordiv">
-        <label for="password">Password: </label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          class="w-full bg-transparent border-none outline-none text-xs"
-          required
-	  autofocus
-        />
-      </div>
-    `;
-    appendTerminalOutput("Enter your credentials");
-    appendTerminalElement(form);
-    const username = document.getElementById("username") as HTMLInputElement;
-    const password = document.getElementById("password") as HTMLInputElement;
-    const passdiv = document.getElementById("passwordiv") as HTMLElement;
-    if (username) {
-      username.addEventListener("keydown", (e: KeyboardEvent) => {
-        if (e.key == "Enter") {
-          if (!username.value) {
-            appendTerminalOutput("Username required");
-            return;
-          }
-          passdiv.classList.remove("hidden");
-        }
-      });
-    }
-
-    if (password && username) {
-      password.addEventListener("keydown", async (e: KeyboardEvent) => {
-        if (e.key == "Enter") {
-          if (!password.value) {
-            appendTerminalOutput("Password required");
-            return;
-          }
-          appendTerminalOutput("Authenticating________");
-          const user: User|null = await AuthService.login(username.value, password.value);
-          
-          if (user)
-          {
-            const params = new URLSearchParams(window.location.search);
-            const redirect = params.get("redirect");
-
-            redirect? router.navigate(redirect) : router.navigate('/dashboard')
-          }
-          username.id = "";
-          password.id = "";
-          line.classList.remove("hidden");
-        }
-      });
-    }
-      }
-
-  function showRegister(): void {
-    appendTerminalOutput("");
-    appendTerminalOutput("REGISTER - Create New Account");
-    appendTerminalOutput("━━━━━━━━━━");
-
-    const commandLine = document.getElementById("command-line") as HTMLElement;
-    if (commandLine) commandLine.classList.add("hidden");
-
-    const form = document.createElement("div");
-    form.className = "flex flex-col gap-2 mb-4"; 
-
-    form.innerHTML = `
-      <div class="flex flex-row" id="reg-step-1">
-        <span class="mr-2 text-retro">Username:</span>
-        <input type="text" id="reg-username" class="flex-1 bg-transparent border-none outline-none text-green-200" autocomplete="off" autofocus />
-      </div>
-
-      <div class="flex flex-row hidden" id="reg-step-2">
-        <span class="mr-2 text-retro">Email:</span>
-        <input type="email" id="reg-email" class="flex-1 bg-transparent border-none outline-none text-green-200" autocomplete="off" />
-      </div>
-
-      <div class="flex flex-row hidden" id="reg-step-3">
-        <span class="mr-2 text-retro">Password:</span>
-        <input type="password" id="reg-pass" class="flex-1 bg-transparent border-none outline-none text-green-200" />
-      </div>
-    `;
-
-    appendTerminalElement(form);
-
-    const userInput = form.querySelector("#reg-username") as HTMLInputElement;
-    
-    const emailRow = form.querySelector("#reg-step-2") as HTMLElement;
-    const emailInput = form.querySelector("#reg-email") as HTMLInputElement;
-    
-    const passRow = form.querySelector("#reg-step-3") as HTMLElement;
-    const passInput = form.querySelector("#reg-pass") as HTMLInputElement;
-
-    setTimeout(() => userInput?.focus(), 50);
-
-    userInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        const val = userInput.value.trim();
-        if (!val) {
-             return; 
-        }
-        userInput.disabled = true;
-        emailRow.classList.remove("hidden");
-        emailInput.focus();
-      }
+    this.controller.register("HELP", () => {
+      this.terminal.print("");
+      this.terminal.print("HELP - Command Reference");
+      this.terminal.print("━━━━━━━━━━");
+      this.terminal.print("");
+      this.terminal.print("LOGIN     : Access existing account.");
+      this.terminal.print("REGISTER  : Create a new account.");
+      this.terminal.print("INTRA  : Login or Register via 42 Intra.");
+      this.terminal.print("GUEST  : Play without account.");
+      this.terminal.print("CLEAR  : Clear the terminal.");
+      this.terminal.print("");
+      this.terminal.print("━━━━━━━━━━");
+      this.terminal.print("");
+        this.terminal.showCommandLine();
+        return true;
     });
 
-    emailInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        const val = emailInput.value.trim();
-        if (!val) return;
-
-        emailInput.disabled = true;
-        passRow.classList.remove("hidden");
-        passInput.focus();
-      }
-    });
-
-    passInput?.addEventListener("keydown", async (e) => {
-      if (e.key === "Enter") {
-        appendTerminalOutput(">> Processing...");
-
-        const res = await AuthService.register(emailInput.value, 
-          userInput.value, 
-          passInput.value );
-
-        if (res) {
-          appendTerminalOutput(">> [SUCCESS] Account created!");
-          appendTerminalOutput(">> Please 'LOGIN' to continue.");
-      
-        } else {
-          appendTerminalOutput(">> [ERROR] Registration failed.");
-        }
-        userInput.id = ""
-        emailInput.id = ""
-        passInput.id = ""
-        emailRow.id = ""
-        userInput.id = ""
-        document.getElementById("command-line")?.classList.remove("hidden");
-       
+    this.terminal.onCommand((cmd) => {
+      if (!this.controller.execute(cmd)) {
+        this.terminal.print(`Error: Unknown command '${cmd}'`);
+        this.terminal.print("Type HELP for available commands");
+        this.terminal.showCommandLine();
       }
     });
   }
+}
 
-  function clear(): void {
-    const commandLine = document.getElementById("command-line") as HTMLElement;
-      const terminalOutput = document.getElementById("terminal-output");
-
-    if (terminalOutput) {
-      terminalOutput.innerHTML = "";
-      terminalOutput.appendChild(commandLine)
-      commandLine.focus();
-    }
-  }
-  function appendTerminalElement(elem: HTMLElement): void {
-    const output = document.getElementById("terminal-output");
-    const command = document.getElementById("command-line");
-    if (output) {
-      output.insertBefore(elem, command);
-
-      // Auto scroll to bottom
-      output.scrollTop = output.scrollHeight;
-    }
-  }
-
-  function show42Intra(): void{}
-   
-  }
-  }
-
-  customElements.define("login-page", LoginPage);
+customElements.define("login-page", LoginPage);

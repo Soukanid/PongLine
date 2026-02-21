@@ -14,6 +14,7 @@ export interface JWTPayload {
 export const authPlugin = fp(async (fastify: FastifyInstance) => {
   const JWT_SECRET = process.env.JWT_SECRET!;
   const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d"!;
+  const JWT_GUEST_EXPIRY = process.env.JWT_GUEST_EXPIRY || "15m"!;
 
   //generate access token
   function generateToken(
@@ -21,6 +22,11 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
     role: string,
     username: string,
   ): string {
+    if (role !== "warrior") {
+      return jwt.sign({ userId, role, username }, JWT_SECRET, {
+        expiresIn: JWT_GUEST_EXPIRY,
+      } as jwt.SignOptions);
+    }
     return jwt.sign({ userId, role, username }, JWT_SECRET, {
       expiresIn: JWT_EXPIRY,
     } as jwt.SignOptions);

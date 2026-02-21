@@ -3,6 +3,7 @@ import  pongLineImage  from "../../public/pongline.png";
 import  searchIcon  from "../../public/search.png";
 import  notifIcon  from "../../public/notif.png";
 import  chatIcon  from "../../public/chat.png";
+import { appStore } from "../core/Store";
 
 export class Header extends BaseComponent {
   render() {
@@ -43,6 +44,12 @@ export class Header extends BaseComponent {
 
         </div> </div>
     `);
+    /*if (!appStore.getUser())
+    {
+      this.classList.add('hidden')
+      console.log(appStore.getUser())
+    }
+      */
     this.addEvents();
   }
 

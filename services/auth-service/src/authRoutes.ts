@@ -1,151 +1,306 @@
 import  { type FastifyInstance, type FastifyReply, type FastifyRequest }  from "fastify";
 import { AuthService } from "./authService.ts";
 import { LoginSchema, RegisterSchema, ValidateSchema } from "./authSchemas.ts";
+import * as speakeasy from 'speakeasy' 
 
 export default async function authRoutes(fastify: FastifyInstance) {
-    const authService = new AuthService(fastify.prisma, fastify)
+  const authService = new AuthService(fastify.prisma, fastify);
 
-    //register
-    fastify.post('/register', {schema: RegisterSchema}, async (request: FastifyRequest, reply: FastifyReply)=>{
-        try {
-            const {email, username, password} = request.body as {
-              email : string
-              username : string
-              password : string
-            }
-            const result = await authService.register(email,username,password)
-            return result
-        } catch (error: any) {
-         reply.code(400).send({error: error.message})   
-        }
-    })
-    
-    //login
-    fastify.post('/login', {schema: LoginSchema}, async (request: FastifyRequest, reply: FastifyReply)=>{
-        try {
-            const {email, password, twoFactorCode} = request.body as {
-              email : string
-              password : string
-              twoFactorCode : string
-            }
-            const result = await authService.login(email, password, twoFactorCode)
+  //guest
+  fastify.post(
+    "/guest",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { alias } = request.body as { alias: string };
 
-            reply.setCookie('access_token', result.token, {
-              path: '/',        
-              httpOnly: true,
-              secure: true,       
-              sameSite: 'strict', 
-              maxAge: 86400   
-            });
-            reply.send({success: true});
-        } catch (error: any) {
-            reply.code(401).send({error: error.message})
-        }
-    })
-    
-    // Validate token (for API Gateway)
-  // fastify.get('/validate', { schema: ValidateSchema }, async (request, reply) => {
-  //   try {
-  //     const  token  = request.headers.authorization
-  //     const result = await authService.validateToken(token)
-  //
-  //     console.log(" i was here once");
-  //     reply.header("X-User-Id", result.user?.id)
-  //     reply.header("X-User-Username", result.user?.username)
-  //     reply.header("X-User-Alias", result.user?.username)
-  //     reply.header("X-User-Role", result.user?.role)
-  //
-  //     return result
-  //   } catch (error: any) {
-  //     return { valid: false, reason: 'validation_error' }
-  //   }
-  // })
+        const accessToken = fastify.auth.generateToken(-1, "guest", alias);
 
-  fastify.get('/validate', { schema: ValidateSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const  token  = request.cookies?.access_token
-      if (!token)
-        return reply.code(401).send();
+        reply.setCookie("access_token", accessToken, {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 86400,
+        });
 
-      const result = await authService.validateToken(token)
-      if (!result.valid) {
+        reply.send({ success: "Login successful"});
+      } catch (error) {
+        reply.code(400).send({ error: "something's wrong" });
+      }
+    },
+  );
+  //register
+  fastify.post(
+    "/register",
+    { schema: RegisterSchema },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { email, username, password } = request.body as {
+          email: string;
+          username: string;
+          password: string;
+        };
+        await authService.register(email, username, password);
+        reply.code(201).send({ success: "Account created successfully" });
+      } catch (error: any) {
+        reply.code(400).send({ error: error.message });
+      }
+    },
+  );
+
+  //login
+  fastify.post(
+    "/login",
+    { schema: LoginSchema },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { email, password } = request.body as {
+          email: string;
+          password: string;
+        };
+        const result = await authService.login(email, password);
+
+        reply.setCookie(result.type, result.token, {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 86400,
+        });
+
+        if (result.type === "tfa_token") {
+          reply.send({ success: "2FA enabled", tfa: true });
+        } else reply.send({ success: "Login successful", tfa: false });
+      } catch (error: any) {
+        reply.code(401).send({ error: error.message });
+      }
+    },
+  );
+
+  fastify.get(
+    "/validate",
+    { schema: ValidateSchema },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const token = request.cookies?.access_token;
+        if (!token) return reply.code(401).send();
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
           return reply.code(401).send(result);
-      }
-      reply.header("X-User-Id", result.user?.id)
-      reply.header("X-User-Username", result.user?.username)
-      reply.header("X-User-Alias", result.user?.username)
-      reply.header("X-User-Role", result.user?.role)
+        }
+        reply.header("X-User-Id", result.user?.id);
+        reply.header("X-User-Username", result.user?.username);
+        reply.header("X-User-Alias", result.user?.username);
+        reply.header("X-User-Role", result.user?.role);
 
-      return result
-    } catch (error: any) {
-      return { valid: false, reason: 'validation_error' }
-    }
-  })
-/*  
+        return result;
+      } catch (error: any) {
+        return { valid: false, reason: "validation_error" };
+      }
+    },
+  );
+
+  // get 42 authorization
+  fastify.get(
+    "/42/login",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const params = new URLSearchParams({
+        client_id: process.env.INTRA_ID!,
+        redirect_uri: "https://localhost/api/auth/42/callback",
+        response_type: "code",
+        scope: "public",
+      });
+
+      const authUrl = `https://api.intra.42.fr/oauth/authorize?${params.toString()}`;
+
+      return reply.redirect(authUrl);
+    },
+  );
+
+  // get 42 access_token and authenticate
+  fastify.get(
+    "/42/callback",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { code } = request.query as { code: string };
+
+      if (!code) {
+        return reply.status(400).send({ error: "Missing authorization code" });
+      }
+
+      try {
+        const params = new URLSearchParams({
+          grant_type: "authorization_code",
+          client_id: process.env.INTRA_ID!,
+          client_secret: process.env.INTRA_SECRET!,
+          code,
+          redirect_uri: "https://localhost/api/auth/42/callback",
+        });
+
+        var Response = await fetch(
+          `https://api.intra.42.fr/oauth/token?${params.toString()}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          },
+        );
+
+        const tokenResponse = await Response.json();
+        const intraToken = tokenResponse.access_token;
+
+        Response = await fetch("https://api.intra.42.fr/v2/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${intraToken}`,
+          },
+        });
+
+        const user = await Response.json();
+        var authUser = await fastify.prisma.userAuth.findUnique({
+          where: { username: user.login },
+        });
+
+        if (!authUser) {
+          authUser = await authService.register(user.email, user.login, " ");
+        }
+
+        const accessToken = fastify.auth.generateToken(
+          Number(authUser.userId),
+          "warrior",
+          authUser.username,
+        );
+
+        reply.setCookie("access_token", accessToken, {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 86400,
+        });
+
+        reply.redirect("https://localhost/dashboard");
+      } catch (error: any) {
+        console.error("42 OAuth error:", error.response?.data || error);
+        return reply.status(500).send({ error: "42 authentication failed" });
+      }
+    },
+  );
+
   // 2FA setup (for cybersecurity module)
-  fastify.post('/2fa/setup', async (request, reply) => {
-    try {
-      // Extract token from header
-      const token = fastify.auth.extractTokenFromHeader(request.headers.authorization)
-      const payload = fastify.auth.verifyAccessToken(token)
-      
-      // Generate 2FA secret
-      const secret = speakeasy.generateSecret({
-        name: `ft_transcendence:${payload.email}`
-      })
-      
-      // Store secret (but don't enable yet)
-      await fastify.prisma.user.update({
-        where: { id: payload.userId },
-        data: { twoFactorSecret: secret.base32 }
-      })
-      
-      return {
-        secret: secret.base32,
-        qrCodeUrl: secret.otpauth_url
+  fastify.post(
+    "/2fa/setup",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        // Extract token from header
+        var username = request.headers["X-User-Username"];
+        if (!username) {
+          return reply.code(401).send({ error: "User not authenticated" });
+        }
+
+        // Generate 2FA secret
+        const secret = speakeasy.generateSecret({
+          name: `Pongline:${username}`,
+          length: 20,
+        }).base32;
+
+        // Store secret (but don't enable yet)
+        await fastify.prisma.userAuth.update({
+          where: { username },
+          data: { twoFactorSecret: secret },
+        });
+
+        return {
+          secret: secret.base32,
+          qrCodeUrl: secret.otpauth_url,
+        };
+      } catch (error: any) {
+        reply.code(401).send({ error: error.message });
       }
-    } catch (error: any) {
-      reply.code(401).send({ error: error.message })
-    }
-  })
-  
+    },
+  );
+
   // Enable 2FA
-  fastify.post('/2fa/enable', async (request, reply) => {
-    try {
-      const token = fastify.auth.extractTokenFromHeader(request.headers.authorization)
-      const payload = fastify.auth.verifyAccessToken(token)
-      const { code } = request.body
-      
-      const user = await fastify.prisma.user.findUnique({
-        where: { id: payload.userId }
-      })
-      
-      if (!user || !user.twoFactorSecret) {
-        throw new Error('2FA not set up')
+  fastify.post(
+    "/2fa/enable",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        // Extract token from header
+        var username = request.headers["X-User-Username"];
+        if (!username) {
+          return reply.code(401).send({ error: "User not authenticated" });
+        }
+
+        const { code } = request.body;
+
+        const user = await fastify.prisma.userAuth.findUnique({
+          where: { username },
+          select: {
+            isTFAEnabled: true,
+            TFASecret: true,
+          },
+        });
+
+        if (!user || !user.TFASecret) {
+          throw new Error("2FA not set up");
+        }
+
+        // Verify the code
+        const isValid = speakeasy.totp.verify({
+          secret: user.TFASecret,
+          encoding: "base32",
+          token: code,
+          window: 1,
+        });
+
+        if (!isValid) {
+          throw new Error("Invalid 2FA code");
+        }
+
+        // Enable 2FA
+        await fastify.prisma.userAuth.update({
+          where: { username },
+          data: { isTFAEnabled: true },
+        });
+
+        return { success: true };
+      } catch (error: any) {
+        reply.code(400).send({ error: error.message });
       }
-      
-      // Verify the code
-      const isValid = speakeasy.totp.verify({
-        secret: user.twoFactorSecret,
-        encoding: 'base32',
-        token: code,
-        window: 1
-      })
-      
-      if (!isValid) {
-        throw new Error('Invalid 2FA code')
+    },
+  );
+
+  fastify.post(
+    "/2fa/validate",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const token = request.cookies?.tfa_token;
+        if (!token) return reply.code(401).send({ error: "2FA token missing" });
+
+        const { tfacode } = request.body as {
+          tfacode: string;
+        };
+
+        const result = await authService.validateTFA(tfacode, token);
+
+        reply.setCookie(result.type, result.token, {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 86400,
+        });
+
+        reply.clearCookie("tfa_token", {
+          path: "/",
+          sameSite: "strict",
+        });
+
+        reply.send({ success: true });
+      } catch (error: any) {
+        reply.code(401).send({ error: error.message });
       }
-      
-      // Enable 2FA
-      await fastify.prisma.user.update({
-        where: { id: payload.userId },
-        data: { isTwoFactorEnabled: true }
-      })
-      
-      return { success: true }
-    } catch (error: any) {
-      reply.code(400).send({ error: error.message })
-    }
-  })
-    */
+    },
+  );
 }

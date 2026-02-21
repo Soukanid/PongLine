@@ -9,6 +9,7 @@ import "../features/utils/NotFoundPage";
 import "../features/profile/profile"
 import "./Component";
 import "../features/game/Menu";
+import "../components/Header";
 /*
 export class Router {
   routes: Record<string, string>;
