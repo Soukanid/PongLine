@@ -1,57 +1,114 @@
-import  { userCreateData } from "./../types"
+import { api } from "../../core/Client";
+import { appStore } from "../../core/Store";
+import { User } from "../../core/Types";
 
-class AuthService {
-    
-  async createUser(data: userCreateData)
-  {
-    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/register`);
 
+export class AuthService {
+  static async init() {
+    await this.setCurrentUser();
+  }
+  static async guest(
+    alias: string,
+  ): Promise<{ success?: string; error?: string }> {
     try {
-      const response = await fetch(`${url}`.toString(), 
-      {   
-        method: 'POST',
-        headers: {
-          'content-Type': 'application/json',
-        },
-          body: JSON.stringify(data)
+      await api.post<{}>("api/auth/guest", {alias});
+
+      appStore.setUser({
+        username: alias,
+        id: '',
+        email:""
+      })
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
+  static async login(
+    email: string,
+    password: string,
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      const result = await api.post<{ tfa?: boolean }>("api/auth/login", {
+        email,
+        password,
       });
 
-      return (response);
-    } catch (error)
-    {
-      console.log("could not fetsh the user data");
-      return null;
+      if (result.tfa) return { success: "TFA" };
+
+      await this.setCurrentUser();
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
     }
   }
 
-  async login(identifier: string, password: string)
-  {
-    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/login`);
-
+  static async tfaValidate(
+    email: string,
+    password: string,
+    tfacode: string
+  ): Promise<{ success?: string; error?: string }> {
     try {
-      const response = await fetch(`${url}`.toString(), 
-      {   
-        method: 'POST',
-        headers: {
-          'content-Type': 'application/json',
-        },
-        credentials: "include",
-        body: JSON.stringify({ email: identifier, password: password })
+      await api.post<{}>("api/auth/2fa/validate", {
+        email,
+        password,
+        tfacode
       });
 
-      if (!response.ok)
-      {
-        const err = await response.json();
-        throw new Error(err.error);
-      } 
-      return  { success: true };
-    } catch (error)
-    {
-      console.log("Login error", error);
-      return null;
+      await this.setCurrentUser();
+      return { success: "logged in" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
     }
+  }
+
+  static async register(
+    email: string,
+    username: string,
+    password: string,
+  ): Promise<{ success?: string; error?: string }> {
+    try {
+      await api.post<{}>("api/auth/register", {
+        email,
+        username,
+        password,
+      });
+      return {success: "account created"}
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
+
+  static async intra(): Promise<{success?: string; error?: string}> {
+    try {
+      await api.get<{}>("api/auth/42/login",{});
+
+      return {success: "42 login successful"}
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
+  }
+
+  static async logout() {
+    appStore.setUser(null);
+    await api.get<{}>("api/auth/logout", {});
+  }
+
+  static async setCurrentUser(): Promise<void> {
+    try {
+      const me = await api.get<User>("api/user-management/me", {});
+
+      appStore.setUser(me);
+    } catch {
+      appStore.setUser(null);
+    }
+  }
+
+  static isAuthenticated(): boolean {
+    return !!appStore.getUser();
   }
 }
-
-
-export const authService = new AuthService();

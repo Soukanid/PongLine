@@ -22,7 +22,6 @@ export class ChatPage extends BaseComponent {
 
   async render() {
 
-
     this.setHtml(`
     <div id="grandparent" class="h-full w-full   flex flex-col">
       <div class="flex-1 flex overflow-hidden ">
@@ -388,6 +387,6 @@ export class ChatPage extends BaseComponent {
   }
 }
 
-customElements.define('page-chat', ChatPage);
+customElements.define('chat-page', ChatPage);
 
 

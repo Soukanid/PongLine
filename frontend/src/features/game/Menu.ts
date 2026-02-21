@@ -1,5 +1,5 @@
 import { BaseComponent } from '../../core/Component';
-import { router } from '../../main';
+import { router } from '../../core/Router';
 import "../../css/button.css";
 import "../../css/game.css";
 import "../../css/prompt.css";
@@ -197,7 +197,7 @@ export class Menu extends BaseComponent {
             });
             if (nick === null) return;
             const q = 'mode=' + encodeURIComponent(mode) + (nick ? '&nick=' + encodeURIComponent(nick as string) : '');
-            router.navigateTo(`/game?${q}`);
+            router.navigate(`/game?${q}`);
           }
           if (mode === "remote") {
             const room = await this.remotePrompt({
@@ -207,7 +207,7 @@ export class Menu extends BaseComponent {
             });
             if (room === null) return;
             const q = 'mode=' + encodeURIComponent(mode) + '&room=' + encodeURIComponent(room as string);
-            router.navigateTo(`/game?${q}`);
+            router.navigate(`/game?${q}`);
           }
 
           if (mode === "local") {
@@ -220,7 +220,7 @@ export class Menu extends BaseComponent {
             const left = res?.[0] || '';
             const right = res?.[1] || '';
             const q = 'mode=' + encodeURIComponent(mode) + (left ? '&left=' + encodeURIComponent(left) : '') + (right ? '&right=' + encodeURIComponent(right) : '');
-            router.navigateTo(`/game?${q}`);
+            router.navigate(`/game?${q}`);
           }
 
         });
@@ -229,4 +229,4 @@ export class Menu extends BaseComponent {
 
 }
 
-customElements.define('page-menu', Menu);
+customElements.define('menu-page', Menu);

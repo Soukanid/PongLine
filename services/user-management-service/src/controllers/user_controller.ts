@@ -220,6 +220,37 @@ export class UserController {
       }
   }
 
+ async getMe(req: FastifyRequest<{}>, reply: FastifyReply)
+  {
+      const userId = Array.isArray(req.headers['x-user-id'])
+  ? req.headers['x-user-id'][0]
+  : req.headers['x-user-id'];
+      if (!userId) {
+        return reply.status(400).send({ error: 'X-User-Id header missing' });
+      }
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: Number(userId) },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+          },
+        });
+        
+        if (!user)
+          return reply.status(404).send({ error: "User not found" + userId });
+
+        reply.status(200);
+        return user;
+      } catch (error)
+      {
+        console.error(error);
+        return reply.status(500).send({ error: 'Failed to fetsh User'+ userId});
+      }
+  }
+
+
   async searchUser(req: FastifyRequest<{ Querystring: {str: string}}>, reply: FastifyReply)
   {
     var searchStr = req.query.str;

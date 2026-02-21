@@ -22,4 +22,6 @@ export async function userRoutes(server: FastifyInstance) {
   server.get('/search', userController.searchUser);
 
   server.post('/create_user', userController.createUser);
+
+  server.get('/me', userController.getMe);
 }

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { type PrismaClient } from "@prisma/client";
 import { type FastifyInstance } from "fastify";
-//import * as speakeasy from 'speakeasy' 2FA
+import * as speakeasy from 'speakeasy' 
 
 export class AuthService {
   private prisma: PrismaClient;
@@ -29,7 +29,11 @@ export class AuthService {
         "Content-Type": "application/json",
         "X-Internal-Request": "true",
         "X-Service-Name": "auth-service",
+<<<<<<< HEAD
         "Cookie": `access_token=${token}`,
+=======
+        Cookie: `access_token=${token}`,
+>>>>>>> front
       },
       body: JSON.stringify(data),
     });
@@ -67,14 +71,15 @@ export class AuthService {
 
     try {
       //generate temp token
-      const tempToken = this.fastify.auth.generateToken(
-        0,
-        "warrior",
-        username,
-      );
+      const tempToken = this.fastify.auth.generateToken(0, "warrior", username);
 
       //create user in User service
-      const user = await this.callUserService<{id: number;}>("POST", "/create_user", tempToken, { email, username });
+      const user = await this.callUserService<{ id: number }>(
+        "POST",
+        "create_user",
+        tempToken,
+        { email, username },
+      );
 
       //create user in Auth service
       await this.prisma.userAuth.create({
@@ -87,27 +92,18 @@ export class AuthService {
         },
       });
 
-      //generate token
-      const accessToken = this.fastify.auth.generateToken(
-        user.id,
-        "warrior",
-        username,
-      );
-
-      return { token: accessToken };
     } catch (error: any) {
       await this.prisma.userAuth
         .deleteMany({
           where: { email },
         })
         .catch(() => {});
-          console.error("Registration failed");
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
 
   //login controller
-  async login(email: string, password: string, twoFactorCode?: string) {
+  async login(email: string, password: string) {
     // 1. Find user in Auth DB
     const authUser = await this.prisma.userAuth.findUnique({
       where: { email },
@@ -115,7 +111,7 @@ export class AuthService {
         id: true,
         username: true,
         passwordHash: true,
-        userId: true,
+        isTFAEnabled: true,
       },
     });
 
@@ -132,42 +128,100 @@ export class AuthService {
     if (!isValidPassword) {
       throw new Error("Invalid credentials");
     }
-    /* 
-    // 3. Check 2FA if enabled
-    if (authUser.isTwoFactorEnabled && authUser.twoFactorSecret) {
-      if (!twoFactorCode) {
-        throw new Error('2FA code required')
-      }
-      
-      const isValid2FA = speakeasy.totp.verify({
-        secret: authUser.twoFactorSecret,
-        encoding: 'base32',
-        token: twoFactorCode,
-        window: 1
-      })
-      
-      if (!isValid2FA) {
-        throw new Error('Invalid 2FA code')
-      }
-    }
-    */
 
+    // 3. Check 2FA if enabled
+    if (authUser.isTFAEnabled) {
+      // Generate 2FA temp token
+      const TFAToken = this.fastify.auth.generateToken(
+        Number(authUser.userId),
+        "warrior",
+        authUser.username,
+      );
+      return { type: 'tfa_token',token: TFAToken };
+    }
     // 6. Generate token
     const accessToken = this.fastify.auth.generateToken(
       Number(authUser.userId),
-      'warrior',
+      "warrior",
       authUser.username,
     );
 
-    return { token: accessToken };
+    return { type: 'access_token',token: accessToken };
+  }
+
+  // validate 2FA
+  async validateTFA(twoFactorCode: string, tfa_token: string) {
+
+   try {
+     const payload = this.fastify.auth.verifyToken(tfa_token);
+
+     // Check if auth user still exists
+     const authUser = await this.prisma.userAuth.findUnique({
+       where: { username: payload.username },
+       select: {
+         userId: true,
+         username: true,
+         isTFAEnabled: true,
+         TFASecret: true,
+       },
+     });
+
+     if (!authUser || !authUser.isTFAEnabled) {
+       throw new Error("Invalid credentials or 2FA not enabled");
+     }
+
+     if (!authUser.TFASecret) {
+       throw new Error("2FA not setup");
+     }
+
+     if (!twoFactorCode) {
+       throw new Error("2FA code required");
+     }
+
+     const isValid2FA = speakeasy.totp.verify({
+       secret: authUser.TFASecret,
+       encoding: "base32",
+       token: twoFactorCode,
+       window: 1,
+     });
+
+     if (!isValid2FA) {
+       throw new Error("Invalid 2FA code");
+     }
+
+     const accessToken = this.fastify.auth.generateToken(
+       Number(authUser.userId),
+       "warrior",
+       authUser.username,
+     );
+
+     return { type: "access_token", token: accessToken };
+   } catch (error: any) {
+     if (error.name === "TokenExpiredError") {
+       return { valid: false, reason: "token_expired" };
+     }
+     return { valid: false, reason: "invalid_token" };
+   }
   }
 
   //validate token controller
-  //
+
   async validateToken(token: string) {
     try {
       const payload = this.fastify.auth.verifyToken(token);
 
+      if (payload.role === 'guest')
+      {
+        return {
+          valid: true,
+          user: {
+            id: payload.userId,
+            role: "guest",
+            alias: payload.username,
+            username: "",
+          },
+        };
+      }
       // Check if auth user still exists
       const authUser = await this.prisma.userAuth.findUnique({
         where: { username: payload.username },
@@ -185,7 +239,7 @@ export class AuthService {
         valid: true,
         user: {
           id: authUser.userId,
-          role: 'warrior',
+          role: "warrior",
           username: authUser.username,
           alias: authUser.username,
         },
@@ -197,38 +251,4 @@ export class AuthService {
       return { valid: false, reason: "invalid_token" };
     }
   }
-  // async validateToken(AuthHeader: string | undefined) {
-  //   try {
-  //     const accessToken = this.fastify.auth.extractToken(AuthHeader);
-  //     const payload = this.fastify.auth.verifyToken(accessToken);
-  //
-  //     // Check if auth user still exists
-  //     const authUser = await this.prisma.userAuth.findUnique({
-  //       where: { username: payload.username },
-  //       select: {
-  //         userId: true,
-  //         username: true,
-  //       },
-  //     });
-  //
-  //     if (!authUser) {
-  //       return { valid: false, reason: "user_not_found" };
-  //     }
-  //
-  //     return {
-  //       valid: true,
-  //       user: {
-  //         id: authUser.userId,
-  //         role: 'warrior',
-  //         username: authUser.username,
-  //         alias: authUser.username,
-  //       },
-  //     };
-  //   } catch (error: any) {
-  //     if (error.name === "TokenExpiredError") {
-  //       return { valid: false, reason: "token_expired" };
-  //     }
-  //     return { valid: false, reason: "invalid_token" };
-  //   }
-  // }
 }

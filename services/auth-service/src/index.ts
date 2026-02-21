@@ -28,7 +28,7 @@ async function main () {
 
     // Graceful shutdown
     process.on("SIGTERM", async () => {
-      console.log("🛑 Shutting down auth service...");
+      ("🛑 Shutting down auth service...");
       await fastify.prisma.$disconnect();
       await fastify.close();
       process.exit(0);

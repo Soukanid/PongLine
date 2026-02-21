@@ -7,8 +7,8 @@ export const RegisterSchema = {
     password: Type.String({ minLength: 6 })
   }),
   response: {
-    200: Type.Object({
-      token: Type.String()
+    201: Type.Object({
+      success: Type.String()
       }),
     400: Type.Object({
       error: Type.String()
@@ -20,11 +20,11 @@ export const LoginSchema = {
   body: Type.Object({
     email: Type.String({ format: 'email' }),
     password: Type.String(),
-    twoFactorCode: Type.Optional(Type.String())
   }),
   response: {
     200: Type.Object({
-     token: Type.String()
+     success: Type.String(),
+     tfa: Type.Boolean()
     }),
     401: Type.Object({
       error: Type.String()

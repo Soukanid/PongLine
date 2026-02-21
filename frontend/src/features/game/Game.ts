@@ -1,6 +1,6 @@
 import { BaseComponent } from '../../core/Component';
-import { router } from '../../main';
 import { io, Socket } from 'socket.io-client'; 
+import { router } from '../../core/Router';
 import { PongGame } from "./Render";
 import "../../css/button.css";
 import "../../css/game.css";
@@ -39,7 +39,7 @@ export class Game extends BaseComponent {
 
         if ((mode != "remote" && mode != "local" && mode != "bot")
             || (mode === "remote" && (room === undefined || room === ""))) {
-                router.navigateTo(`/menu`);
+                router.navigate(`/menu`);
         }
 
         this.socket = io(import.meta.env.VITE_WSSURL, {
@@ -72,9 +72,4 @@ export class Game extends BaseComponent {
     addEvents(): void {}
 }
 
-customElements.define('page-game', Game);
-
-
-// get nickname and username of site user
-// test APIs
-// tournament backend 
+customElements.define('game-page', Game);
