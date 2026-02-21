@@ -151,6 +151,25 @@ class ChatService {
     }
     return await response.json();
   }
+
+  // to be checked ************
+  async getInvitations(): Promise<Friend[]> {
+
+    const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/invitations`);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'content-Type': 'application/json',
+      }
+    });
+  
+    if (!response.ok)
+    {
+      console.error("Failed to load Blocked Users");
+    }
+    return await response.json();
+  }
 }
 
 

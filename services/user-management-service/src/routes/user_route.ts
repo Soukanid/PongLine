@@ -11,6 +11,9 @@ export async function userRoutes(server: FastifyInstance) {
   // controller to get Blocked friends
   server.get('/blocked_users', userController.getBlockedUsers);
 
+  // to be checked ************
+  server.get('/invitations', userController.getFriendRequests);
+
   // controller to get user, friend, mine profile
   server.get('/profile', userController.getProfileWithRelationship);
   

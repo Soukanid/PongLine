@@ -6,7 +6,7 @@ import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
 import sendIcon from '../../../public/sent.png'
 import blockIcon from '../../../public/block.png'
-import inviteIcon from '../../../public/invite.png'
+// import inviteIcon from '../../../public/invite.png'
 import personIcon from '../../../public/person.png'
 
 
@@ -58,6 +58,9 @@ export class ChatPage extends BaseComponent {
               class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
               placeholder="Search friends..." 
             >
+            <button id="invitations" class="cursor-pointer px-4 py-2">
+              <img src="invite.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+            </button>
           </div>
           <div id="friends-list" class="min-h-0 flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           </div>
@@ -71,7 +74,7 @@ export class ChatPage extends BaseComponent {
             </button>
 
             <button id="friend-chat" class="cursor-pointer px-4 py-2">
-              <img src="${inviteIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+              <img src="chat.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
             </button>
           </div>
         </div>
@@ -314,6 +317,20 @@ export class ChatPage extends BaseComponent {
     this.renderFriendList(this.currentList);
   }
 
+  // to be checked ************
+  async showInvitations()
+  {
+    this.isBlockedView = false;
+
+    const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
+      if (searchInput)
+        searchInput.value = '';
+
+    this.friends = await chatService.getInvitations();
+    this.currentList = this.friends
+    this.renderFriendList(this.currentList);
+  }
+
   addEvents() {
     const btn = this.querySelector('#send-btn');
     const input = this.querySelector('#msg-input') as HTMLInputElement;
@@ -342,6 +359,8 @@ export class ChatPage extends BaseComponent {
     const chatListBtn = this.querySelector('#friend-chat');
     chatListBtn?.addEventListener('click', () => this.loadFriend());
 
+    const invitationListBnt = this.querySelector('#invitations');
+    invitationListBnt?.addEventListener('click', () => this.loadFriend());
 
     if (input)
     { 
