@@ -1,6 +1,6 @@
 import { BaseComponent } from '../../core/Component';
 import { chatService} from './ChatServices';
-import { Message, Friend } from '../types'
+import { Message, Friend } from '../../core/Types'
 import contactIcon from '../../../public/contact.png'
 import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'

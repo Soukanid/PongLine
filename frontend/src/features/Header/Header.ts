@@ -4,7 +4,8 @@ import  pongLineImage  from "../../../public/pongline.png";
 import  searchIcon  from "../../../public/search.png";
 import  notifIcon  from "../../../public/notif.png";
 import  chatIcon  from "../../../public/chat.png";
-import { headerService } from "./HeaderService"
+import { headerService } from "./HeaderService";
+import { router } from "../../core/Router";
 
 export class Header extends BaseComponent {
 
@@ -218,13 +219,13 @@ export class Header extends BaseComponent {
     const ponglineLink = this.querySelector('#pongLine') as HTMLImageElement;
 
     ponglineLink.addEventListener('click', () => {
-      window.router.navigateTo("/profile"); 
+      router.navigate("/dashboard"); 
     });
 
     const chatLink = this.querySelector('#chatPage') as HTMLImageElement;
 
     chatLink.addEventListener('click', () => {
-      window.router.navigateTo("/chat"); 
+      router.navigate("/chat"); 
     });
 
     const notifBtn = this.querySelector('#notif-btn');

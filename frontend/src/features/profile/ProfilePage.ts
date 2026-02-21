@@ -3,6 +3,7 @@ import tournIcon from "./../../../public/tourn.png";
 import gameIcon from "./../../../public/game.png";
 import { profileService } from "./ProfileService";
 import { Tournament } from "./../types";
+import { router } from "../../core/Router";
 
 export class ProfilePage extends BaseComponent {
 
@@ -178,7 +179,7 @@ async render() {
         < JOIN >
       </button>
     `
-    const joingBtn = item.querySelector('.join-btn');
+    const joingBtn = item.querySelector('.join-btn') as HTMLButtonElement;
     joingBtn?.addEventListener('click', (e) =>{
     e.stopPropagation();
       this.handleJoinTournament(t.tour_id, joingBtn);
@@ -362,11 +363,11 @@ async render() {
     if (btnPiPo)
     {
       btnPiPo.addEventListener('click', () => {
-        window.router.navigateTo("/menu"); 
+        router.navigate("/menu"); 
       });
     }
   }
 }
 
-customElements.define('page-profile', ProfilePage);
+customElements.define('profile-page', ProfilePage);
 

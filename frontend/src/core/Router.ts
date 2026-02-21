@@ -6,10 +6,10 @@ import "../features/chat/ChatPage";
 import "../features/game/Render";
 import "../features/utils/LandingPage";
 import "../features/utils/NotFoundPage";
-import "../features/profile/profile"
+import "../features/profile/ProfilePage"
 import "./Component";
 import "../features/game/Menu";
-import "../components/Header";
+import "../features/Header/Header";
 /*
 export class Router {
   routes: Record<string, string>;

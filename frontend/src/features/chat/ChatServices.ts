@@ -1,4 +1,4 @@
-import { Message , Friend } from "./../types"
+import { Message , Friend } from "../../core/Types"
 
 type ChatHandler = (msg: Message) => void;
 type NotificationHandler = (notif: any) => void;
