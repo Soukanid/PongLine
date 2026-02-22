@@ -4,8 +4,8 @@ interface GameState {
 	player2: string;
 	paddle1Y: number;
 	paddle2Y: number;
-	score_plr1: number;
-	score_plr2: number;
+	score2: number;
+	score1: number;
 	ballX: number;
 	ballY: number;
 	mode?: string;
@@ -15,7 +15,7 @@ interface GameState {
 export class PongGame {
 	private canvas: HTMLCanvasElement;
 	private context: CanvasRenderingContext2D;
-	
+
 	private width = 800;
 	private height = 500;
 	
@@ -57,17 +57,17 @@ export class PongGame {
 		this.game = {
 			ballX: this.width / 2,
 			ballY: this.height / 2,
-			paddle2Y: this.height / 2 - 40,
 			paddle1Y: this.height / 2 - 40,
-			score_plr2: 0,
-			score_plr1: 0,
-			player2: left || 'Player 1',
-			player1: right || 'Player 2',
+			paddle2Y: this.height / 2 - 40,
+			score1: 0,
+			player1: left || 'Player 1',
+			score2: 0,
+			player2: right || 'Player 2',
 			mode: _mode,
 			timestamp: Date.now()
 		};
+		this.game.player1 = 'Bot';
 		if (this.game.mode === 'bot') {
-			this.game.player2 = 'Bot';
 		}
 	}
 	
@@ -81,24 +81,24 @@ export class PongGame {
         	});
     	} else {
     		if (this.game.mode === 'local') {
-        		if (this.keys['w'] || this.keys['W']) this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
-        		if (this.keys['s'] || this.keys['S']) this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
+        		if (this.keys['w'] || this.keys['W']) this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
+        		if (this.keys['s'] || this.keys['S']) this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
     		} else if (this.game.mode === 'bot') {
-    		    const paddleCenter = this.game.paddle2Y + 40;
+    		    const paddleCenter = this.game.paddle1Y + 40;
     		    if (this.game.ballX < (this.width * 2) / 7) {
 					if (paddleCenter + 30 < this.game.ballY ) {
-						this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
+						this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
 					} else if (paddleCenter - 30 > this.game.ballY ) {
-						this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
+						this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
 					}
 				}
 			}
 			if (this.game.mode === 'local' || this.game.mode === 'bot') {
 				if (this.keys['ArrowUp']) {
-					this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
+					this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
 				   }
 				   if (this.keys['ArrowDown']) {
-					   this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
+					   this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
 				   }
 			}
    			if (this.game.mode === 'local' || this.game.mode === 'bot') {
@@ -110,14 +110,14 @@ export class PongGame {
 
     		    this.checkPaddleCollision();
    			    if (this.game.ballX - this.ballRadius <= 0) {
-   			        this.game.score_plr1++;
+   			        this.game.score2++;
    			        this.resetBall();
    			    }
    			    if (this.game.ballX + this.ballRadius >= this.width) {
-   			        this.game.score_plr2++;
+   			        this.game.score1++;
    			        this.resetBall();
    			    }
-				if (this.game.score_plr1 >= 5 || this.game.score_plr2 >= 5) {
+				if (this.game.score2 >= 5 || this.game.score1 >= 5) {
 					this.isPaused = true;
 				}
    			}
@@ -145,7 +145,7 @@ export class PongGame {
     	ctx.fillText("CHAMPION", midX, midY + 30);
 		
     	ctx.font = '40px VT323, monospace';
-    	ctx.fillText(winner.toUpperCase(), midX, midY + 80);
+    	ctx.fillText(winner, midX, midY + 80);
 
     	ctx.fillStyle = 'rgba(5, 8, 5, 0.2)';
     	for (let i = 0; i < this.height; i += 4) {
@@ -168,16 +168,16 @@ export class PongGame {
 		if (
 			this.game.ballX - this.ballRadius <= 10 + paddleWidth &&
 			this.game.ballX - this.ballRadius >= 10 &&
-			this.game.ballY >= this.game.paddle2Y &&
-			this.game.ballY <= this.game.paddle2Y + paddleHeight
+			this.game.ballY >= this.game.paddle1Y &&
+			this.game.ballY <= this.game.paddle1Y + paddleHeight
 		) {
 			this.ballVelX *= -1;
 		}
 		if (
 			this.game.ballX + this.ballRadius >= this.width - 20 &&
 			this.game.ballX + this.ballRadius <= this.width - 20 + paddleWidth &&
-			this.game.ballY >= this.game.paddle1Y &&
-			this.game.ballY <= this.game.paddle1Y + paddleHeight
+			this.game.ballY >= this.game.paddle2Y &&
+			this.game.ballY <= this.game.paddle2Y + paddleHeight
 		) {
 			this.ballVelX *= -1;
 		}
@@ -193,7 +193,7 @@ export class PongGame {
 			this.keys[e.key] = false;
 		});
 	}
-	
+
 	private setupSocketListeners(): void {
 		if (!this.socket) return;
 
@@ -223,7 +223,7 @@ export class PongGame {
 			this.roomId = '';
 		});
 		this.socket.on('gameStart', () => {
-		    this.isStarted = true;
+			this.isStarted = true;
 			requestAnimationFrame(() => this.loop());
 		});
 		this.socket.on('connect', () => {
@@ -260,18 +260,18 @@ export class PongGame {
 		const ctx = this.context;
 		ctx.fillStyle = '#1BFB08';
 		ctx.font = '24px VT323, monospace';
+		ctx.fillText(this.game.player1, 20, 45);
 		ctx.textAlign = 'left';
-		ctx.fillText(this.game.player2, 20, 45);
 		ctx.textAlign = 'right';
-		ctx.fillText(this.game.player1, this.width - 20, 45);
+		ctx.fillText(this.game.player2, this.width - 20, 45);
 	}
 	private drawScores(): void {
 		const ctx = this.context;
 		ctx.fillStyle = '#1BFB08';
 		ctx.font = '32px VT323, monospace';
 		ctx.textAlign = 'center';
-		ctx.fillText(`${this.game.score_plr2}`, this.width / 2 - 80, 50);
-		ctx.fillText(`${this.game.score_plr1}`, this.width / 2 + 80, 50);
+		ctx.fillText(`${this.game.score1}`, this.width / 2 - 80, 50);
+		ctx.fillText(`${this.game.score2}`, this.width / 2 + 80, 50);
 	}
 	
 	private drawBall(): void {
@@ -304,8 +304,8 @@ export class PongGame {
 		const paddleWidth = 10;
 		const paddleHeight = 80;
 		
-		this.drawPaddle(10, this.game.paddle2Y, paddleWidth, paddleHeight);
-		this.drawPaddle(this.width - 20, this.game.paddle1Y, paddleWidth, paddleHeight);
+		this.drawPaddle(10, this.game.paddle1Y, paddleWidth, paddleHeight);
+		this.drawPaddle(this.width - 20, this.game.paddle2Y, paddleWidth, paddleHeight);
 	}
 	private drawPaddle(x: number, y: number, width: number, height: number): void {
 		const ctx = this.context;
@@ -334,10 +334,10 @@ export class PongGame {
 	}
 	public loop(): void {
 		if (this.isPaused) {
-			if (this.game.score_plr1 >= 5) {
-				this.renderWinner(this.game.player1)
-			} else if(this.game.score_plr2 >= 5) {
+			if (this.game.score2 >= 5) {
 				this.renderWinner(this.game.player2)
+			} else if(this.game.score1 >= 5) {
+				this.renderWinner(this.game.player1)
 			}
 			return;
 		}

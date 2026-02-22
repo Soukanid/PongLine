@@ -88,12 +88,12 @@ export function updateRoom(gameId: string, io: any) {
   }
     
   const syncData = {
-    player1: room.players[1]?.nickname,
-    player2: room.players[0]?.nickname,
-    paddle1Y: state.paddles.right.y,
-    paddle2Y: state.paddles.left.y,
-    score_plr1: state.scores.right,
-    score_plr2: state.scores.left,
+    player1: room.players[0]?.nickname,
+    player2: room.players[1]?.nickname,
+    paddle1Y: state.paddles.left.y,
+    paddle2Y: state.paddles.right.y,
+    score1: state.scores.left,
+    score2: state.scores.right,
     ballX: state.ballPosition.x,
     ballY: state.ballPosition.y,
     timestamp: Date.now()
@@ -108,8 +108,8 @@ export function updateRoom(gameId: string, io: any) {
       room_id: gameId,
       username1: room.players[0]?.username,
       username2: room.players[1]?.username,
-      score_plr1: state.scores.right,
-      score_plr2: state.scores.left,
+      score_plr1: state.scores.left,
+      score_plr2: state.scores.right,
       winnerName: winner?.username,
     };
     

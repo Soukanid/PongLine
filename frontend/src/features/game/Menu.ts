@@ -92,6 +92,60 @@ export class Menu extends BaseComponent {
         });
       });
     }
+    private showRoomIdDialog(roomId: string, resolve: (value: string) => void, cleanup: (result: string | string[] | null) => void): void {
+      const overlay = document.body.querySelector('.pl-overlay') as HTMLElement;
+      const dialog = overlay.querySelector('.pl-dialog') as HTMLElement;
+      
+      dialog.innerHTML = '';
+      
+      const title = document.createElement('div');
+      title.className = 'pl-title';
+      title.textContent = 'Room Created!';
+      dialog.appendChild(title);
+      
+      const message = document.createElement('div');
+      message.className = 'pl-message';
+      message.textContent = 'Share this Room ID with your friend:';
+      dialog.appendChild(message);
+      
+      const roomIdContainer = document.createElement('div');
+      roomIdContainer.className = 'pl-room-id-container';
+      
+      const roomIdDisplay = document.createElement('div');
+      roomIdDisplay.className = 'pl-room-id-display';
+      roomIdDisplay.textContent = roomId;
+      roomIdDisplay.style.cursor = 'pointer';
+      roomIdDisplay.style.userSelect = 'all';
+      roomIdDisplay.title = 'Click to copy';
+      roomIdContainer.appendChild(roomIdDisplay);
+      
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'pl-copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(roomId).then(() => {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+          }, 2000);
+        });
+      });
+      roomIdContainer.appendChild(copyBtn);
+      dialog.appendChild(roomIdContainer);
+      
+      const actions = document.createElement('div');
+      actions.className = 'pl-actions';
+      
+      const continueBtn = document.createElement('button');
+      continueBtn.className = 'pl-btn primary';
+      continueBtn.textContent = 'Continue';
+      continueBtn.addEventListener('click', () => {
+        cleanup(roomId);
+      });
+      
+      actions.appendChild(continueBtn);
+      dialog.appendChild(actions);
+    }
     private remotePrompt(opts: { title?: string; message?: string; placeholders: string[]; }): Promise<string | string[] | null> {
       return new Promise(resolve => {
         const overlay = document.createElement('div');
@@ -146,7 +200,7 @@ export class Menu extends BaseComponent {
             const res = await response.json();
           
             if (res.success && res.roomId) {
-              cleanup(res.roomId); 
+              this.showRoomIdDialog(res.roomId, resolve, cleanup);
             } else {
               alert('Server failed to create room.');
             }

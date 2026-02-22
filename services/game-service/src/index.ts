@@ -1,5 +1,6 @@
 import { rooms, updateRoom} from "./game/gameLogic";
 import tournamentRoutes from './tournament/database'; 
+import { saveMatch } from "./game/database";
 import gameRoutes from "./game/database";
 import { Server, Socket } from "socket.io";
 import Fastify from 'fastify';
@@ -37,7 +38,7 @@ const start = async () => {
     io.on("connection", (socket: Socket) => {
       console.log("A user connected:", socket.id);
 
-      socket.on("joinGame", (data) => {
+      socket.on("joinGame", (data: any) => {
         const { gameId, username, nickname } = data;
         
         if (!rooms[gameId]) {
@@ -84,30 +85,39 @@ const start = async () => {
         paddle.y = Math.max(0, Math.min(room.gameState.canvas.height - 100, paddle.y));
       });
       socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+          for (const gameId in rooms) {
+              const room = rooms[gameId];
+              if (!room) continue;
+          
+              const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
 
-        for (const gameId in rooms) {
-          const room = rooms[gameId];
-          if (!room) continue;
-        
-          const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
-          if (playerIndex !== -1) {
-            room.players.splice(playerIndex, 1);
-          
-            io.to(gameId).emit("playerDisconnected", {
-              playerId: socket.id,
-              message: "Opponent left the game."
-            });
-          
-            console.log(`Player ${socket.id} left room ${gameId}. Remaining: ${room.players.length}`);
-          
-            if (room.players.length === 0) {
-              delete rooms[gameId];
-              console.log(`Room ${gameId} deleted.`);
-            }
-            break; 
+              if (playerIndex !== -1) {
+                const winner = playerIndex === 0 ? room.players[0] : room.players[1];
+
+                if (winner && winner.socketId) {
+                  io.to(winner.socketId).emit("playerDisconnected", { 
+                      winnerId: winner.socketId,
+                      reason: "Opponent disconnected" 
+                  });
+                  console.log(`Winner notified: ${winner.socketId}`);
+                  const state = room.gameState;
+                  const matchResult = {
+                    room_id: gameId,
+                    username1: room.players[0]?.username,
+                    username2: room.players[1]?.username,
+                    score_plr1: state.scores.left,
+                    score_plr2: state.scores.right,
+                    winnerName: winner?.username,
+                  };
+                      
+                  saveMatch(matchResult, winner);
+                }
+                
+                delete rooms[gameId];
+                console.log(`Room ${gameId} cleaned up.`);
+                break; 
+              }
           }
-        }
       });
     });
     

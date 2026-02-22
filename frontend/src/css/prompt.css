@@ -77,3 +77,47 @@
   background: #1bfb08;
   color: #001000;
 }
+.pl-room-id-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.pl-room-id-display {
+  flex: 1;
+  padding: 12px 16px;
+  background: #000;
+  border: 2px solid #1bfb08;
+  color: #1bfb08;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.pl-room-id-display:hover {
+  box-shadow: 0 0 12px rgba(27, 251, 8, 0.5);
+  border-color: #4eff3f;
+  color: #4eff3f;
+}
+
+.pl-copy-btn {
+  background: transparent;
+  color: #1bfb08;
+  border: 1px solid #1bfb08;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'VT323', monospace;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pl-copy-btn:hover {
+  background: #1bfb08;
+  color: #001000;
+}
