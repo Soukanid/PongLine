@@ -82,7 +82,10 @@ export class ChatController {
       const userServiceResponse = await fetch(`${process.env.USER_SERVICE_URL}chat_friends`,
       {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': myId
+          },
           body: JSON.stringify({ ids: contactIds })
       });
 
@@ -261,6 +264,26 @@ export class ChatController {
         if (!receiver_id || !content)
           return;
         const receiverIdNum = Number(receiver_id);
+        // check if the sender is blocked
+        try {
+          const blockCheckRes = await fetch(`${process.env.USER_SERVICE_URL}blocks/check?targetId=${receiverIdNum}`, {
+            headers: { 'x-user-id': myId }
+          });
+          
+          if (blockCheckRes.ok)
+          {
+            const blockData = await blockCheckRes.json();
+            
+            if (blockData.isBlocked) {
+              return;
+            }
+          }
+          else 
+            return ;
+        } catch (err) {
+          return;
+        }
+
         // store the message
         const savedMsg = await prisma.message.create({
           data: {

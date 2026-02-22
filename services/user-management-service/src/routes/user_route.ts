@@ -24,4 +24,16 @@ export async function userRoutes(server: FastifyInstance) {
   server.post('/create_user', userController.createUser);
 
   server.get('/me', userController.getMe);
+
+  server.post('/friends/request', userController.sendFriendRequest);
+  
+  server.post('/friends/accept', userController.acceptFriendRequest);
+  
+  server.post('/friends/remove', userController.removeFriend);
+
+  server.post('/blocks/add', userController.blockUser);
+  
+  server.post('/blocks/remove', userController.unblockUser);
+
+  server.get('/blocks/check', userController.checkBlockStatus);
 }

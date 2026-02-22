@@ -3,7 +3,6 @@ import { prisma } from '../utils/prisma_init';
 
 export class UserController {
 
-  // to be checked **************
   async getFriendRequests(req: FastifyRequest, reply: FastifyReply)
   {
     const myId = req.headers['x-user-id']?.toString();
@@ -137,15 +136,36 @@ export class UserController {
 
   async getChatFriends(req: FastifyRequest<{ Body: { ids: number[]}}>, reply: FastifyReply )
   {
-     const { ids } = req.body;
+      const userIdStr = req.headers['x-user-id']?.toString();
+      if (!userIdStr)
+        return reply.code(400).send({ error: "Missing x-user-id header" });
+      const myId = parseInt(userIdStr);
+
+      const { ids } = req.body;
 
       if (!ids || ids.length === 0)
         return reply.send([]);
 
       try {
+        const activeBlocks = await prisma.block.findMany({
+          where: {
+            blockerId: myId, 
+            blockedId: { in: ids } 
+          }
+        });
+
+        const blockedIds = new Set(
+          activeBlocks.map(block => block.blockedId)
+        );
+
+        const allowedIds = ids.filter(id => !blockedIds.has(id));
+
+        if (allowedIds.length === 0)
+          return reply.send([]); 
+
         const users = await prisma.user.findMany({
           where: {
-            id : { in: ids }
+            id : { in: allowedIds }
           },
           select: {
             id: true,
@@ -156,30 +176,28 @@ export class UserController {
         });
 
         const newUsers = users.map(f => {
+          let avatarBase64 : string | null = null;
 
+          if (f.avatar)
+          {
+            const base64String = f.avatar.toString('base64');
+            avatarBase64 = `data:image/png;base64,${base64String}`;
+          }
 
-        let avatarBase64 : string | null = null;
-
-        if (f.avatar)
-        {
-          const base64String = f.avatar.toString('base64');
-          avatarBase64 = `data:image/png;base64,${base64String}`;
-        }
-
-        return {
-          id: f.id,
-          username: f.username,
-          isOnline: f.isOnline,
-          avatar: avatarBase64
-        };
-      });
+          return {
+            id: f.id,
+            username: f.username,
+            isOnline: f.isOnline,
+            avatar: avatarBase64
+          };
+        });
 
         return reply.send(newUsers);
+
       } catch (error) {
         console.error(error);
         return reply.status(500).send({ error: 'Failed to fetch users'});
       }
-
   }
 
   async createUser(req: FastifyRequest< { Body: { email: string, username: string }}>, reply: FastifyReply) {
@@ -381,7 +399,210 @@ export class UserController {
     }
 
     return this.formatUserResponse(targetUser, relationship);
-}
+  }
 
+  async sendFriendRequest(req: FastifyRequest<{ Body: { targetUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
 
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+
+    try {
+      const targetUser = await prisma.user.findUnique({
+          where: 
+            { username: req.body.targetUsername }
+      });
+
+      if (!targetUser)
+        return reply.code(400);
+
+      if (targetUser.id === myId)
+        return reply.code(400);
+
+      await prisma.friendship.create({
+        data: { senderId: myId, receiverId: targetUser.id, status: "PENDING" }
+      });
+
+      return reply.send("Friend request sent" );
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send("Failed to send request");
+    }
+  }
+
+  async acceptFriendRequest(req: FastifyRequest<{ Body: { targetUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+    try {
+      const targetUser = await prisma.user.findUnique({ where: { username: req.body.targetUsername } });
+      if (!targetUser)
+        return reply.code(404).send("User not found");
+
+      const request = await prisma.friendship.findFirst({
+        where: { senderId: targetUser.id, receiverId: myId, status: "PENDING" }
+      });
+
+      if (!request)
+        return reply.code(404).send("No pending request found");
+
+      await prisma.friendship.update({
+        where: { id: request.id },
+        data: { status: "ACCEPTED" }
+      });
+
+      return reply.send("Friend request accepted" );
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send("Failed to accept request");
+    }
+  }
+
+  async removeFriend(req: FastifyRequest<{ Body: { targetUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+
+    try {
+      const targetUser = await prisma.user.findUnique({ 
+        where: { username: req.body.targetUsername }
+      });
+
+      if (!targetUser)
+        return reply.code(404).send();
+
+      await prisma.friendship.deleteMany({
+        where: {
+          OR: [
+            { senderId: myId, receiverId: targetUser.id },
+            { senderId: targetUser.id, receiverId: myId }
+          ]
+        }
+      });
+      return reply.send("Friendship removed" );
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send("Failed to remove friend");
+    }
+  }
+
+  async blockUser(req: FastifyRequest<{ Body: { targetUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+
+    try {
+      const targetUser = await prisma.user.findUnique({
+        where: { username: req.body.targetUsername }
+      });
+
+      if (!targetUser)
+        return reply.code(404).send();
+
+      const existingBlock = await prisma.block.findFirst({
+        where: {
+          blockerId: myId,
+          blockedId: targetUser.id
+        }
+      });
+
+      if (!existingBlock) {
+        await prisma.block.create({
+          data: {
+            blockerId: myId,
+            blockedId: targetUser.id
+          }
+        });
+      }
+
+      await prisma.friendship.deleteMany({
+        where: {
+          OR: [
+            { senderId: myId, receiverId: targetUser.id },
+            { senderId: targetUser.id, receiverId: myId }
+          ]
+        }
+      });
+
+      return reply.send("User blocked");
+      
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send("Failed to block user");
+    }
+  }
+
+  async unblockUser(req: FastifyRequest<{ Body: { targetUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+
+    try {
+      const targetUser = await prisma.user.findUnique({ where: { username: req.body.targetUsername } });
+      if (!targetUser)
+        return reply.code(404).send();
+
+      await prisma.block.deleteMany({
+        where: { 
+          blockerId: myId, blockedId: targetUser.id
+            }
+      });
+      return reply.send("User unblocked");
+
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send("Failed to unblock user");
+    }
+  }
+
+  async checkBlockStatus(req: FastifyRequest<{ Querystring: { targetId: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+
+    if (!userId)
+      return reply.code(400).send();
+
+    const myId = parseInt(userId);
+    const targetId = parseInt(req.query.targetId);
+
+    if (!targetId)
+      return reply.code(400).send("Missing targetId");
+
+    try {
+
+      const blockExists = await prisma.block.findFirst({
+        where: {
+          OR: [
+            { blockerId: myId, blockedId: targetId },
+            { blockerId: targetId, blockedId: myId }
+          ]
+        }
+      });
+
+      return reply.send({ isBlocked: !!blockExists });
+
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send({ error: "Failed to check block status" });
+    }
+  }
 }

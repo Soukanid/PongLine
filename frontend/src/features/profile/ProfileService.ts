@@ -162,6 +162,26 @@ class ProfileService {
       return [];
     }
   }
+
+  async executeUserAction(actionRoute: string, targetUsername: string)
+  {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/${actionRoute}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ targetUsername })
+      });
+
+      if (!response.ok)
+        return false;
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
 }
 
 export const profileService = new ProfileService();

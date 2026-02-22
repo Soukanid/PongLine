@@ -38,15 +38,6 @@ render() {
             </div>
 
             <div id="guest-controls" class="hidden mt-6 pt-4 border-t border-dashed border-retro/50 flex flex-row gap-4 w-full">
-              <button id="btn-add-friend" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
-                [ ADD_FRIEND.sh ]
-              </button>
-              <button id="btn-message" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
-                [ MSG_USER.exe ]
-              </button>
-              <button id="btn-block" class="flex-1 border border-red-500/50 text-red-500 py-2 text-[10px] uppercase font-bold hover:bg-red-500 hover:text-black transition-colors cursor-pointer">
-                [ EXECUTE_BLOCK ]
-              </button>
             </div>
           </div>
 
@@ -119,11 +110,6 @@ render() {
   `);
   }
 
-  private userControle(isOwner: boolean)
-  {
-    // this will be used also for guest controle
-    // show add-friend and block and message buttons here 
-  }
 
   async connectedCallback()
   {
@@ -133,10 +119,10 @@ render() {
     const urlParams = new URLSearchParams(window.location.search);
     let targetUsername = "ME";
 
+    
     if (path.startsWith('/profile'))
     {
       const tmp  = urlParams.get('username'); 
-      console.log("definitely staying");
       if (tmp)
         targetUsername = tmp;
     }
@@ -156,6 +142,7 @@ render() {
        router.navigate("/dashboard");
        return;
     }
+    this.setupGuestControls(profileData, username);
 
     const stats = await profileService.getStats(profileData.username);
 
@@ -228,7 +215,85 @@ render() {
       container.appendChild(item);
     });
   }
-  
+
+  setupGuestControls(profileData: any, targetUsername: string)
+  {
+    const guestControls = this.querySelector('#guest-controls');
+    if (!guestControls)
+      return;
+
+    guestControls.innerHTML = '';
+
+    if (targetUsername === "ME" || profileData.relationship === 'me' || profileData.relationship === 'blocked_by_other')
+    {
+      guestControls.classList.add('hidden');
+      return;
+    }
+
+    guestControls.classList.remove('hidden');
+
+    if (profileData.relationship === 'blocked_by_me')
+    {
+      guestControls.innerHTML = `
+        <button id="btn-block" class="flex-1 border border-retro py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer text-retro">
+          [ UNBLOCK.exe ]
+        </button>
+      `;
+      const btnBlock = this.querySelector('#btn-block') as HTMLButtonElement;
+      btnBlock.onclick = () => this.handleUserAction('blocks/remove', profileData.username);
+      return;
+    }
+
+    let friendBtnText = '';
+    let friendRoute = '';
+
+    switch (profileData.relationship)
+    {
+      case 'friend':
+        friendBtnText = '[ UNFRIEND.sh ]';
+        friendRoute = 'friends/remove';
+        break;
+      case 'sent':
+        friendBtnText = '[ CANCEL_REQ.sh ]';
+        friendRoute = 'friends/remove';
+        break;
+      case 'received':
+        friendBtnText = '[ ACCEPT_REQ.sh ]';
+        friendRoute = 'friends/accept';
+        break;
+      default:
+        friendBtnText = '[ ADD_FRIEND.sh ]';
+        friendRoute = 'friends/request';
+        break;
+    }
+
+    guestControls.innerHTML = `
+      <button id="btn-add-friend" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
+        ${friendBtnText}
+      </button>
+      <button id="btn-message" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
+        [ MSG_USER.exe ]
+      </button>
+      <button id="btn-block" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer text-red-500">
+        [ BLOCK_USER.exe ]
+      </button>
+    `;
+
+    const btnAdd = this.querySelector('#btn-add-friend') as HTMLButtonElement;
+    const btnMsg = this.querySelector('#btn-message') as HTMLButtonElement;
+    const btnBlock = this.querySelector('#btn-block') as HTMLButtonElement;
+
+    btnAdd.onclick = () => this.handleUserAction(friendRoute, profileData.username);
+    btnMsg.onclick = () => router.navigate(`/chat?user=${profileData.username}`);
+    btnBlock.onclick = () => this.handleUserAction('blocks/add', profileData.username);
+  }
+
+  private async handleUserAction(route: string, username: string) {
+    const success = await profileService.executeUserAction(route, username);
+    if (success) {
+      await this.loadProfileData(username);
+    }
+  }
   // -------------------------------tournament LOGIC--------------------------------------
 
   async loadTournaments()
