@@ -24,7 +24,7 @@ class HeaderService {
   async maskAsRead()
   {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/notifications/mark-read`,
+      const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`,
                   { method: 'POST' }
                   );
       if (!response.ok)

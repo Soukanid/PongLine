@@ -35,22 +35,14 @@ class ChatService {
     };
     
     this.socket.onclose = () => {
-
-      //[soukaina] I should check if the session is Expired here
-      //...
-      
-      // just if the internet drops ( the user should be still connected)
-      if (this.socket)
-      {
+      if (this.socket) {
         this.socket.close();
         this.socket = null;
       }
-      // [soukaina] to be updated
-      // setTimeout(() => {
-      //   if (this.myUserId) {
-      //     this.connectSocket(this.myUserId);
-      //   }
-      // }, this.timeToReconnect);
+      
+      setTimeout(() => {
+          this.connectSocket();
+      }, this.timeToReconnect);
     };
 
   }
@@ -152,7 +144,6 @@ class ChatService {
     return await response.json();
   }
 
-  // to be checked ************
   async getInvitations(): Promise<Friend[]> {
 
     const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/invitations`);
@@ -170,6 +161,41 @@ class ChatService {
     }
     return await response.json();
   }
+
+  async getUnreadCount(): Promise<number> {
+    try {
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/unread-count`);
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok)
+        return (0);
+      
+      const data = await response.json();
+      return (data.count);
+    } catch (error) {
+      console.error("Failed to load unread count");
+      return (0);
+    }
+  }
+
+  async markAsRead(friendId: number): Promise<void> {
+    try {
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`);
+
+      await fetch(url.toString(), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId })
+      });
+
+    } catch (error) {
+      console.error("Failed to mark messages as read");
+    }
+  }
+  
 }
 
 

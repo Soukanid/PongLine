@@ -56,10 +56,10 @@ const routes: Route[] = [
   {path: '/', page: "landing-page"},
   {path: '/login', page: "login-page"},
   {path: '/dashboard', page: "profile-page"},
+  {path: '/profile', page: "profile-page"},
   {path: '/menu', page: "menu-page"},
   {path: '/game', page: "game-page"},
   {path: '/chat', page: "chat-page"},
-//  {path: '/tournaments', page: TournamentPage}
 ]
 
 export const router = {

@@ -22,5 +22,9 @@ export async function chatRoutes(server: FastifyInstance) {
   server.get('/notifications', chatController.getNotifications);
   
   server.post('/mark-read', chatController.markAsRead);
+  
+  server.get('/unread-count', chatController.getUnreadCount);
+  
+  server.patch('/mark-read', chatController.markMessagesAsRead);
 }
 

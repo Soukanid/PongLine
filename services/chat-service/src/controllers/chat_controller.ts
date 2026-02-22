@@ -79,7 +79,7 @@ export class ChatController {
       if (contactIds.length === 0)
         return reply.send([]);
 
-      const userServiceResponse = await fetch(`${process.env.USER_SERVICE_URL}/chat_friends`,
+      const userServiceResponse = await fetch(`${process.env.USER_SERVICE_URL}chat_friends`,
       {
           method: 'POST',
           headers: { 'Content-Type': 'application/json'},
@@ -185,7 +185,60 @@ export class ChatController {
     } catch (error)
     {
       console.error("Failed to fetch user notifications", error);
-      return reply.status(500).send({ error: 'Internal Server Error'});
+      return reply.status(500).send('Internal Server Error');
+    }
+  }
+
+  async getUnreadCount(req: FastifyRequest, reply: FastifyReply) {
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400).send();
+
+    const userId = parseInt(myId);
+    try {
+      const count = await prisma.message.count({
+        where: {
+          receiver_id: userId,
+          read: false
+        }
+      });
+
+      return reply.send({ count });
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send('Failed to count unread messages');
+    }
+  }
+
+  async markMessagesAsRead(req: FastifyRequest<{ Body: { friendId: number } }>, reply: FastifyReply)
+  {
+    const myId = req.headers['x-user-id']?.toString();
+
+    if (!myId)
+      return reply.code(400).send();
+
+    const userId = parseInt(myId);
+    const { friendId } = req.body;
+    if (!friendId)
+      return reply.code(400).send();
+
+    try {
+      await prisma.message.updateMany({
+        where: {
+          receiver_id: userId,
+          sender_id: friendId,
+          read: false
+        },
+        data: {
+          read: true
+        }
+      });
+
+      return reply.code(200).send({ success: true });
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send('Failed to mark messages as read');
     }
   }
 

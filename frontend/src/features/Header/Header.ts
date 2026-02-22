@@ -36,7 +36,12 @@ export class Header extends BaseComponent {
             </div>
 
           </div> <div class="flex gap-4">
-            <img id="chatPage" src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+            <div class="relative">
+              <img id="chatPage" src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+              <span id="chat-badge" class="absolute -top-3 -right-1 text-xxl text-retro font-bold  rounded-full hidden">
+                0
+              </span>
+            </div>
             <div class="relative" id="notif-container">
                <button id="notif-btn" class="relative hover:scale-110 transition-transform">
                   <img src="${notifIcon}" class="h-8 w-8 cursor-pointer">
@@ -54,12 +59,36 @@ export class Header extends BaseComponent {
   private  debounceTimer: any = null;
   private notifcounter : number = 0;
   private isNotifOpen : boolean = false;
+  private unreadChatCounter: number = 0;
 
-  private handleNotification = (data: any) => {
+  handleNotification = (data: any) => {
       this.notifcounter++;
       //[soukaina] I am gonna use Numbers
       // this.updateRedDot();
 
+  }
+
+  handleIncomingChat = (data: any) => {
+      if (!data.myId && window.location.pathname !== '/chat')
+      {
+          this.unreadChatCounter++;
+          this.updateChatBadge();
+      }
+  }
+
+  updateChatBadge()
+  {
+      const badge = this.querySelector('#chat-badge') as HTMLElement;
+      if (!badge)
+        return;
+
+      if (this.unreadChatCounter > 0)
+      {
+          badge.textContent = this.unreadChatCounter > 9 ? '9+' : this.unreadChatCounter.toString();
+          badge.classList.remove('hidden');
+      }
+      else 
+          badge.classList.add('hidden');
   }
 
   async connectedCallback()
@@ -67,7 +96,11 @@ export class Header extends BaseComponent {
       super.connectedCallback?.();
       
       chatService.onNotification(this.handleNotification);
+      chatService.onChatUpdate(this.handleIncomingChat);
       const list = await headerService.fetchUnreadNotifications();
+
+      this.unreadChatCounter = await chatService.getUnreadCount();
+      this.updateChatBadge();
 
       if (list)
       {
@@ -153,7 +186,7 @@ export class Header extends BaseComponent {
     results.forEach(u => {
 
       const userItem = document.createElement('div');
-      userItem.className = "flex items-center p-3 text-retro font-mono hover:bg-retro hover:text-black";
+      userItem.className = "flex items-center p-3 text-retro font-mono hover:bg-retro hover:text-black cursor-pointer";
 
       userItem.innerHTML = `
           <span class="font-mono font-bold text-sm pointer-events-none">${u.username}</span> 
@@ -225,6 +258,8 @@ export class Header extends BaseComponent {
     const chatLink = this.querySelector('#chatPage') as HTMLImageElement;
 
     chatLink.addEventListener('click', () => {
+      this.unreadChatCounter = 0;
+      this.updateChatBadge();
       router.navigate("/chat"); 
     });
 

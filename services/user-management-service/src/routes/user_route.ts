@@ -15,7 +15,7 @@ export async function userRoutes(server: FastifyInstance) {
   server.get('/invitations', userController.getFriendRequests);
 
   // controller to get user, friend, mine profile
-  server.get('/profile', userController.getProfileWithRelationship);
+  server.get('/profile', userController.getProfileWithRelationship.bind(userController));
   
   server.post('/chat_friends', userController.getChatFriends);
 

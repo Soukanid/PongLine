@@ -95,6 +95,73 @@ class ProfileService {
       return null;
     }
   }
+
+  async getProfile(username: string)
+  {
+    try {
+      
+      let endpoint = "";
+
+      if (username === "ME")
+        endpoint = `${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/me`;
+      else
+        endpoint = `${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/profile?targetUsername=${username}`;
+        
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        } 
+      });
+
+      if (!response.ok)
+        return null;
+
+      return await response.json();
+    } catch (error)
+    {
+      console.error(error);
+      return null;
+    }
+  }
+
+  async getStats(username: string) {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/stats/${username}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) 
+        return null;
+      
+      const data = await response.json();
+      return data.stats;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  async getMatchHistory(username: string) {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/history/${username}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok)
+        return [];
+
+      const data = await response.json();
+      return data.matches; 
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
 }
 
 export const profileService = new ProfileService();

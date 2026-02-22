@@ -8,6 +8,7 @@ import sendIcon from '../../../public/sent.png'
 import blockIcon from '../../../public/block.png'
 // import inviteIcon from '../../../public/invite.png'
 import personIcon from '../../../public/person.png'
+import { router } from "../../core/Router";
 
 
 export class ChatPage extends BaseComponent {
@@ -23,7 +24,7 @@ export class ChatPage extends BaseComponent {
   async render() {
 
     this.setHtml(`
-    <div id="grandparent" class="h-full w-full   flex flex-col">
+     <div id="grandparent" class="h-full w-full   flex flex-col">
       <div class="flex-1 flex overflow-hidden ">
       
         <div class="w-3/4 flex flex-col border border-retro/50 rounded-xl">
@@ -57,7 +58,7 @@ export class ChatPage extends BaseComponent {
               class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
               placeholder="Search friends..." 
             >
-            <button id="invitations" class="cursor-pointer px-4 py-2">
+            <button id="invitations" class="cursor-pointer px-4 py-2 shrink-0 ml-auto">
               <img src="invite.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
             </button>
           </div>
@@ -82,6 +83,7 @@ export class ChatPage extends BaseComponent {
     `);
     await this.loadFriend();
   }
+
 
   private handleIncomingMessage = (msg: Message) => {
     const isFromContact = msg.sender_id === this.activeFriendId;
@@ -131,9 +133,7 @@ export class ChatPage extends BaseComponent {
           statusHTML = `<span class="mr-3 text-[20px] font-mono text-retro animate-pulse"> ONLINE </span>`;
         
         friendItem.innerHTML = `
-          <a href="/profile?id=${f.username}" data-link class="avatar-link z-10 relative">
-             <img class="m-2 w-10 h-10 rounded-full avatar-img hover:scale-110 "> 
-          </a>
+          <img class="m-2 w-10 h-10 rounded-full avatar-img hover:scale-110 "> 
           <div class="m-2 flex-1">
             <div class=" font-bold  font-mono username-text"></div>
           </div>
@@ -150,6 +150,11 @@ export class ChatPage extends BaseComponent {
           imgEl.src = personIcon;
         else
           imgEl.src = f.avatar;
+
+        imgEl.addEventListener('click', () => {
+            router.navigate(`/profile?username=${f.username}`); 
+        });
+
         nameEl.textContent = f.username;
         
         friendItem.addEventListener('click', () => {
@@ -256,6 +261,9 @@ export class ChatPage extends BaseComponent {
 
     }
 
+    // mark the messages of this friend as read and update the read counter
+    await chatService.markAsRead(friendId);
+
     // enable the button and the input field
     const input = this.querySelector('#msg-input') as HTMLInputElement;
     const btn = this.querySelector('#send-btn') as HTMLButtonElement;
@@ -316,7 +324,6 @@ export class ChatPage extends BaseComponent {
     this.renderFriendList(this.currentList);
   }
 
-  // to be checked ************
   async showInvitations()
   {
     this.isBlockedView = false;
@@ -359,7 +366,7 @@ export class ChatPage extends BaseComponent {
     chatListBtn?.addEventListener('click', () => this.loadFriend());
 
     const invitationListBnt = this.querySelector('#invitations');
-    invitationListBnt?.addEventListener('click', () => this.loadFriend());
+    invitationListBnt?.addEventListener('click', () => this.showInvitations());
 
     if (input)
     { 

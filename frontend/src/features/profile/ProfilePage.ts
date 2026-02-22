@@ -4,61 +4,61 @@ import gameIcon from "./../../../public/game.png";
 import { profileService } from "./ProfileService";
 import { Tournament } from "./../types";
 import { router } from "../../core/Router";
+import { chatService } from "../chat/ChatServices";
 
 export class ProfilePage extends BaseComponent {
 
-async render() {
-  this.setHtml(`
-    <div class="h-screen text-retro font-mono p-6 flex gap-6 select-none overflow-hidden">
-      
-      <div class="flex-1 flex flex-col gap-6 h-full pb-30">
+render() {
+    this.setHtml(`
+      <div class="h-screen text-retro font-mono p-6 flex gap-6 select-none overflow-hidden">
         
-        <div class="border border-retro p-4 flex items-start gap-8 relative shrink-0">
-          <div class="text-xs leading-none whitespace-pre animate-pulse hidden md:block">
-((_ , ... , _))
-  |  o  o  |
-   \\  /  /
-    ^ _ ^
-          </div>
-      
+        <div class="flex-1 flex flex-col gap-6 h-full pb-30">
+          
+          <div class="border-2 border-retro/70 p-4 pt-6 flex flex-col relative shrink-0 shadow-[0_0_15px_rgba(0,255,0,0.1)]">
+  
+            <div class="absolute top-0 left-0 w-full bg-retro/70 text-black text-[10px] px-2 font-bold flex justify-between">
+              <span>root@pong:~/users/profile.exe</span>
+              <span>[X]</span>
+            </div>
+            
+            <div class="flex items-center  mt-2">
+               <div class="shrink-0 relative group">
+               <img id="avatar" class="h-30 w-30 rounded-full border-2 border-retro object-cover brightness-75">
+            </div>
+  
+            <div class="flex-1 flex min-w-0 flex-col justify-center space-y-2 pl-10">
+              <h2 id="profile-name" class="text-xl font-bold tracking-widest truncate mb-2">
+                <span class="animate-pulse">_</span>
+              </h2>
     
-          <div class="flex-1 space-y-2">
-            <div class="flex justify-between items-end">
-              <h2 class="text-xl font-bold tracking-widest truncate">THE LEGEND Soukaina</h2>
-              <div class="flex items-center gap-2 text-sm whitespace-nowrap">
-                <span class="hidden sm:inline">++++++++++++++</span>
-                <span>20 Wins</span>
-              </div>
+              <p id="profile-total" class="text-retro/80">$ total_matches : 0</p>
+                <p id="profile-wins" class="text-retro/80">$ total_wins : 0</p>
+              <p id="profile-losses" class="text-retro/80">$ total_losses : 0</p>
+            </div>
             </div>
 
-            <div class="flex justify-between items-end">
-              <p>Ranking : 20 th</p>
-              <div class="flex items-center gap-2 text-sm whitespace-nowrap">
-                <span class="hidden sm:inline">================</span>
-                <span>30 draws</span>
-              </div>
-            </div>
-
-            <div class="flex justify-between items-end">
-              <p>Nb game played : 200</p>
-              <div class="flex items-center gap-2 text-sm whitespace-nowrap">
-                <span class="hidden sm:inline">-------</span>
-                <span>10 loses</span>
-              </div>
+            <div id="guest-controls" class="hidden mt-6 pt-4 border-t border-dashed border-retro/50 flex flex-row gap-4 w-full">
+              <button id="btn-add-friend" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
+                [ ADD_FRIEND.sh ]
+              </button>
+              <button id="btn-message" class="flex-1 border border-retro/50 py-2 text-[10px] uppercase font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">
+                [ MSG_USER.exe ]
+              </button>
+              <button id="btn-block" class="flex-1 border border-red-500/50 text-red-500 py-2 text-[10px] uppercase font-bold hover:bg-red-500 hover:text-black transition-colors cursor-pointer">
+                [ EXECUTE_BLOCK ]
+              </button>
             </div>
           </div>
+
+          <div class="flex-1 border border-retro/50 rounded-sm p-4 relative flex flex-col min-h-0 ">
+            <h3 class="text-xs text-retro/70 uppercase mb-3 flex items-center gap-2 shrink-0">
+              <span class="animate-pulse">_</span> > MATCH_HISTORY.log
+            </h3>
+          <div id="match-history-list" class="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            </div>
+          </div>
+
         </div>
-
-        <div class="flex-1 border border-retro/50 rounded-sm p-4 relative flex flex-col min-h-0">
-           <p class="text-retro/30 text-[10px] uppercase tracking-widest mb-2 border-b border-retro/20 shrink-0">>> System_Log</p>
-           
-           <div class="overflow-y-auto flex-1 custom-scrollbar space-y-1">
-           </div>
-           
-        </div>
-
-      </div>
-
       <div class="flex-1 border border-retro/50 rounded-sm p-4 flex flex-col gap-4 bg-retro/5 mb-30">
         
         <div class="flex flex-row gap-4 w-full shrink-0">
@@ -86,7 +86,7 @@ async render() {
 
 
         <div id="tournament-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-          <div class="border-2 border-retro p-8 w-100 relative bg-black">
+          <div class="border-2 border-retro p-8 w-100 relative">
             <button id="close-modal" class="absolute top-2 cursor-pointer right-4 text-retro/50 hover:text-retro text-xl font-bold">[X]</button>
             <h2 id="modal-title" class="text-xl font-bold font-mono mb-6 text-center animate-pulse">> ACCESS_TOURNAMENT</h2>
             <div id="modal-error" class="hidden border border-retro text-retro text-xs p-2 mb-4 text-center"></div>
@@ -117,11 +117,118 @@ async render() {
       </div>
     </div>
   `);
-  await this.loadTournaments();
   }
 
+  private userControle(isOwner: boolean)
+  {
+    // this will be used also for guest controle
+    // show add-friend and block and message buttons here 
+  }
 
+  async connectedCallback()
+  {
+    super.connectedCallback();
+    
+    const path = window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetUsername = "ME";
 
+    if (path.startsWith('/profile'))
+    {
+      const tmp  = urlParams.get('username'); 
+      console.log("definitely staying");
+      if (tmp)
+        targetUsername = tmp;
+    }
+
+    await this.loadProfileData(targetUsername);
+    await this.loadTournaments();
+  }
+
+  // -------------------------------Profile LOGIC--------------------------------------
+
+  async loadProfileData(username: string)
+  {
+    const profileData = await profileService.getProfile(username);
+
+    if (!profileData)
+    {
+       router.navigate("/dashboard");
+       return;
+    }
+
+    const stats = await profileService.getStats(profileData.username);
+
+    const nameEl = this.querySelector('#profile-name');
+    const winsEl = this.querySelector('#profile-wins');
+    const lossesEl = this.querySelector('#profile-losses');
+    const totalEl = this.querySelector('#profile-total');
+    const avatarEl = this.querySelector('#avatar') as HTMLImageElement;
+    
+    if (nameEl)
+      nameEl.textContent = `> THE LEGEND ${profileData.username}`;
+    
+    if (avatarEl && profileData.avatar)
+      avatarEl.src = profileData.avatar;
+
+    if (totalEl)
+      totalEl.textContent = `$ total_matches : ${stats?.total_games || 0}`;
+    
+    if (winsEl)
+      winsEl.textContent = `$ total_wins : ${stats?.total_wins || 0}`;
+    
+    if (lossesEl)
+      lossesEl.textContent = `$ total_losses : ${stats?.total_losses || 0}`;
+
+    const history = await profileService.getMatchHistory(profileData.username);
+    this.renderMatchHistory(history, profileData.username);
+  }
+
+  renderMatchHistory(matches: any[], currentUsername: string)
+  {
+    const container = this.querySelector('#match-history-list');
+    if (!container)
+      return;
+
+    container.innerHTML = '';
+
+    if (!matches || matches.length === 0)
+    {
+      container.innerHTML = `
+        <div class="text-retro/30 text-center text-[10px] mt-4 border border-dashed border-retro/20 p-2">
+          NO MATCH DATA FOUND
+        </div>`;
+      return;
+    }
+
+    matches.forEach(match => {
+      const isPlayer1 = match.username1 === currentUsername;
+      const opponent = isPlayer1 ? match.username2 : match.username1;
+      const myScore = isPlayer1 ? match.score_plr1 : match.score_plr2;
+      const oppScore = isPlayer1 ? match.score_plr2 : match.score_plr1;
+      
+      const isWin = match.winnerName === currentUsername;
+      const statusText = isWin ? 'VICTORY' : 'DEFEAT';
+      const scoreDisplay = `${myScore} - ${oppScore}`;
+
+      const item = document.createElement('div');
+      item.className = "flex justify-between items-center border border-retro/20 p-2 bg-retro/5 text-[10px] hover:bg-retro/10 transition-colors";
+      
+      item.innerHTML = `
+        <div class="flex flex-col">
+          <span class="text-retro/50 uppercase">vs ${opponent || 'Unknown'}</span>
+          <span class="font-bold tracking-wider">${new Date(match.playedAt).toLocaleDateString()}</span>
+        </div>
+        <div class="flex flex-col items-end">
+          <span class="font-retro font-bold">${statusText}</span>
+          <span class="text-retro font-bold">${scoreDisplay}</span>
+        </div>
+      `;
+      
+      container.appendChild(item);
+    });
+  }
+  
   // -------------------------------tournament LOGIC--------------------------------------
 
   async loadTournaments()
@@ -130,14 +237,14 @@ async render() {
 
     if (myTourn)
     {
-        this.switchView(myTourn);
-        return;
+      this.switchView(myTourn);
+      return;
     }
 
     const list = await profileService.getActiveTournaments();
 
     if (list)
-        this.renderTournamentList(list);
+      this.renderTournamentList(list);
   }
 
   renderTournamentList(tourn: Tournament[])
@@ -366,6 +473,7 @@ async render() {
         router.navigate("/menu"); 
       });
     }
+    
   }
 }
 

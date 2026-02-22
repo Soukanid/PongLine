@@ -29,7 +29,8 @@ export class UserController {
       const formattedRequests = incomingRequests.map((request: any) => {
         let avatarBase64: string | null = null;
 
-        if (request.sender.avatar) {
+        if (request.sender.avatar)
+        {
           const base64String = request.sender.avatar.toString('base64');
           avatarBase64 = `data:image/png;base64,${base64String}`;
         }
@@ -220,14 +221,15 @@ export class UserController {
       }
   }
 
- async getMe(req: FastifyRequest<{}>, reply: FastifyReply)
+ async getMe(req: FastifyRequest, reply: FastifyReply)
   {
-      const userId = Array.isArray(req.headers['x-user-id'])
-  ? req.headers['x-user-id'][0]
-  : req.headers['x-user-id'];
-      if (!userId) {
-        return reply.status(400).send({ error: 'X-User-Id header missing' });
-      }
+      const myId = req.headers['x-user-id']?.toString();
+
+      if (!myId)
+      return reply.code(400).send();
+
+      const userId = parseInt(myId);
+
       try {
         const user = await prisma.user.findUnique({
           where: { id: Number(userId) },
@@ -235,14 +237,30 @@ export class UserController {
             id: true,
             email: true,
             username: true,
+            avatar: true,
           },
         });
         
         if (!user)
           return reply.status(404).send({ error: "User not found" + userId });
 
-        reply.status(200);
-        return user;
+        let avatarBase64: string | null = null;
+
+        if (user.avatar)
+        {
+          const base64String = user.avatar.toString('base64');
+          avatarBase64 = `data:image/png;base64,${base64String}`;
+        }
+
+        const formatUsr = {
+          requestId: user.id,
+          id: user.id,
+          username: user.username,
+          avatar: avatarBase64
+        };
+
+       
+        return reply.send(formatUsr);
       } catch (error)
       {
         console.error(error);
@@ -281,18 +299,42 @@ export class UserController {
     
   }
 
-  async getProfileWithRelationship(req: FastifyRequest<{ Querystring: { myId: string, targetId: string } }>, reply: FastifyReply) {
-    const myId = parseInt(req.query.myId);
-    const targetId = parseInt(req.query.targetId);
+  formatUserResponse(user: any, relationship: string)
+  {
+    let avatarBase64: string | null = null;
 
-    if (myId === targetId) {
+    if (user.avatar)
+        avatarBase64 = `data:image/png;base64,${user.avatar.toString('base64')}`;
+
+    return {
+        id: user.id,
+        username: user.username,
+        avatar: avatarBase64,
+        isOnline: user.isOnline,
+        relationship: relationship
+    };
+  }
+
+  async getProfileWithRelationship(req: FastifyRequest<{ Querystring: { targetUsername: string } }>, reply: FastifyReply) {
+    const userId = req.headers['x-user-id']?.toString();
+    const myUsername = req.headers['x-user-username'];
+
+    if (!userId || !myUsername)
+      return ;
+
+    const myId = parseInt(userId);
+    const targetUsername = req.query.targetUsername;
+
+    if (myUsername === targetUsername)
+    {
         const user = await prisma.user.findUnique({ where: { id: myId } });
-        if (!user) throw new Error("User not found");
+        if (!user)
+          throw new Error("User not found");
         return this.formatUserResponse(user, 'me');
     }
 
     const targetUser = await prisma.user.findUnique({
-        where: { id: targetId },
+        where: { username: targetUsername },
         include: {
             receivedRequests: {
                 where: { senderId: myId },
@@ -342,18 +384,4 @@ export class UserController {
 }
 
 
-formatUserResponse(user: any, relationship: string) {
-    let avatarBase64: string | null = null;
-    if (user.avatar) {
-        avatarBase64 = `data:image/png;base64,${user.avatar.toString('base64')}`;
-    }
-
-    return {
-        id: user.id,
-        username: user.username,
-        avatar: avatarBase64,
-        isOnline: user.isOnline,
-        relationship: relationship
-    };
-}
 }

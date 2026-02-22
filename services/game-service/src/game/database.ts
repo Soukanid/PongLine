@@ -25,6 +25,63 @@ export default async function gameRoutes(fastify: FastifyInstance) {
             return reply.status(500).send({ success: false, error: "Internal Server Error" });
         }
     });
+
+    fastify.get<{ Params: { username: string } }>('/stats/:username', async (request, reply) => {
+        try {
+            const { username } = request.params;
+
+            const player = await prisma.player.findUnique({
+                where: { username: username },
+                select: {
+                    total_wins: true,
+                    total_games: true
+                }
+            });
+
+            if (!player) {
+                return reply.status(200).send({
+      
+                    stats: {
+                        total_wins: 0,
+                        total_games: 0,
+                        total_losses: 0
+                    }
+                });
+            }
+            return reply.status(200).send({
+                stats: {
+                    total_wins: player.total_wins,
+                    total_games: player.total_games,
+                    total_losses: player.total_games - player.total_wins 
+                }
+            });
+
+        } catch (error) {
+            console.error("Failed to fetch player stats:", error);
+            return reply.status(500).send("Internal Server Error");
+        }
+    });
+
+    fastify.get<{ Params: { username: string } }>('/history/:username', async (request, reply) => {
+      try {
+        const { username } = request.params;
+        const matches = await prisma.match.findMany({
+            where: {
+                OR: [
+                    { username1: username },
+                    { username2: username }
+                ]
+            },
+            orderBy: { playedAt: 'desc' },
+            take: 50
+        });
+        
+        return reply.status(200).send({ matches });
+      } catch (error) {
+        console.error(error);
+        return reply.status(500).send("Internal Server Error" );
+      }
+    });
 }
 
 export async function saveMatch(matchResult: any, winner: any) {
@@ -48,3 +105,5 @@ export async function saveMatch(matchResult: any, winner: any) {
       console.error("Failed to save match:", error);
     }
 }
+    
+

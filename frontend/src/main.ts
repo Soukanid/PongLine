@@ -1,6 +1,7 @@
 //import "./style.css";
 import { router } from "./core/Router";
 import { AuthService } from "./features/auth/authService.ts"
+import { chatService } from "./features/chat/ChatServices.ts"
 /*
 import "./features/auth/LoginPage";
 import "./features/chat/ChatPage";
@@ -56,10 +57,11 @@ class App {
       }
     });
 
-    //websocket setup
-   /* const id = Number(appStore.getUser()?.id);
-   id?chatService.connectSocket(id):chatService.connectSocket(1);
-*/
+    // const id = Number(appStore.getUser()?.id);
+    // id?chatService.connectSocket():null;
+    //[soukaina] because appStore is undefine
+    chatService.connectSocket();
+
     //initial render
     this.render();
   }
