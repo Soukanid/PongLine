@@ -19,6 +19,7 @@ export class ChatPage extends BaseComponent {
   private activeFriendId : number | null = null;
   private activeFriendUsername : string | null = null;
   private isBlockedView: boolean = false;
+  private isInvitationView: boolean = false;
 
 
   async render() {
@@ -173,6 +174,8 @@ export class ChatPage extends BaseComponent {
 
   async loadFriend() {
     this.isBlockedView = false
+    this.isInvitationView = false;
+
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
       
@@ -267,7 +270,29 @@ export class ChatPage extends BaseComponent {
     // enable the button and the input field
     const input = this.querySelector('#msg-input') as HTMLInputElement;
     const btn = this.querySelector('#send-btn') as HTMLButtonElement;
+    const messageArea = this.querySelector("#message-area");
 
+    if (this.isInvitationView)
+    {
+        input.disabled = true;
+        btn.disabled = true;
+        input.value = ""; 
+        input.placeholder = "> Pending Friend Request...";
+        input.classList.add("cursor-not-allowed", "opacity-50");
+        
+        if (messageArea) {
+            messageArea.innerHTML = `
+              <div class="flex flex-col items-center justify-center h-full text-retro font-mono">
+                <button id="go-to-profile" class="cursor-pointer border border-retro px-6 py-3 hover:bg-retro hover:text-black transition-colors font-bold tracking-widest">
+                  [ VIEW PROFILE TO ACCEPT.sh ]
+                </button>
+              </div>
+            `;
+            const profileBtn = messageArea.querySelector('#go-to-profile');
+            profileBtn?.addEventListener('click', () => router.navigate(`/profile?username=${name}`));
+        }
+        return;
+    }
     if (this.isBlockedView)
     {
         input.disabled = true;
@@ -285,7 +310,6 @@ export class ChatPage extends BaseComponent {
         input.focus();
     }
 
-    const messageArea = this.querySelector("#message-area");
     if (messageArea)
       messageArea.innerHTML = `<div class="text-retro text-center ml-10 animate-pulse">Loading conversation...</div>`;
   
@@ -301,6 +325,7 @@ export class ChatPage extends BaseComponent {
   async showContact()
   {
     this.isBlockedView = false;
+    this.isInvitationView = false;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
@@ -313,6 +338,7 @@ export class ChatPage extends BaseComponent {
   async showBlocked()
   {
     this.isBlockedView = true;
+    this.isInvitationView = false;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
@@ -327,6 +353,7 @@ export class ChatPage extends BaseComponent {
   async showInvitations()
   {
     this.isBlockedView = false;
+    this.isInvitationView = true;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
