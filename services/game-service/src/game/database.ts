@@ -29,22 +29,33 @@ export default async function gameRoutes(fastify: FastifyInstance) {
 
 export async function saveMatch(matchResult: any, winner: any) {
     try {
-      await prisma.$transaction([
+        await prisma.$transaction(async (tx: any) => {
+            await tx.player.upsert({
+                where: { username: matchResult.username1 },
+                update: {},
+                create: { username: matchResult.username1 }
+            });
 
-        prisma.match.create({ data: matchResult }),
+            await tx.player.upsert({
+                where: { username: matchResult.username2 },
+                update: {},
+                create: { username: matchResult.username2 }
+            });
 
-        prisma.player.updateMany({
-          where: { username: { in: [matchResult.username1, matchResult.username2] } },
-          data: { total_games: { increment: 1 } }
-        }),
+            await tx.match.create({ data: matchResult });
 
-        prisma.player.update({
-          where: { username: winner.username },
-          data: { total_wins: { increment: 1 } }
-        })
-      ]);
-      console.log(`Match ${matchResult.room_id} saved to database.`);
+            await tx.player.updateMany({
+                where: { username: { in: [matchResult.username1, matchResult.username2] } },
+                data: { total_games: { increment: 1 } }
+            });
+
+            await tx.player.update({
+                where: { username: winner.username },
+                data: { total_wins: { increment: 1 } }
+            });
+        });
+        console.log(`Match ${matchResult.room_id} saved successfully.`);
     } catch (error) {
-      console.error("Failed to save match:", error);
+        console.error("Transaction Failed: Match not saved.", error);
     }
 }

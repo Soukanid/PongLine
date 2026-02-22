@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../core/Component';
+import { appStore } from '../../core/Store';
 import { io, Socket } from 'socket.io-client'; 
 import { router } from '../../core/Router';
 import { PongGame } from "./Render";
@@ -54,9 +55,9 @@ export class Game extends BaseComponent {
         
         this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
-            const name: string = Math.random().toString(36).substring(2, 8).toUpperCase();
-            console.log(`Attempting to join room: ${room}`);
-            this.game.joinRoom(room, `${name}_u`, `${name}_n`);// send user data to the backend and fetch them from the user-management
+            const name = appStore.getUser()?.username;
+            console.log(`username: ${name}, room: ${room}`);
+            this.game.joinRoom(room, `${name}`, `${name}`);
         }
         this.game.loop();
     }
