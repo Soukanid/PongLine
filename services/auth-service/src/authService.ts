@@ -143,7 +143,7 @@ export class AuthService {
     );
 
       //update users online status in User service
- /*     await this.callUserService<{}>(
+    /* await this.callUserService<{}>(
         "PATCH",
         "online",
         accessToken,
@@ -197,9 +197,9 @@ export class AuthService {
        "warrior",
        authUser.username,
      );
-
+/*
 //update users online status in User service
-/*      await this.callUserService<{}>(
+      await this.callUserService<{}>(
         "PATCH",
         "online",
         accessToken,

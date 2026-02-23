@@ -306,7 +306,7 @@ export class Header extends BaseComponent {
       router.navigate("/dashboard");
     });
 
-    const logoutLink = this.querySelector("#logout") as HTMLImageElement;
+    const logoutLink = this.querySelector("#Logout") as HTMLImageElement;
 
     logoutLink.addEventListener("click", () => {
       AuthService.logout();
