@@ -32,6 +32,19 @@ export const LoginSchema = {
   }
 }
 
+export const IntraCallSchema = {
+  body: Type.Object({
+    code: Type.String(),
+  }),
+  response: {
+    200: Type.Object({
+     success: Type.String(),
+    }),
+    401: Type.Object({
+      error: Type.String()
+    })
+  }
+}
 export const ValidateSchema = {
   // headers: Type.Object({
   //   authorization: Type.String({

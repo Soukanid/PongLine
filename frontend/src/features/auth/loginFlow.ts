@@ -11,35 +11,39 @@ export class LoginFlow {
 
   async start() {
     this.terminal.hideCommandLine();
-    this.terminal.print("Enter your credentials");
+    this.terminal.print("Enter your credentials :");
 
-    const form = document.createElement("form");
-    form.className = "flex flex-row";
+    const form = document.createElement("div");
+    form.className = "flex flex-col";
     form.innerHTML = `
       <div class="w-full bg-transparent border-none outline-none">
-        <input type="text" placeholder="Username" id="username" required />
+        <label for="email">Email :</label>
+        <input type="email" placeholder="flan@frtlan.com" id="email" required />
       </div>
       <div class="hidden w-full bg-transparent border-none outline-none">
-        <input type="password" placeholder="Password" id="password" required />
+        <label for="password">Password :</label>
+        <input type="password" placeholder="ifta7 ya simsim" id="password" required />
       </div>
        <div class="hidden w-full bg-transparent border-none outline-none">
-        <input type="tfacode" placeholder="2FA code" id="tfacode"/>
+        <label for="tfacode">2FA Code :</label>
+        <input type="number" placeholder="ha lm39ool" id="tfacode"/>
       </div>
     `;
 
     this.terminal.printElem(form);
 
-    const username = form.querySelector("#username") as HTMLInputElement;
+    const email = form.querySelector("#email") as HTMLInputElement;
     const password = form.querySelector("#password") as HTMLInputElement;
     const tfacode = form.querySelector("#tfacode") as HTMLInputElement;
 
-    username.focus();
+    email.focus();
 
-    username.addEventListener("keydown", async (e) => {
+    email.addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
-        if (!username.value) this.terminal.print("Username required");
+        if (!email.value) this.terminal.printError("email required");
         else {
-          username.disabled = true;
+          this.terminal.removeError();
+          email.disabled = true;
           password.parentElement?.classList.remove("hidden");
           password.focus();
         }
@@ -48,64 +52,88 @@ export class LoginFlow {
 
     password.addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
-        if (!password.value) this.terminal.print("Password required");
+        if (!password.value) this.terminal.printError("Password required");
         else {
           password.disabled = true;
-          this.terminal.print("Authenticating...");
+          this.terminal.printError("Authenticating...");
 
           const result = await AuthService.login(
-            username.value,
+            email.value,
             password.value,
           );
 
+          this.terminal.removeError();
+
           if (result.success === "TFA") {
-            this.terminal.print("2 Factor Authentication Enabled");
+            this.terminal.print("2 Factor Authentication Required");
             this.terminal.print("Please Enter the 2FA code");
             tfacode.parentElement?.classList.remove("hidden");
             tfacode.focus();
-            return true;
+          }
+          else if (result.success === "logged in"){
+            await AuthService.setCurrentUser();
+            this.terminal.print(" Login Successful");
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get("redirect");
+            router.navigate(redirect || "/dashboard");
           }
 
           if (result.error) {
             this.terminal.print("Error : " + result.error);
             this.terminal.showCommandLine();
-            return true;
           }
-
-          this.terminal.print(" Login Successful");
-          const params = new URLSearchParams(window.location.search);
-          const redirect = params.get("redirect");
-          router.navigate(redirect || "/dashboard");
         }
       }
+      return true;
     });
 
     tfacode.addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
-        if (!tfacode.value) this.terminal.print("2 FA code required");
+        if (!tfacode.value) this.terminal.printError("2FA code required");
         else {
           tfacode.disabled = true;
-          this.terminal.print("Validating...");
+          this.terminal.printError("Validating...");
 
           const result = await AuthService.tfaValidate(
-            username.value,
+            email.value,
             password.value,
             tfacode.value,
           );
 
+          this.terminal.removeError();
+
+          if (result.success) {
+            await AuthService.setCurrentUser();
+            this.terminal.print(" Login Successful");
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get("redirect");
+            router.navigate(redirect || "/dashboard");
+          }
+
           if (result.error) {
             this.terminal.print(result.error);
             this.terminal.showCommandLine();
-            return true;
           }
-
-          this.terminal.print(" Login Successful");
-          const params = new URLSearchParams(window.location.search);
-          const redirect = params.get("redirect");
-          router.navigate(redirect || "/dashboard");
         }
       }
     });
+
     return true;
+  }
+
+  async intra(){
+    window.location.assign(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/42/login`)
+    this.terminal.print(`Redirecting to
+
+          ██╗  ████╗
+         ██╔╝  █  ██║ 
+        ██╔╝     ██║
+       ██████╗  █████║
+           ██║  ╚════╝
+           ╚═╝           
+    `)
+    setTimeout(() => {}, 10);
+    return true;
+
   }
 }

@@ -32,21 +32,6 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
     } as jwt.SignOptions);
   }
 
-  // Extract access token
-  function extractToken(authHeader: string | undefined): string {
-    if (!authHeader) {
-      throw new Error("Missing authorization header");
-    }
-
-    if (!authHeader.startsWith("Bearer ")) {
-      throw new Error(
-        "Invalid authorization header format. Expected: Bearer <token>",
-      );
-    }
-
-    return authHeader.substring(7); // Remove "Bearer " prefix
-  }
-
   // Verify access token
   function verifyToken(token: string): JWTPayload {
     return jwt.verify(token, JWT_SECRET) as JWTPayload;
@@ -56,7 +41,6 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
   fastify.decorate("auth", {
     generateToken,
     verifyToken,
-    extractToken,
   });
 });
 
@@ -69,7 +53,6 @@ declare module "fastify" {
         username: string,
       ) => string;
       verifyToken: (token: string) => JWTPayload;
-      extractToken: (authHeader: string | undefined) => string;
     };
   }
 }

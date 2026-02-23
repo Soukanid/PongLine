@@ -1,9 +1,10 @@
-import "../../css/login.css";
 import { BaseComponent } from "../../core/Component";
 import { TerminalUI } from "./terminalUI";
 import { CommandController } from "./commandController";
 import { LoginFlow } from "./loginFlow";
 import { RegisterFlow } from "./registerFlow";
+import { appStore } from "../../core/Store";
+import { router } from "../../core/Router";
 
 export class LoginPage extends BaseComponent {
   private terminal!: TerminalUI;
@@ -12,12 +13,13 @@ export class LoginPage extends BaseComponent {
   render(): void {
     this.setHtml(`
       <div>
-        <div id="logo-section" class="flex flex-col items-center justify-center mb-8 md:mb-12 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl px-4">
-          <img src="pongline.png" alt="Pongline Logo" class="w-full h-auto" />
+        <div id="logo-section" class="flex flex-col w-full px-10 mb-5 mt-25 items-center">
+          <img src="pongline.png" alt="Pongline Logo" class="h-auto lg:w-2/5" />
         </div>
-        <div id="terminal-section" class="flex flex-col gap-4 md:gap-6 w-full h-100 max-w-4xl overflow-hidden text-2xl md:text-3xl lg:text-4xl items-center justify-center">
-          <div class="flex flex-col items-center justify-center min-h-0 flex-1">
-            <div id="terminal-output" class="h-full space-y-4  overflow-y-auto">
+        <div id="terminal-section" class="flex flex-col w-full h-100 overflow-hidden text-4xl items-center justify-center">
+          <div class="flex flex-col w-full items-center justify-center min-h-0 flex-1">
+          <h2 class="m-5"> >> AUTHENTICATION REQUIRED << </h2>
+            <div id="terminal-output" class="h-full space-y-4 overflow-y-auto lg:w-2/5 ">
               <!-- Terminal content will be injected here -->
 
               <!-- Command Input -->
@@ -38,7 +40,16 @@ export class LoginPage extends BaseComponent {
     `);
   }
 
+  update(): void {
+      const user = appStore.getUser()
+
+      if (user) router.navigate("/dashboard");
+  }
+
   addEvents(): void {
+
+    this.update();
+
     this.terminal = new TerminalUI(this);
     this.terminal.init();
 
@@ -50,10 +61,7 @@ export class LoginPage extends BaseComponent {
     this.controller.register("LOGIN", () => loginFlow.start());
     this.controller.register("REGISTER", () => registerFlow.start());
     this.controller.register("CLEAR", () => this.terminal.clear());
-    this.controller.register("INTRA", () => {
-      window.location.assign(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/42/login`)
-      return true;
-    });
+    this.controller.register("INTRA", () => loginFlow.intra());
     this.controller.register("GUEST", () => registerFlow.guest());
     this.controller.register("LS", () => {
       this.terminal.print("This is not your terminal 😝 ")
@@ -74,8 +82,8 @@ export class LoginPage extends BaseComponent {
       this.terminal.print("");
       this.terminal.print("━━━━━━━━━━");
       this.terminal.print("");
-        this.terminal.showCommandLine();
-        return true;
+      this.terminal.showCommandLine();
+      return true;
     });
 
     this.terminal.onCommand((cmd) => {

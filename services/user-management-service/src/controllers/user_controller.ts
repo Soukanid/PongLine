@@ -634,7 +634,7 @@ export class UserController {
         data: { isOnline: isOnline }
       });
 
-      return reply.send();
+      return reply.send({});
     } catch (error) {
       console.error(error);
       return reply.code(500).send('Failed to update status');

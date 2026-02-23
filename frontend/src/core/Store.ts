@@ -11,10 +11,8 @@ export class Store {
   }
 
   setUser(user: User | null) {
-    if (this.user !== user) {
       this.user = user;
       this.notify();
-    }
   }
 
   subscribe(listener: listener) {

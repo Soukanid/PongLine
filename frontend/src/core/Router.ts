@@ -1,4 +1,3 @@
-//port { StringMappingType } from "typescript";
 import { AuthService } from "../features/auth/authService";
 import  "../features/auth/LoginPage";
 import  "../features/game/Game";
@@ -6,46 +5,13 @@ import "../features/chat/ChatPage";
 import "../features/game/Render";
 import "../features/utils/LandingPage";
 import "../features/utils/NotFoundPage";
+import "../features/utils/NotAllowedPage";
 import "../features/profile/ProfilePage"
 import "./Component";
 import "../features/game/Menu";
 import "../features/Header/Header";
-/*
-export class Router {
-  routes: Record<string, string>;
+import { appStore } from "./Store";
 
-  constructor(routes: Record<string, string>) {
-    this.routes = routes;
-
-    // handle the 'Back' button
-    window.addEventListener('popstate', () => this.loadRoute());
-    document.body.addEventListener('click', e => {
-      const target = e.target as HTMLElement;
-      if (target.matches('[data-link]')) {
-        e.preventDefault();
-        this.navigateTo((target as HTMLAnchorElement).href);
-      }
-      if (target.matches('button[data-url]')) {
-        e.preventDefault();
-        this.navigateTo(target.dataset.url!);
-      }
-    });
-    this.loadRoute();
-  }
-
-  navigateTo(url: string) {
-    history.pushState(null, '', url);
-    this.loadRoute();
-  }
-
-  loadRoute() {
-    const path = window.location.pathname;
-    const tagName = this.routes[path] || this.routes['/'];
-    const app = document.getElementById('app');
-    if (app) app.innerHTML = `<${tagName}></${tagName}>`;
-  }
-}
-*/
 interface Route {
   path: string
   page:  string
@@ -53,39 +19,66 @@ interface Route {
 }
 
 const routes: Route[] = [
-  {path: '/', page: "landing-page"},
-  {path: '/login', page: "login-page"},
-  {path: '/dashboard', page: "profile-page"},
-  {path: '/profile', page: "profile-page"},
-  {path: '/menu', page: "menu-page"},
-  {path: '/game', page: "game-page"},
-  {path: '/chat', page: "chat-page"},
+  {path: '/', page: "landing-page", protected:false},
+  {path: '/login', page: "login-page", protected:false},
+  {path: '/dashboard', page: "profile-page", protected:false},
+  {path: '/profile', page: "profile-page", protected:false},
+  {path: '/settings', page: "settings-page", protected:true},
+  {path: '/menu', page: "menu-page", protected:false},
+  {path: '/game', page: "game-page", protected:false},
+  {path: '/chat', page: "chat-page", protected:true},
+  {path: '/WarriorsOnly', page: "not-allowed-page", protected:false},
+  {path: '/LostYourWay', page: "not-found-page", protected:false},
 ]
 
 export const router = {
   async resolve(url:URL): Promise<HTMLElement>{
+
     //check if route exists
     const route = routes.find(r => this.matchPath(r.path, url.pathname))
 
+    //landing page
+    if (route && route.path === '/')
+    {
+      history.pushState({},"",route.path);
+      return document.createElement("landing-page");
+    }
+
+    //check authentication
+    if (!AuthService.isAuthenticated()){
+
+      console.log("not authenticated");
+      if (route && route.path !== "/login" && route.path !== "/") {
+        history.pushState(
+          {},
+          "",
+          `/login?redirect=${encodeURIComponent(url.pathname)}`,
+        );
+      }
+      return document.createElement("login-page");
+    }
+
+    //redirect if route doesnt exist
     if (!route){
       console.log("route not found")
+      history.pushState({},"", '/LostYourWay')
       return document.createElement("not-found-page")
     }
 
-    //check authentication for protected routes
-    if (route.path !== '/login' && route.path !== '/' && !AuthService.isAuthenticated()){
-      console.log("not authenticated")
-      history.pushState({},"", `/login?redirect=${encodeURIComponent(url.pathname)}`)
-      return document.createElement("login-page")
+    //redirect from protected routes for guests
+    if (route.protected && appStore.getUser()?.role === 'guest'){
+      console.log("Protected route")
+      history.pushState({},"", '/WarriorsOnly')
+      return document.createElement("not-allowed-page")
     }
 
-    //check authorization for users routes
     //redirect to dashboard if already logged in
-    if (route.path === '/login' && AuthService.isAuthenticated()){
+    if (route.path === '/login'){
       console.log("login but authenticated")
       history.pushState({},"", '/dashboard')
       return document.createElement("profile-page")
     }
+
     return document.createElement(route.page)
   },
 

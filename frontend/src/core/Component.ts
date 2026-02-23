@@ -11,8 +11,6 @@ export abstract class BaseComponent extends HTMLElement {
     this.render();
     this.addEvents();
     this.unsubscribe = appStore.subscribe(()=>{
-      this.render();
-      this.addEvents();
     })
   }
 
