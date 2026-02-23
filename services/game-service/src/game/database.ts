@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance , type FastifyRequest, type FastifyResponse} from 'fastify';
+import fastify, { FastifyInstance , type FastifyRequest, type FastifyReply} from 'fastify';
 import { prisma } from '../tournament/database'
 import { rooms, createInitialState } from './gameLogic';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,7 +14,7 @@ export async function createGameRoom() {
 }
 
 export default async function gameRoutes(fastify: FastifyInstance) {
-    fastify.post('/create-room', async (request: FastifyRequest, reply: FastifyResponse) => {
+    fastify.post('/create-room', async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const roomId = await createGameRoom();
             return reply.status(201).send({
@@ -26,9 +26,9 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/stats/:username', async (request: FastifyRequest, reply: FastifyResponse) => {
+      fastify.get('/stats/:username', async (request: FastifyRequest<{ Params: { username: string } }>, reply: FastifyReply) => {
         try {
-            const { username } = request.params;
+            const { username } = request.params
 
             const player = await prisma.player.findUnique({
                 where: { username: username },
@@ -61,7 +61,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/history/:username', async (request: FastifyRequest, reply:FastifyResponse) => {
+    fastify.get<{ Params: { username: string } }>('/history/:username', async (request, reply) => {
       try {
         const { username } = request.params;
         const matches = await prisma.match.findMany({
@@ -69,7 +69,10 @@ export default async function gameRoutes(fastify: FastifyInstance) {
                 OR: [
                     { username1: username },
                     { username2: username }
-                ]
+                ],
+                winnerName: {
+                  not: null
+              }
             },
             orderBy: { playedAt: 'desc' },
             take: 50
@@ -84,6 +87,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
 }
 
 export async function saveMatch(matchResult: any, winner: any) {
+    let finalMatchToNotify: any = null;
     try {
         await prisma.$transaction(async (tx: any) => {
             await tx.player.upsert({
@@ -131,23 +135,54 @@ export async function saveMatch(matchResult: any, winner: any) {
                 const secondMatch = tournamentMatches[1];
                 const finalMatch = tournamentMatches[2];
 
-                if (firstMatch?.winnerName && secondMatch?.winnerName) {
-                    await tx.match.update({
+                if (firstMatch?.winnerName && secondMatch?.winnerName && !finalMatch?.winnerName) {
+                    const updatedFinalMatch = await tx.match.update({
                         where: { id: finalMatch.id },
                         data: {
                             username1: firstMatch.winnerName,
                             username2: secondMatch.winnerName
                         }
                     });
-                    // add whatever you want
-                    
+                    finalMatchToNotify = updatedFinalMatch; 
                 }
+
+                if (finalMatch.winnerName)
+                  console.log("soukaina");
             }
             
         });
+        if (finalMatchToNotify)
+            await notifyPlayersAboutFinaleMatch(finalMatchToNotify.username1, finalMatchToNotify.username2, finalMatchToNotify.room_id);
+
         console.log(`Match ${matchResult.room_id} saved successfully.`);
     } catch (error) {
         console.error("Transaction Failed: Match not saved.", error);
     }
 }
     
+async function notifyPlayersAboutFinaleMatch(username1: string, username2: string, roomId: string) {
+    const notifications = [
+      { username: username1, type: "TOURNAMENT_MATCH", payload: roomId },
+      { username: username2, type: "TOURNAMENT_MATCH", payload: roomId }
+    ];
+
+    const url = new URL(`${process.env.CHAT_SERVICE_URL}notify`);
+
+    for (const notif of notifications) {
+      if (!notif.username) continue; 
+
+      try {
+        await fetch(url.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: notif.username, 
+            type: notif.type,
+            payload: notif.payload 
+          }),
+        });
+      } catch(error) {
+        console.error(error);
+      }
+    }
+}

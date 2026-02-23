@@ -248,7 +248,8 @@ export class Header extends BaseComponent {
       });
 
       container.appendChild(userItem);
-      });
+    });
+
     container.classList.remove('hidden');
   }
 

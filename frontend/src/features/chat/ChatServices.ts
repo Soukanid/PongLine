@@ -183,8 +183,8 @@ class ChatService {
 
   async markAsRead(friendId: number): Promise<void> {
     try {
-      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`);
-
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-msg-read`);
+      
       await fetch(url.toString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

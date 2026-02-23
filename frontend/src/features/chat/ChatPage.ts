@@ -62,13 +62,13 @@ export class ChatPage extends BaseComponent {
                   placeholder="Search friends..." 
               >
               <button id="invitations" class="cursor-pointer px-4 py-2 shrink-0">
-                  <img src="${inviteIcon}" class="w-8 h-8 hover:brightness-0 hover:opacity-80 transition-opacity" />
+                  <img src="${inviteIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
               </button>
           </div>
           <div id="friends-list" class="min-h-0 flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           </div>
           <div class="border-t border-retro/50 flex justify-between items-center px-4 py-2">
-            <button id="friends-contact" class="cursor-pointer px-4 py-2 on hover:">
+            <button id="friends-contact" class="cursor-pointer px-4 py-2">
               <img src="${contactIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
             </button>
 
@@ -137,7 +137,7 @@ export class ChatPage extends BaseComponent {
           statusHTML = `<span class="mr-3 text-[20px] font-mono text-retro animate-pulse"> ONLINE </span>`;
         
         friendItem.innerHTML = `
-          <img class="m-2 w-10 h-10 rounded-full avatar-img hover:scale-110 "> 
+          <img class="m-2 w-10 h-10 rounded-full avatar-img transition-transform hover:scale-110 group-hover:brightness-0">
           <div class="m-2 flex-1">
             <div class=" font-bold  font-mono username-text"></div>
           </div>
@@ -204,17 +204,17 @@ export class ChatPage extends BaseComponent {
 
   addMessageToUI(msg: Message) {
     const area = this.querySelector('#message-area');
-    if (!area) return;
+    if (!area)
+      return;
 
     let senderName = 'Unknown';
 
-    if (msg.sender_id === msg.myId) {
+    if (msg.sender_id === msg.myId)
         senderName = 'You';
-    } else if (msg.sender_id === this.activeFriendId) {
+    else if (msg.sender_id === this.activeFriendId)
         senderName = this.activeFriendUsername || 'Friend';
-    } else {
+    else
         senderName = 'Someone else'; 
-    }
 
     const date = msg.created_at ? new Date(msg.created_at) : new Date();
     const timeStr = date.toLocaleTimeString('en-GB', { 
@@ -224,13 +224,18 @@ export class ChatPage extends BaseComponent {
         second: '2-digit' 
     });
 
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const formattedContent = msg.content.replace(urlRegex, (url) => {
+        return `<a href="${url}" class=" text-retro px-2 py-1 ml-2 font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">[ JOIN ]</a>`;
+    });
+
     const line = document.createElement('div');
     line.className = "w-full mb-1 font-mono text-sm text-retro break-words hover:bg-retro/10 transition-colors px-2";
 
     line.innerHTML = `
       <span class="opacity-60 mr-2">[${timeStr}]</span>
       <span class="font-bold mr-2">&lt;${senderName}&gt;</span>
-      <span class="text-retro">${msg.content}</span>
+      <span class="text-retro">${formattedContent}</span>
     `;
 
     area.appendChild(line);
@@ -258,8 +263,33 @@ export class ChatPage extends BaseComponent {
       nameSpane.textContent = name;
 
       const icon = document.createElement('img');
-      icon.className = "items-center m-2  w-8 h-8 ml-auto";
+      icon.className = "items-center m-2  w-8 h-8 ml-auto group-hover:brightness-0 hover:opacity-80 transition-opacity cursor-pointer";
       icon.src = gameIcon;
+
+      icon.addEventListener('click', async () => {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/create-room`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          
+          const res = await response.json();
+          
+          if (res.success && res.roomId)
+          { 
+            const gameLink = `${window.location.origin}/game?mode=remote&room=${res.roomId}`;
+            
+            if (this.activeFriendId)
+            {
+                const inviteText = `I challenge you to a match! Join here: ${gameLink}`;
+                await chatService.sendMessage(this.activeFriendId, inviteText);
+            }
+          }
+          } catch (err) {
+            console.error(err);
+          }
+      });
 
       chatHeader.appendChild(span);
       chatHeader.appendChild(nameSpane);

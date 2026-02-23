@@ -1,5 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../utils/prisma_init';
+import path  from 'path';
+import fs from 'fs';
 
 export class UserController {
 
@@ -203,11 +205,21 @@ export class UserController {
   async createUser(req: FastifyRequest< { Body: { email: string, username: string }}>, reply: FastifyReply) {
     
     try {
+      const defaultAvatarPath = path.join(__dirname, '../../data/avatars/default_avatar.png') 
+
+      let avatarBuffer: Buffer;
+
+      try {
+        avatarBuffer = fs.readFileSync(defaultAvatarPath);
+      } catch
+      {
+        avatarBuffer = Buffer.alloc(0);
+      }
       const user = await prisma.user.create({
         data : {
           email: req.body.email,
           username: req.body.username,
-          avatar: Buffer.alloc(0)
+          avatar: avatarBuffer
         },
       });
       return reply.status(201).send( {id: user.id });
