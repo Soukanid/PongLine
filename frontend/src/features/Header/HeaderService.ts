@@ -21,16 +21,14 @@ class HeaderService {
       }
   }
 
-  async maskAsRead()
+  async markAsRead()
   {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`,
                   { method: 'POST' }
                   );
       if (!response.ok)
-      {
         console.error("Failed to mark the notifications as read");
-      }
     } catch (error) {
         console.error("Failed to mark the notifications as read");
     }

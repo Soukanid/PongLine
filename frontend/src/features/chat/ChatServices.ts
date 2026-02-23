@@ -186,7 +186,7 @@ class ChatService {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`);
 
       await fetch(url.toString(), {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendId })
       });

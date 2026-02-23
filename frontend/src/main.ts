@@ -57,9 +57,6 @@ class App {
       }
     });
 
-    // const id = Number(appStore.getUser()?.id);
-    // id?chatService.connectSocket():null;
-    //[soukaina] because appStore is undefine
     chatService.connectSocket();
 
     //initial render

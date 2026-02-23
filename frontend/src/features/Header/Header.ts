@@ -45,10 +45,13 @@ export class Header extends BaseComponent {
             <div class="relative" id="notif-container">
                <button id="notif-btn" class="relative hover:scale-110 transition-transform">
                   <img src="${notifIcon}" class="h-8 w-8 cursor-pointer">
+                  <span id="notif-badge" class="absolute -top-3 -right-1 text-xxl text-retro font-bold rounded-full hidden">
+                    0
+                  </span>
                </button>
 
-               <div id="notif-dropdown" class="absolute right-0 top-full mt-4 w-80 bg-black border border-retro z-50 hidden flex-col">
-                  <div id="notif-list" class="max-h-80 overflow-y-auto"> </div>
+               <div id="notif-dropdown" class="absolute right-0 top-full mt-4 w-80 bg-black border border-retro z-50 hidden flex-col ">
+                  <div id="notif-list" class="max-h-80 overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"> </div>
                </div>
           </div>
 
@@ -63,9 +66,7 @@ export class Header extends BaseComponent {
 
   handleNotification = (data: any) => {
       this.notifcounter++;
-      //[soukaina] I am gonna use Numbers
-      // this.updateRedDot();
-
+      this.updateNotifBadge();
   }
 
   handleIncomingChat = (data: any) => {
@@ -91,6 +92,21 @@ export class Header extends BaseComponent {
           badge.classList.add('hidden');
   }
 
+  updateNotifBadge()
+  {
+      const badge = this.querySelector('#notif-badge') as HTMLElement;
+      if (!badge)
+        return;
+
+      if (this.notifcounter > 0)
+      {
+          badge.textContent = this.notifcounter > 9 ? '9+' : this.notifcounter.toString();
+          badge.classList.remove('hidden');
+      }
+      else 
+          badge.classList.add('hidden');
+  }
+
   async connectedCallback()
   {
       super.connectedCallback?.();
@@ -104,14 +120,17 @@ export class Header extends BaseComponent {
 
       if (list)
       {
-         this.notifcounter = list.length;
+        const unreadList = list.filter((n: any) => n.read === false);
+        this.notifcounter = unreadList.length;
       }
+      this.updateNotifBadge();
   }
 
-  // disconnectedCallback() {
-  //
-  //     chatService.notificationListeners = chatService.notificationListeners.filter(cb => cb !== this.handleNotification);
-  // }
+  disconnectedCallback() {
+      super.disconnectedCallback?.();
+      
+      chatService.offNotification(this.handleNotification);
+  }
   
 
 
@@ -132,7 +151,8 @@ export class Header extends BaseComponent {
           const notifList = await headerService.fetchUnreadNotifications();
           this.renderNotificationItems(notifList, listContainer);
           this.notifcounter = 0;
-          headerService.maskAsRead();
+          this.updateNotifBadge();
+          headerService.markAsRead();
       }
       else 
           dropdown.classList.add('hidden');
@@ -149,14 +169,37 @@ export class Header extends BaseComponent {
       container.innerHTML = '';
       notifs.forEach(n => {
           const item = document.createElement('div');
-          item.className = "p-2 border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col";
+          item.className = "p-3 border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col";
           
-          let message = n.content;
+          let actionButton = '';
+
+          if (n.type === 'TOURNAMENT_MATCH') {
+              actionButton = `
+                <button class="join-match-btn   py-1  uppercase font-bold text-retro hover:bg-retro hover:text-black transition-colors cursor-pointer mt-1">
+                  [ JOIN_ROOM.exe ]
+                </button>
+              `;
+          }
 
           item.innerHTML = `
-             <div class="text-sm text-retro font-mono">${message}</div>
-             <div class="text-sm text-retro text-right">${new Date(n.createdAt).toLocaleTimeString()}</div>
+             <div class="text-sm text-retro font-mono animate-pulse">"You Tournament match is ready"</div>
+             ${actionButton}
+             <div class="text-lg text-retro/50 text-right">${new Date(n.createdAt).toLocaleTimeString()}</div>
           `;
+
+          if (n.type === 'TOURNAMENT_MATCH')
+          {
+              const btn = item.querySelector('.join-match-btn') as HTMLButtonElement;
+              btn?.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  
+                  this.isNotifOpen = false;
+                  this.querySelector('#notif-dropdown')?.classList.add('hidden');
+                  
+                  router.navigate(`/game?mode=remote&room=${n.content}`);
+              });
+          }
+
           container.appendChild(item);
       });
   }

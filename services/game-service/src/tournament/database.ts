@@ -102,6 +102,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
 
   async function startTournamentBrackets(tournament: any)
   {
+  
     const players = tournament.participant;
     const matches = tournament.matches; 
     
@@ -125,6 +126,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
       })
     ]);
 
+    await notifyPlayersAboutMatches(players, matches);
   }
 
   fastify.post('/join', async (request, reply) => {
@@ -161,9 +163,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             include: { participant: true, matches: true }
         });
 
-        if (updated.tour_state === "In-progress") {
+        if (updated.tour_state === "In-progress")
           await startTournamentBrackets(updated);
-        }
 
         return reply.code(200).send(updated);
 
@@ -172,6 +173,37 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         return reply.code(500).send({ error: "Join failed" });
     }
   });
+
+  async function notifyPlayersAboutMatches(players: any[], matches: any[]) {
+    const notifications = [
+      { username: players[0].username, type: "TOURNAMENT_MATCH", payload: matches[0].room_id },
+      { username: players[1].username, type: "TOURNAMENT_MATCH", payload: matches[0].room_id },
+      { username: players[2].username, type: "TOURNAMENT_MATCH", payload: matches[1].room_id },
+      { username: players[3].username, type: "TOURNAMENT_MATCH", payload: matches[1].room_id }
+    ];
+
+    const url = new URL(`${process.env.CHAT_SERVICE_URL}notify`);
+
+    for (const notif of notifications)
+    {
+      if (!notif.username)
+         continue; 
+
+      try {
+        await fetch(url.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: notif.username, 
+            type: notif.type,
+            payload: notif.payload 
+          }),
+        });
+      } catch(error) {
+        console.error(error);
+      }
+    }
+  }
 
   fastify.delete('/delete/:tour_id', async (request, reply) => {
     const { tour_id } = request.params as { tour_id: string };

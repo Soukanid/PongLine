@@ -11,12 +11,6 @@ const fastify = Fastify({
 // add plugins
 
 await fastify.register(websocket);
-fastify.addHook('onRequest', async (request, reply) => {
-  console.log('------------------------------------------------');
-  console.log(`🔍 INCOMING REQUEST: ${request.method} ${request.url}`);
-  console.log('🔍 HEADERS:', request.headers);
-  console.log('------------------------------------------------');
-});
 await fastify.register(chatRoutes)
 
 // run the server

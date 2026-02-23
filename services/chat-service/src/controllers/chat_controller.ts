@@ -102,13 +102,20 @@ export class ChatController {
 
   }
 
-  async notify(req: FastifyRequest<{Body: {userId: string, type: string, payload: string}}>, reply: FastifyReply)
+  async notify(req: FastifyRequest<{Body: {username: string, type: string, payload: string}}>, reply: FastifyReply)
   {
-    const { userId, type, payload } = req.body;
-
-    const targetId = parseInt(userId);
+    const { username, type, payload } = req.body;
 
     try {
+
+        // get Id
+        const resp = await fetch(`${process.env.USER_SERVICE_URL}get-id?username=${username}`);
+        
+        if (!resp.ok)
+            return reply.status(404).send();
+
+        const userData = await resp.json();
+        const targetId = parseInt(userData.id);
         // save the notification 
         const savedNotif = await prisma.notification.create({
            data: {
@@ -179,9 +186,9 @@ export class ChatController {
       const notifications = await prisma.notification.findMany({
         where: {
           userId: userId,
-          read: false
         },
-        orderBy: { createdAt: 'desc'}
+        orderBy: { createdAt: 'desc'},
+        take: 20
       });
 
       return notifications;
@@ -330,5 +337,6 @@ export class ChatController {
        }
     });
   }
+
 }
 

@@ -40,7 +40,6 @@ export default async function gameRoutes(fastify: FastifyInstance) {
 
             if (!player) {
                 return reply.status(200).send({
-      
                     stats: {
                         total_wins: 0,
                         total_games: 0,

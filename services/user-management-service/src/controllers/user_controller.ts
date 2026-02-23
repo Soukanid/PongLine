@@ -605,18 +605,21 @@ export class UserController {
       return reply.code(500).send({ error: "Failed to check block status" });
     }
   }
-  async setOnline(req: FastifyRequest, reply: FastifyReply)
+
+  async setOnlineStatus(req: FastifyRequest<{ Body: { isOnline: boolean } }>, reply: FastifyReply)
   {
-    const userIdStr = req.headers['x-user-id']?.toString();
+    const userId = req.headers['x-user-id']?.toString();
     
-    if (!userIdStr)
+    if (!userId)
       return reply.code(400).send();
-    const myId = parseInt(userIdStr);
+    const myId = parseInt(userId);
+
+    const { isOnline } = req.body;
 
     try {
       await prisma.user.update({
         where: { id: myId },
-        data: { isOnline: true }
+        data: { isOnline: isOnline }
       });
 
       return reply.send();
@@ -626,22 +629,25 @@ export class UserController {
     }
   }
 
-  async setOffline(req: FastifyRequest, reply: FastifyReply) {
-    const userIdStr = req.headers['x-user-id']?.toString();
+  async getIdByUsername(req: FastifyRequest<{ Querystring: { username: string } }>, reply: FastifyReply) {
+    const { username } = req.query;
     
-    if (!userIdStr) return reply.code(400).send({ error: "Missing user ID" });
-    const myId = parseInt(userIdStr);
+    if (!username)
+      return reply.code(400).send();
 
     try {
-      await prisma.user.update({
-        where: { id: myId },
-        data: { isOnline: false }
+      const user = await prisma.user.findUnique({
+        where: { username: username },
+        select: { id: true }
       });
 
-      return reply.send();
+      if (!user)
+        return reply.code(404).send();
+
+      return reply.send({ id: user.id });
     } catch (error) {
       console.error(error);
-      return reply.code(500).send('Failed to update status');
+      return reply.code(500).send();
     }
   }
 }

@@ -37,7 +37,7 @@ export async function userRoutes(server: FastifyInstance) {
 
   server.get('/blocks/check', userController.checkBlockStatus);
 
-  server.patch('/online', userController.setOnline);
+  server.patch('/online', userController.setOnlineStatus);
 
-  server.patch('/offline', userController.setOffline);
+  server.get('/get-id', userController.getIdByUsername);
 }
