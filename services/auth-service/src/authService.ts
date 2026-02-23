@@ -104,7 +104,7 @@ export class AuthService {
     const authUser = await this.prisma.userAuth.findUnique({
       where: { email },
       select: {
-        id: true,
+        userId: true,
         username: true,
         passwordHash: true,
         isTFAEnabled: true,
@@ -142,13 +142,20 @@ export class AuthService {
       authUser.username,
     );
 
+      //update users online status in User service
+ /*     await this.callUserService<{}>(
+        "PATCH",
+        "online",
+        accessToken,
+        { isOnline: true },
+      );
+*/
     return { type: 'access_token',token: accessToken };
   }
 
   // validate 2FA
   async validateTFA(twoFactorCode: string, tfa_token: string) {
 
-   try {
      const payload = this.fastify.auth.verifyToken(tfa_token);
 
      // Check if auth user still exists
@@ -191,13 +198,15 @@ export class AuthService {
        authUser.username,
      );
 
-     return { type: "access_token", token: accessToken };
-   } catch (error: any) {
-     if (error.name === "TokenExpiredError") {
-       return { valid: false, reason: "token_expired" };
-     }
-     return { valid: false, reason: "invalid_token" };
-   }
+//update users online status in User service
+/*      await this.callUserService<{}>(
+        "PATCH",
+        "online",
+        accessToken,
+        { isOnline: true },
+      );
+*/
+     return {token: accessToken };
   }
 
   //validate token controller

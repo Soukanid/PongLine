@@ -15,6 +15,7 @@ export class ApiClient {
     endpoint: string,
     data?: any,
     options?: RequestInit,
+    redir: Boolean = true,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -39,7 +40,7 @@ export class ApiClient {
     const responseData = responsetext?JSON.parse(responsetext):{} as T;
 
     if (!response.ok) {
-      if (response.status === 401) window.location.href = "/login";
+      if (response.status === 401 && redir) window.location.href = "/login";
       throw new Error(responseData.error || "Request failed");
     }
 
@@ -49,39 +50,44 @@ export class ApiClient {
   async get<T>(
     endpoint: string,
     options?: RequestInit,
+    redir?: Boolean
   ): Promise<T> {
-    return this.request<T>("GET", endpoint, undefined, options);
+    return this.request<T>("GET", endpoint, undefined, options, redir);
   }
 
   async post<T>(
     endpoint: string,
     data?: any,
     options?: RequestInit,
+    redir?: Boolean
   ): Promise<T> {
-    return this.request<T>("POST", endpoint, data, options);
+    return this.request<T>("POST", endpoint, data, options, redir);
   }
 
   async put<T>(
     endpoint: string,
     data?: any,
     options?: RequestInit,
+    redir?: Boolean
   ): Promise<T> {
-    return this.request<T>("PUT", endpoint, data, options);
+    return this.request<T>("PUT", endpoint, data, options, redir);
   }
 
   async patch<T>(
     endpoint: string,
     data?: any,
     options?: RequestInit,
+    redir?: Boolean
   ): Promise<T> {
-    return this.request<T>("PATCH", endpoint, data, options);
+    return this.request<T>("PATCH", endpoint, data, options, redir);
   }
 
   async delete<T>(
     endpoint: string,
     options?: RequestInit,
+    redir?: Boolean
   ): Promise<T> {
-    return this.request<T>("DELETE", endpoint, undefined, options);
+    return this.request<T>("DELETE", endpoint, undefined, options, redir);
   }
 }
 

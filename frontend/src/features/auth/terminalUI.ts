@@ -32,19 +32,39 @@ export class TerminalUI {
     const line = document.createElement("p");
     line.textContent = text;
     this.output.insertBefore(line, this.commandLine);
-    this.output.scrollTop = this.output.scrollHeight;
+    requestAnimationFrame(()=>{
+      this.output.scrollTop = this.output.scrollHeight;
+    });
   }
 
   printElem(elem: HTMLElement) {
     this.output.insertBefore(elem, this.commandLine);
-    this.output.scrollTop = this.output.scrollHeight;
+    requestAnimationFrame(()=>{
+      this.output.scrollTop = this.output.scrollHeight;
+    });
+  }
+
+  removeError(){
+    const err = document.querySelector('#error-p')
+    if (err)
+      err.remove();
+  }
+
+  printError(text: string){
+    this.removeError();
+    const err = document.createElement('p');
+    err.id = 'error-p'
+    err.textContent = text;
+    this.printElem(err);
   }
 
   hideCommandLine() {
+    this.input.disabled = true;
     this.commandLine.classList.add("hidden");
   }
 
   showCommandLine() {
+    this.input.disabled = false;
     this.commandLine.classList.remove("hidden");
     this.input.focus();
   }

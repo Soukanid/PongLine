@@ -1,37 +1,73 @@
-import "../../css/login.css";
 import { router } from "../../core/Router";
 import { BaseComponent } from "../../core/Component";
 
 export class LandingPage extends BaseComponent {
   render(): void {
     this.setHtml(`
-      <div id="title-section" class="flex flex-col items-center justify-center mb-8 md:mb-12 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl px-4">
-        <img src="pongline.png" alt="Pongline Logo" class="w-full h-auto" />
+      <div class="">
+      <div id="title-section" class="flex flex-col w-full mx-4 my-10  mt-30 items-center">
+        <img src="pongline.png" alt="Pongline Logo" class="h-auto lg:w-2/3 mx-12 my-5" />
       </div>
-      <div id="welcome-section" class="flex flex-col gap-4 md:gap-6 w-full max-w-4xl overflow-hidden text-2xl md:text-3xl lg:text-4xl items-center justify-center">
-        <p>
-        <span class="mr-2">&gt;&gt;</span>
-        Welcome to Pongline universe
-        <br />
-        <span class="mr-2">&gt;&gt;</span>
-        Click Enter to start ...
+      <div id="welcome-section" class=" flex flex-row w-full justify-center text-4xl text-center ">
+        <p id="instructions" class="whitespace-pre-line text-center">
         <span
-            class="cursor-blink ml-2 inline-block w-2 h-6 md:h-7 lg:h-8 bg-[#1bfb08]"
+            class="cursor-blink inline-block ml-2 w-2 h-[1em] align-bottom bg-retro"
             ></span>
-        </p>
+          </p>
+      </div>
       </div>
       `);
+
   }
 
+  private writeText(
+  target: HTMLElement,
+  content: string,
+  delay: number = 10,
+  before?: HTMLElement
+): Promise<void> {
+  return new Promise((resolve) => {
+    let index = 0;
+
+    const interval = setInterval(() => {
+
+      if (before)
+      {
+const char = content[index];
+      target.insertBefore(document.createTextNode(char),
+    before);
+      }
+      else{
+        target.textContent += content[index]
+      }
+            index++;
+
+      if (index >= content.length) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, delay);
+  });
+}
+
   private handleEnter = (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter") { 
       window.removeEventListener("keydown", this.handleEnter);
       router.navigate("/dashboard");
     }
+  };
+
+  async  addEvents(): Promise<void> {
+      const output = this.querySelector('#instructions') as HTMLElement;
+      const cursor = this.querySelector('.cursor-blink') as HTMLElement;
+
+      await this.writeText(output, "Welcome to Pongline universe\nClick Enter to start ...", 30,cursor)
+
+    window.addEventListener("keydown", this.handleEnter);
   }
 
-  addEvents(): void {
-    window.addEventListener("keydown",this.handleEnter);
+  disconnectedCallback(): void {
+    window.removeEventListener("keydown", this.handleEnter);
   }
 }
 

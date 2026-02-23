@@ -1,36 +1,7 @@
-//import "./style.css";
 import { router } from "./core/Router";
 import { AuthService } from "./features/auth/authService.ts"
-import { chatService } from "./features/chat/ChatServices.ts"
-/*
-import "./features/auth/LoginPage";
-import "./features/chat/ChatPage";
-import "./features/game/Menu";
-import "./features/game/Game";
-import "./features/profile/profile.ts"
-declare global {
-  interface Window {
-    router: Router;
-  }
-}
+import { chatService } from "./features/chat/ChatServices.ts";
 
-const routes = {
-  "/": "login-page",
-  "/menu": "page-menu",
-  "/game": "page-game",
-  "/chat": "page-chat",
-  "/demo": "page-demo",
-  "/profile": "page-profile"
-};
-
-export const routerInstance = new Router(routes);
-export const router = routerInstance;
-window.router = routerInstance;
-
-chatService.connectSocket();
-
-//initialize app
-*/
 class App {
   private currentPage: HTMLElement | null = null;
 
@@ -66,6 +37,10 @@ class App {
   private async render() {
     const path = new URL(window.location.href);
     const page = await router.resolve(path);
+    const header = document.querySelector('app-header');
+    if (header){
+      (header as any).update();
+    }
 
     if (this.currentPage) {
       this.currentPage.remove();

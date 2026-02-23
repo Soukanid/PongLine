@@ -4,39 +4,45 @@ import { User } from "../../core/Types";
 
 
 export class AuthService {
+
   static async init() {
     await this.setCurrentUser();
   }
+
+  //guest controller
   static async guest(
     alias: string,
   ): Promise<{ success?: string; error?: string }> {
     try {
-      await api.post<{}>("api/auth/guest", {alias});
+      await api.post<{}>("api/auth/guest", { alias }, {}, false);
 
       appStore.setUser({
         username: alias,
-        id: '',
-        email:""
-      })
+        id: "",
+        role: "guest",
+      });
       return { success: "logged in" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
       else return { error: "something went wrong" };
     }
   }
+
+  //login controller
   static async login(
     email: string,
     password: string,
   ): Promise<{ success?: string; error?: string }> {
     try {
-      const result = await api.post<{ tfa?: boolean }>("api/auth/login", {
-        email,
-        password,
-      });
+      const result = await api.post<{ tfa?: boolean }>(
+        "api/auth/login",
+        { email, password },
+        {},
+        false,
+      );
 
       if (result.tfa) return { success: "TFA" };
 
-      await this.setCurrentUser();
       return { success: "logged in" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
@@ -44,19 +50,24 @@ export class AuthService {
     }
   }
 
+  //2fa controller
   static async tfaValidate(
     email: string,
     password: string,
-    tfacode: string
+    tfacode: string,
   ): Promise<{ success?: string; error?: string }> {
     try {
-      await api.post<{}>("api/auth/2fa/validate", {
-        email,
-        password,
-        tfacode
-      });
+      await api.post<{}>(
+        "api/auth/2fa/validate",
+        {
+          email,
+          password,
+          tfacode,
+        },
+        {},
+        false,
+      );
 
-      await this.setCurrentUser();
       return { success: "logged in" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
@@ -64,50 +75,80 @@ export class AuthService {
     }
   }
 
+  //register controller
   static async register(
     email: string,
     username: string,
     password: string,
   ): Promise<{ success?: string; error?: string }> {
     try {
-      await api.post<{}>("api/auth/register", {
-        email,
-        username,
-        password,
-      });
-      return {success: "account created"}
+      await api.post<{}>(
+        "api/auth/register",
+        {
+          email,
+          username,
+          password,
+        },
+        {},
+        false,
+      );
+      return { success: "account created" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
       else return { error: "something went wrong" };
     }
   }
 
-  static async intra(): Promise<{success?: string; error?: string}> {
+  //42 intra controller
+  static async intra(): Promise<{ success?: string; error?: string }> {
     try {
-      await api.get<{}>("api/auth/42/login",{});
+      await api.get<{}>("api/auth/42/login", {}, false);
 
-      return {success: "42 login successful"}
+      return { success: "42 login successful" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
       else return { error: "something went wrong" };
     }
   }
 
-  static async logout() {
-    appStore.setUser(null);
-    await api.get<{}>("api/auth/logout", {});
+  //logout controller
+  static async logout(): Promise<{ success?: string; error?: string }> {
+    try {
+     /* if (appStore.getUser()?.role !== "guest"){
+        await api.patch<{ success?: string; error?: string }>(
+          "api/users/online",
+          { isOnline: false },
+        );
+      }
+*/
+      await api.post<{ success?: string; error?: string }>(
+        "api/auth/logout",
+        {},
+      );
+
+      appStore.setUser(null);
+      await Promise.resolve();
+      window.location.href = "/login";
+
+      return { success: "logged out" };
+    } catch (error) {
+      if (error instanceof Error) return { error: error.message };
+      else return { error: "something went wrong" };
+    }
   }
 
+  //fetching and setting the appStore.user information
   static async setCurrentUser(): Promise<void> {
     try {
       const me = await api.get<User>("api/user-management/me", {});
-
+      me.role = "warrior";
       appStore.setUser(me);
     } catch {
       appStore.setUser(null);
     }
   }
 
+  //checking if appStore.user is set means logged in
   static isAuthenticated(): boolean {
     return !!appStore.getUser();
   }

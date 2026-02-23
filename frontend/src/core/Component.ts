@@ -10,9 +10,9 @@ export abstract class BaseComponent extends HTMLElement {
   connectedCallback() {
     this.render();
     this.addEvents();
+      this.update();
     this.unsubscribe = appStore.subscribe(()=>{
-      this.render();
-      this.addEvents();
+      this.update();
     })
   }
 
@@ -24,6 +24,7 @@ export abstract class BaseComponent extends HTMLElement {
     this.innerHTML = html;
   }
 
+  abstract update(): void;
   abstract render(): void;
   abstract addEvents(): void;
 }

@@ -13,7 +13,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       try {
         const { alias } = request.body as { alias: string };
 
-        const accessToken = fastify.auth.generateToken(-1, "guest", alias);
+        const accessToken = fastify.auth.generateToken(1, "guest", alias);
 
         reply.setCookie("access_token", accessToken, {
           path: "/",
@@ -23,7 +23,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           maxAge: 86400,
         });
 
-        reply.send({ success: "Login successful"});
+        reply.send({ success: "Login successful" });
       } catch (error) {
         reply.code(400).send({ error: "something's wrong" });
       }
@@ -163,9 +163,16 @@ export default async function authRoutes(fastify: FastifyInstance) {
         });
 
         if (!authUser) {
-          authUser = await authService.register(user.email, user.login, " ");
+          await authService.register(user.email, user.login, " ");
         }
 
+        authUser = await fastify.prisma.userAuth.findUnique({
+          where: { username: user.login },
+        });
+
+        if (!authUser) {
+          throw new Error("something went wrong");
+        }
         const accessToken = fastify.auth.generateToken(
           Number(authUser.userId),
           "warrior",
@@ -183,7 +190,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         reply.redirect("https://localhost/dashboard");
       } catch (error: any) {
         console.error("42 OAuth error:", error.response?.data || error);
-        return reply.status(500).send({ error: "42 authentication failed" });
+        return reply.status(500).send({ error: error.response?.data });
       }
     },
   );
@@ -194,9 +201,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         // Extract token from header
-        var username = request.headers["X-User-Username"];
+        const username = Array.isArray(request.headers["x-user-username"])
+          ? request.headers["x-user-username"][0]
+          : request.headers["x-user-username"];
         if (!username) {
-          return reply.code(401).send({ error: "User not authenticated" });
+          return reply.status(400).send({ error: "X-User-Id header missing" });
         }
 
         // Generate 2FA secret
@@ -208,11 +217,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
         // Store secret (but don't enable yet)
         await fastify.prisma.userAuth.update({
           where: { username },
-          data: { twoFactorSecret: secret },
+          data: { TFASecret: secret },
         });
 
         return {
-          secret: secret.base32,
           qrCodeUrl: secret.otpauth_url,
         };
       } catch (error: any) {
@@ -227,12 +235,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         // Extract token from header
-        var username = request.headers["X-User-Username"];
+        const username = Array.isArray(request.headers["x-user-username"])
+          ? request.headers["x-user-username"][0]
+          : request.headers["x-user-username"];
         if (!username) {
-          return reply.code(401).send({ error: "User not authenticated" });
+          return reply.status(400).send({ error: "X-User-Id header missing" });
         }
 
-        const { code } = request.body;
+        const { code } = request.body as {code: number};
 
         const user = await fastify.prisma.userAuth.findUnique({
           where: { username },
@@ -284,7 +294,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         const result = await authService.validateTFA(tfacode, token);
 
-        reply.setCookie(result.type, result.token, {
+        reply.setCookie("access_token", result.token, {
           path: "/",
           httpOnly: true,
           secure: true,
@@ -294,6 +304,28 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         reply.clearCookie("tfa_token", {
           path: "/",
+          sameSite: "strict",
+        });
+
+        reply.send({ success: true });
+      } catch (error: any) {
+        reply.code(401).send({ error: error.message });
+      }
+    },
+  );
+
+  fastify.post(
+    "/logout",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        reply.clearCookie("access_token", {
+          path: "/",
+          httpOnly: true,
+          secure: true,
           sameSite: "strict",
         });
 
