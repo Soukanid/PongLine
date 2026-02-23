@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance } from 'fastify';
+import fastify, { FastifyInstance , type FastifyRequest, type FastifyResponse} from 'fastify';
 import { prisma } from '../tournament/database'
 import { rooms, createInitialState } from './gameLogic';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,7 +14,7 @@ export async function createGameRoom() {
 }
 
 export default async function gameRoutes(fastify: FastifyInstance) {
-    fastify.post('/create-room', async (request, reply) => {
+    fastify.post('/create-room', async (request: FastifyRequest, reply: FastifyResponse) => {
         try {
             const roomId = await createGameRoom();
             return reply.status(201).send({
@@ -26,7 +26,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/stats/:username', async (request, reply) => {
+    fastify.get<{ Params: { username: string } }>('/stats/:username', async (request: FastifyRequest, reply: FastifyResponse) => {
         try {
             const { username } = request.params;
 
@@ -62,7 +62,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/history/:username', async (request, reply) => {
+    fastify.get<{ Params: { username: string } }>('/history/:username', async (request: FastifyRequest, reply:FastifyResponse) => {
       try {
         const { username } = request.params;
         const matches = await prisma.match.findMany({
@@ -121,6 +121,30 @@ export async function saveMatch(matchResult: any, winner: any) {
                 where: { username: winner.username },
                 data: { total_wins: { increment: 1 } }
             });
+            const tournamentId = existingMatch?.tournamentId || matchResult.tournamentId;
+            if (tournamentId) {
+                const tournamentMatches = await tx.match.findMany({
+                    where: { tournamentId: tournamentId },
+                    orderBy: { id: 'asc' }
+                });
+
+                const firstMatch = tournamentMatches[0];
+                const secondMatch = tournamentMatches[1];
+                const finalMatch = tournamentMatches[2];
+
+                if (firstMatch?.winnerName && secondMatch?.winnerName) {
+                    await tx.match.update({
+                        where: { id: finalMatch.id },
+                        data: {
+                            username1: firstMatch.winnerName,
+                            username2: secondMatch.winnerName
+                        }
+                    });
+                    // add whatever you want
+                    
+                }
+            }
+            
         });
         console.log(`Match ${matchResult.room_id} saved successfully.`);
     } catch (error) {
