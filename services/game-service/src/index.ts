@@ -52,6 +52,11 @@ const start = async () => {
           socketId: socket.id
         };
         
+        if (rooms[gameId].players.length === 2) {
+          socket.emit("gameFull");
+          return;
+        }
+        
         rooms[gameId].players.push(playerUpdate);
         
         socket.join(gameId);
@@ -62,10 +67,6 @@ const start = async () => {
             players: rooms[gameId].players,
           });
           updateRoom(gameId, io);
-        }
-        if (rooms[gameId].players.length > 2) {
-          socket.leave(gameId);
-          socket.emit("gameFull");
         }
       });
       

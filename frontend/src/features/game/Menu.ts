@@ -202,11 +202,10 @@ export class Menu extends BaseComponent {
             if (res.success && res.roomId) {
               this.showRoomIdDialog(res.roomId, resolve, cleanup);
             } else {
-              alert('Server failed to create room.');
+              console.log('Server failed to create room.');
             }
           } catch (err) {
             console.error(err);
-            alert('Network error. Is the Game Service running?');
           }
         });
         Join.addEventListener('click', () => {

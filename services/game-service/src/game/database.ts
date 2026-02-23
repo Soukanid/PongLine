@@ -99,7 +99,18 @@ export async function saveMatch(matchResult: any, winner: any) {
                 create: { username: matchResult.username2 }
             });
 
-            await tx.match.create({ data: matchResult });
+            const existingMatch = await tx.match.findFirst({
+                where: { room_id: matchResult.room_id }
+            });
+
+            if (existingMatch) {
+                await tx.match.update({
+                    where: { id: existingMatch.id },
+                    data: matchResult
+                });
+            } else {
+                await tx.match.create({ data: matchResult });
+            }
 
             await tx.player.updateMany({
                 where: { username: { in: [matchResult.username1, matchResult.username2] } },
