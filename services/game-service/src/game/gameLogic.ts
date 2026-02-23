@@ -102,7 +102,7 @@ export function updateRoom(gameId: string, io: any) {
   io.to(gameId).emit("gameState", syncData);
 
   if (state.scores.right >= 5 || state.scores.left >= 5) {
-    const winner = state.scores.right >= 5 ? room.players[0] : room.players[1];
+    const winner = state.scores.right >= 5 ? room.players[1] : room.players[0];
 
     const matchResult = {
       room_id: gameId,
@@ -113,9 +113,11 @@ export function updateRoom(gameId: string, io: any) {
       winnerName: winner?.username,
     };
     
+    io.to(gameId).emit("gameOver", { winner: winner?.nickname });
+    
     saveMatch(matchResult, winner);
 
-    io.to(gameId).emit("gameOver", { winner: winner?.nickname });
     delete rooms[gameId];
+    return;
   }
 }

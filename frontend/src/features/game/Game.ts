@@ -33,9 +33,9 @@ export class Game extends BaseComponent {
 
         const params = new URL(window.location.href).searchParams;
         const mode = params.get('mode') || 'something';
-        const nick = params.get('nick') || 'Guest';
-        const left = params.get('left') || 'Guest1';
-        const right = params.get('right') || 'Guest2';
+        const nick = params.get('nick');
+        const left = params.get('left');
+        const right = params.get('right');
         const room = params.get('room') || undefined;
 
         if ((mode != "remote" && mode != "local" && mode != "bot")

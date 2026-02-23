@@ -66,8 +66,8 @@ export class PongGame {
 			mode: _mode,
 			timestamp: Date.now()
 		};
-		this.game.player1 = 'Bot';
 		if (this.game.mode === 'bot') {
+			this.game.player1 = 'Bot';
 		}
 	}
 	
@@ -96,10 +96,10 @@ export class PongGame {
 			if (this.game.mode === 'local' || this.game.mode === 'bot') {
 				if (this.keys['ArrowUp']) {
 					this.game.paddle2Y = Math.max(0, this.game.paddle2Y - speed);
-				   }
-				   if (this.keys['ArrowDown']) {
-					   this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
-				   }
+			   	}
+			   	if (this.keys['ArrowDown']) {
+					this.game.paddle2Y = Math.min(this.height - 80, this.game.paddle2Y + speed);
+			   	}
 			}
    			if (this.game.mode === 'local' || this.game.mode === 'bot') {
    			    this.game.ballX += this.ballVelX;
@@ -198,7 +198,7 @@ export class PongGame {
 		if (!this.socket) return;
 
 		this.socket.on('gameFull', () => {
-		    alert('The game room is full. Cannot join the game.');
+			this.renderGameFull();
 		});
 		this.socket.on('gameState', (state: Partial<GameState>) => {
 			this.game = {...this.game, ...state};
@@ -258,12 +258,18 @@ export class PongGame {
 	
 	private drawPlayerNames(): void {
 		const ctx = this.context;
-		ctx.fillStyle = '#1BFB08';
-		ctx.font = '24px VT323, monospace';
-		ctx.fillText(this.game.player1, 20, 45);
-		ctx.textAlign = 'left';
-		ctx.textAlign = 'right';
-		ctx.fillText(this.game.player2, this.width - 20, 45);
+    	ctx.fillStyle = '#1BFB08';
+    	ctx.font = '24px VT323, monospace';
+
+    	ctx.save();
+    	ctx.textAlign = 'left';
+    	ctx.fillText(this.game.player1, 20, 50);
+    	ctx.restore();
+
+    	ctx.save();
+    	ctx.textAlign = 'right';
+    	ctx.fillText(this.game.player2, this.width - 20, 50);
+    	ctx.restore();
 	}
 	private drawScores(): void {
 		const ctx = this.context;
@@ -331,6 +337,26 @@ export class PongGame {
 
     	this.context.font = '14px VT323, monospace';
     	this.context.fillText('SHARE THIS CODE TO START', this.width / 2, this.height / 2 + 60);
+	}
+	private renderGameFull(): void {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.context.fillStyle = 'rgba(0, 0, 0, 0.9)';
+		this.context.fillRect(0, 0, this.width, this.height);
+
+		this.context.fillStyle = '#1BFB08';
+		this.context.font = 'bold 40px VT323, monospace';
+		this.context.textAlign = 'center';
+		this.context.textBaseline = 'middle';
+		this.context.fillText('ROOM IS FULL', this.width / 2, this.height / 2 - 40);
+
+		this.context.font = '18px VT323, monospace';
+		this.context.fillText('CANNOT JOIN THE GAME', this.width / 2, this.height / 2 + 20);
+
+		this.context.font = '14px VT323, monospace';
+		this.context.fillStyle = '#9fffae';
+		this.context.fillText('Please try another room', this.width / 2, this.height / 2 + 60);
+
+		this.isPaused = true;
 	}
 	public loop(): void {
 		if (this.isPaused) {

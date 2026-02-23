@@ -78,7 +78,7 @@ const start = async () => {
         const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
         if (playerIndex === -1) return;
 
-        const paddle = playerIndex === 0 ? room.gameState.paddles.right : room.gameState.paddles.left;
+        const paddle = playerIndex === 0 ? room.gameState.paddles.left : room.gameState.paddles.right;
         if (up) paddle.y -= speed;
         if (down) paddle.y += speed;
 
@@ -92,7 +92,8 @@ const start = async () => {
               const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
 
               if (playerIndex !== -1) {
-                const winner = playerIndex === 0 ? room.players[0] : room.players[1];
+                const winnerIndex = 1 - playerIndex; 
+                const winner = room.players[winnerIndex];
 
                 if (winner && winner.socketId) {
                   io.to(winner.socketId).emit("playerDisconnected", { 
