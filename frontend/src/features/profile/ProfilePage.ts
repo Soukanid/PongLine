@@ -153,7 +153,7 @@ render() {
     const avatarEl = this.querySelector('#avatar') as HTMLImageElement;
     
     if (nameEl)
-      nameEl.textContent = `> THE LEGEND ${profileData.username}`;
+      nameEl.textContent = `> ${profileData.username}`;
     
     if (avatarEl && profileData.avatar)
       avatarEl.src = profileData.avatar;

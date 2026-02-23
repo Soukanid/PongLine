@@ -83,6 +83,7 @@ export class ChatPage extends BaseComponent {
 
     `);
     await this.loadFriend();
+    await this.checkUrlForTargetUser();
   }
 
 
@@ -418,6 +419,21 @@ export class ChatPage extends BaseComponent {
         // Re-render with the filtered list
         this.renderFriendList(filtered);
     });
+  }
+
+  async checkUrlForTargetUser()
+  {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUsername = urlParams.get('user');
+
+    if (!targetUsername) 
+      return;
+
+    const globalUsers = await chatService.searchGlobalUsers(targetUsername);
+    const targetUser = globalUsers.find(u => u.username === targetUsername);
+
+    if (targetUser)
+      this.openChat(targetUser.id, targetUser.username);
   }
 }
 

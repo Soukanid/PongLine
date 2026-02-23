@@ -195,6 +195,39 @@ class ChatService {
       console.error("Failed to mark messages as read");
     }
   }
+
+  // search for users when we chat them for the first time
+  async searchGlobalUsers(query: string): Promise<Friend[]>
+  {
+    if (!query)
+      return [];
+    
+    try {
+      const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/search`);
+      url.searchParams.append('str', query);
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok)
+        return [];
+      
+      const data = await response.json();
+      
+      return data.map((u: any) => ({
+        id: u.id,
+        username: u.username,
+        isOnline: false,
+        avatar: null
+      }));
+
+    } catch (error) {
+      console.error("Failed to search global users", error);
+      return [];
+    }
+  }
   
 }
 
