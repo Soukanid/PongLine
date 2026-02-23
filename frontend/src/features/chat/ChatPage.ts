@@ -6,7 +6,7 @@ import gameIcon from '../../../public/game.png'
 import searchIcon from '../../../public/search.png'
 import sendIcon from '../../../public/sent.png'
 import blockIcon from '../../../public/block.png'
-// import inviteIcon from '../../../public/invite.png'
+import inviteIcon from '../../../public/invite.png'
 import personIcon from '../../../public/person.png'
 import { router } from "../../core/Router";
 
@@ -50,18 +50,20 @@ export class ChatPage extends BaseComponent {
 
         </div>
         <div class="w-1/4 flex border border-retro/50 rounded-xl flex-col ml-4">
-          <div class="h-12 flex  text-white border-b border-retro/50 shrink-0">
-            <img src="${searchIcon}" class="items-center m-2  w-8 h-8" alt="Search" />
-            <input 
-              id="friend-search" 
-              type="text" 
-              autocomplete=off
-              class="flex-1 focus:outline-none bg-transparent font-mono text text-retro" 
-              placeholder="Search friends..." 
-            >
-            <button id="invitations" class="cursor-pointer px-4 py-2 shrink-0 ml-auto">
-              <img src="invite.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
-            </button>
+          <div class="h-12 flex items-center text-white border-b border-retro/50 shrink-0">
+              <img src="${searchIcon}" class="m-2 w-8 h-8 shrink-0" alt="Search" />
+
+              <input 
+                  id="friend-search" 
+                  type="text" 
+                  autocomplete="off"
+                  /* Added min-w-0 here */
+                  class="flex-1 min-w-0 focus:outline-none bg-transparent font-mono text text-retro" 
+                  placeholder="Search friends..." 
+              >
+              <button id="invitations" class="cursor-pointer px-4 py-2 shrink-0">
+                  <img src="${inviteIcon}" class="w-8 h-8 hover:brightness-0 hover:opacity-80 transition-opacity" />
+              </button>
           </div>
           <div id="friends-list" class="min-h-0 flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           </div>
