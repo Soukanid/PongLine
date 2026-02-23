@@ -585,7 +585,7 @@ export class UserController {
     const targetId = parseInt(req.query.targetId);
 
     if (!targetId)
-      return reply.code(400).send("Missing targetId");
+      return reply.code(400).send();
 
     try {
 
@@ -603,6 +603,45 @@ export class UserController {
     } catch (error) {
       console.error(error);
       return reply.code(500).send({ error: "Failed to check block status" });
+    }
+  }
+  async setOnline(req: FastifyRequest, reply: FastifyReply)
+  {
+    const userIdStr = req.headers['x-user-id']?.toString();
+    
+    if (!userIdStr)
+      return reply.code(400).send();
+    const myId = parseInt(userIdStr);
+
+    try {
+      await prisma.user.update({
+        where: { id: myId },
+        data: { isOnline: true }
+      });
+
+      return reply.send();
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send('Failed to update status');
+    }
+  }
+
+  async setOffline(req: FastifyRequest, reply: FastifyReply) {
+    const userIdStr = req.headers['x-user-id']?.toString();
+    
+    if (!userIdStr) return reply.code(400).send({ error: "Missing user ID" });
+    const myId = parseInt(userIdStr);
+
+    try {
+      await prisma.user.update({
+        where: { id: myId },
+        data: { isOnline: false }
+      });
+
+      return reply.send();
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send('Failed to update status');
     }
   }
 }
