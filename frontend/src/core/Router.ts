@@ -35,16 +35,9 @@ const routes: Route[] = [
 export const router = {
   async resolve(url:URL): Promise<HTMLElement>{
 
-
-      return document.createElement("settings-page");
     //check if route exists
-   /* const route = routes.find(r => this.matchPath(r.path, url.pathname))
+    const route = routes.find(r => this.matchPath(r.path, url.pathname))
 
-if (route && route.path === '/settings')
-    {
-      history.pushState({},"",route.path);
-      return document.createElement("settings-page");
-    }
     //landing page
     if (route && route.path === '/')
     {
@@ -73,6 +66,7 @@ if (route && route.path === '/settings')
       return document.createElement("not-found-page")
     }
 
+    console.log(appStore.getUser());
     //redirect from protected routes for guests
     if (route.protected && appStore.getUser()?.role === 'guest'){
       console.log("Protected route")
@@ -88,7 +82,6 @@ if (route && route.path === '/settings')
     }
 
     return document.createElement(route.page)
-    */
   },
 
   matchPath(routePath: string, currentPath: string): boolean{

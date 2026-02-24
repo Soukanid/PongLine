@@ -13,7 +13,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       try {
         const { alias } = request.body as { alias: string };
 
-        const accessToken = fastify.auth.generateToken(1, "guest", alias);
+        const accessToken = await authService.guestRegister(alias);
 
         reply.setCookie("access_token", accessToken, {
           path: "/",
@@ -25,6 +25,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         reply.send({ success: "Login successful" });
       } catch (error) {
+        if (error instanceof Error) reply.send({ error: error.message });
         reply.code(400).send({ error: "something's wrong" });
       }
     },
@@ -36,13 +37,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { email, username, password } = request.body as {
-          email: string;
-          username: string;
-          password: string;
-        };
+            email: string;
+            username: string;
+            password: string;
+          };
+
         await authService.register(email, username, password);
         reply.code(201).send({ success: "Account created successfully" });
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         reply.code(400).send({ error: error.message });
       }
     },
@@ -69,10 +72,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
         });
 
         if (result.type === "tfa_token") {
-          reply.send({ success: "2FA enabled", tfa: true });
-        } else reply.send({ success: "Login successful", tfa: false });
+          return reply.code(200).send({ success: "2FA enabled", tfa: true });
+        }
+        
+        return reply.code(200).send({ success: "Login successful", tfa:false });
       } catch (error: any) {
-        reply.code(401).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        else return reply.code(404).send({ error: error.message });
       }
     },
   );
@@ -96,6 +102,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return result;
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         return { valid: false, reason: "validation_error" };
       }
     },
@@ -105,7 +112,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
     "/change-password",
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
+        const token = request.cookies?.access_token;
+        if (!token) return reply.code(401).send();
 
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send(result);
+        }
+ 
+        const userId = result.user?.id;
         const { currentPassword, newPassword } = request.body as {
           currentPassword?: string;
           newPassword?: string;
@@ -114,12 +129,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (!currentPassword || !newPassword)
           return reply.code(400).send();
 
-        //[soukaina] I need the userId here
-        // await authService.changePassword(userId, currentPassword, newPassword);
+        await authService.changePassword(userId, currentPassword, newPassword);
 
         return reply.code(200).send({ success: "Password updated successfully" });
 
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         return reply.code(500).send({ error: "Internal Server Error" });
       }
     }
@@ -186,6 +201,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         });
 
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         return reply.code(500).send({ error: "Failed to Update the Username" });
       }
     },
@@ -197,7 +213,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       const params = new URLSearchParams({
         client_id: process.env.INTRA_ID!,
-        redirect_uri: "https://localhost/api/auth/42/callback",
+        redirect_uri: process.env.VITE_API_GATEWAY_URL + "api/auth/42/callback",
         response_type: "code",
         scope: "public",
       });
@@ -224,7 +240,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           client_id: process.env.INTRA_ID!,
           client_secret: process.env.INTRA_SECRET!,
           code,
-          redirect_uri: "https://localhost/api/auth/42/callback",
+          redirect_uri: process.env.VITE_API_GATEWAY_URL + "api/auth/42/callback",
         });
 
         var Response = await fetch(
@@ -277,9 +293,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           maxAge: 86400,
         });
 
-        reply.redirect("https://localhost/dashboard");
+        reply.redirect(process.env.VITE_API_GATEWAY_URL + "dashboard");
       } catch (error: any) {
         console.error("42 OAuth error:", error.response?.data || error);
+        if (error instanceof Error) reply.send({ error: error.message });
         return reply.status(500).send({ error: error.response?.data });
       }
     },
@@ -314,6 +331,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           qrCodeUrl: secret.otpauth_url,
         };
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         reply.code(401).send({ error: error.message });
       }
     },
@@ -366,6 +384,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return { success: true };
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         reply.code(400).send({ error: error.message });
       }
     },
@@ -399,11 +418,41 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         reply.send({ success: true });
       } catch (error: any) {
+        if (error instanceof Error) reply.send({ error: error.message });
         reply.code(401).send({ error: error.message });
       }
     },
   );
+fastify.delete(
+    "/delete",
+  async (request: FastifyRequest, reply: FastifyReply)=>{
+    try {
 
+      const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send(result);
+        }
+        if(result.user?.username)
+          await authService.deleteUser(result.user?.username);
+
+      reply.clearCookie("access_token", {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      return reply.code(204).send();
+      } catch (error: any) {
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(401).send({ error: error.message });
+      }
+  })
+   
   fastify.post(
     "/logout",
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -412,6 +461,21 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (!token)
           return reply.code(400).send({ error: "access token missing" });
 
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          reply.clearCookie("access_token", {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+        });
+          return reply.code(401).send(result);
+        }
+
+        if (result.user?.role === 'guest')
+        {
+          await authService.deleteUser(result.user?.username);
+        }
         reply.clearCookie("access_token", {
           path: "/",
           httpOnly: true,
@@ -419,9 +483,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           sameSite: "strict",
         });
 
-        reply.send({ success: true });
+        return reply.send({ success: true });
       } catch (error: any) {
-        reply.code(401).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(401).send({ error: error.message });
       }
     },
   );

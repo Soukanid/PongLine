@@ -14,13 +14,9 @@ export class AuthService {
     alias: string,
   ): Promise<{ success?: string; error?: string }> {
     try {
-      await api.post<{}>("api/auth/guest", { alias }, {}, false);
+      await api.post<{}>("api/auth/guest",
+        {alias}, {}, false);
 
-      appStore.setUser({
-        username: alias,
-        id: "",
-        role: "guest",
-      });
       return { success: "logged in" };
     } catch (error) {
       if (error instanceof Error) return { error: error.message };
@@ -88,7 +84,7 @@ export class AuthService {
           email,
           username,
           password,
-        },
+       },
         {},
         false,
       );

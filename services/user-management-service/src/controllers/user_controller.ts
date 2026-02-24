@@ -215,10 +215,15 @@ export class UserController {
       {
         avatarBuffer = Buffer.alloc(0);
       }
+      
+      var role = 'warrior';
+      if (req.body.email.endsWith('@guest.gt'))
+        role = 'guest';
       const user = await prisma.user.create({
         data : {
           email: req.body.email,
           username: req.body.username,
+          role,
           avatar: avatarBuffer
         },
       });
@@ -272,6 +277,7 @@ export class UserController {
           select: {
             id: true,
             username: true,
+            role: true,
             avatar: true,
           },
         });
@@ -290,7 +296,7 @@ export class UserController {
         const formatUsr = {
           id: user.id,
           username: user.username,
-          role: "warrior",
+          role: user.role,
           avatar: avatarBase64
         };
        
@@ -301,7 +307,6 @@ export class UserController {
         return reply.status(500).send({ error: 'Failed to fetsh User'+ userId});
       }
   }
-
 
   async searchUser(req: FastifyRequest<{ Querystring: {str: string}}>, reply: FastifyReply)
   {

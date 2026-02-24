@@ -125,7 +125,7 @@ export class Header extends BaseComponent {
     else 
       badge.classList.add('hidden');
   }
-/*
+
   update(): void {
     const user = appStore.getUser();
     if (user === null || ["/login", "/"].includes(window.location.pathname)) {
@@ -138,11 +138,11 @@ export class Header extends BaseComponent {
       this.updateNotifBadge();
     }
   }
-*/
+
   async connectedCallback()
   {
     super.connectedCallback?.();
-     /* 
+      
     chatService.onNotification(this.handleNotification);
     chatService.onChatUpdate(this.handleIncomingChat);
     const list = await headerService.fetchUnreadNotifications();
@@ -157,7 +157,7 @@ export class Header extends BaseComponent {
     }
     this.updateNotifBadge();
     this.update();
-    */
+    
   }
 
   disconnectedCallback() {

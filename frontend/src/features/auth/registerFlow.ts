@@ -32,6 +32,7 @@ export class RegisterFlow {
 
           if (result.error) this.terminal.print("Error : " + result.error);
           if (result.success) {
+            await AuthService.setCurrentUser();
             this.terminal.print(" Starting ...");
             const params = new URLSearchParams(window.location.search);
             const redirect = params.get("redirect");

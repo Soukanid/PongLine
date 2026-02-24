@@ -19,7 +19,7 @@ export class AuthService {
   private async callUserService<T>(
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     endpoint: string,
-    token: string,
+    token?: string,
     data?: unknown,
   ): Promise<T> {
     const url = `${this.USER_SERVICE_URL}${endpoint}`;
@@ -29,7 +29,7 @@ export class AuthService {
         "Content-Type": "application/json",
         "X-Internal-Request": "true",
         "X-Service-Name": "auth-service",
-        "Cookie": `access_token=${token}`,
+        Cookie: `access_token=${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -50,8 +50,67 @@ export class AuthService {
     return parsedPayload as T;
   }
 
-  //register
-  async register(email: string, username: string, password: string) {
+  //guest
+  async guestRegister(alias: string){
+
+    const username = alias;
+    const  password = "";
+    const  role = "guest";
+    const  email = alias+"@guest.gt";
+
+    //check if user exists
+    const existingUser = await this.prisma.userAuth.findFirst({
+      where: { username }
+    });
+    if (existingUser) {
+      throw new Error("alias already exists");
+    }
+
+    //hash  password
+    const passwordHash = await bcrypt.hash(password, this.SALT_ROUNDS);
+
+    try {
+      //generate temp token
+      const tempToken = this.fastify.auth.generateToken(0, role, username);
+
+      //create user in User service
+      const user = await this.callUserService<{ id: number }>(
+        "POST",
+        "create_user",
+        tempToken,
+        { email, username },
+      );
+
+      //create user in Auth service
+      await this.prisma.userAuth.create({
+        data: {
+          email,
+          username,
+          passwordHash,
+          role,
+          userId: Number(user.id),
+          createdAt: new Date(),
+        },
+      });
+
+    const accessToken = this.fastify.auth.generateToken(
+      Number(user.id),
+      role,
+      username,
+    );
+
+     return accessToken;
+    } catch (error: any) {
+      await this.prisma.userAuth
+        .deleteMany({
+          where: { username },
+        })
+        .catch(() => {});
+      throw new Error(`Guest Registration failed: ${error.message}`);
+    }
+  }
+
+    async register(email: string, username: string, password: string) {
     //check if user exists
     const existingUser = await this.prisma.userAuth.findFirst({
       where: {
@@ -83,6 +142,7 @@ export class AuthService {
           email,
           username,
           passwordHash,
+          role: 'warrior',
           userId: Number(user.id),
           createdAt: new Date(),
         },
@@ -106,6 +166,7 @@ export class AuthService {
       select: {
         userId: true,
         username: true,
+        role:true,
         passwordHash: true,
         isTFAEnabled: true,
       },
@@ -130,91 +191,150 @@ export class AuthService {
       // Generate 2FA temp token
       const TFAToken = this.fastify.auth.generateToken(
         Number(authUser.userId),
-        "warrior",
+        authUser.role,
         authUser.username,
       );
-      return { type: 'tfa_token',token: TFAToken };
+      return { type: "tfa_token", token: TFAToken };
     }
     // 6. Generate token
+    const accessToken = this.fastify.auth.generateToken(
+      Number(authUser.userId),
+      authUser.role,
+      authUser.username,
+    );
+
+    //update users online status in User service
+    await this.callUserService<{}>("POST", "online", accessToken, {
+      id: authUser.userId,
+      isOnline: true,
+    });
+
+    return { type: "access_token", token: accessToken };
+  }
+
+  // validate 2FA
+  async validateTFA(twoFactorCode: string, tfa_token: string) {
+    const payload = this.fastify.auth.verifyToken(tfa_token);
+
+    // Check if auth user still exists
+    const authUser = await this.prisma.userAuth.findUnique({
+      where: { username: payload.username },
+      select: {
+        userId: true,
+        username: true,
+        isTFAEnabled: true,
+        TFASecret: true,
+      },
+    });
+
+    if (!authUser || !authUser.isTFAEnabled) {
+      throw new Error("Invalid credentials or 2FA not enabled");
+    }
+
+    if (!authUser.TFASecret) {
+      throw new Error("2FA not setup");
+    }
+
+    if (!twoFactorCode) {
+      throw new Error("2FA code required");
+    }
+
+    const isValid2FA = speakeasy.totp.verify({
+      secret: authUser.TFASecret,
+      encoding: "base32",
+      token: twoFactorCode,
+      window: 1,
+    });
+
+    if (!isValid2FA) {
+      throw new Error("Invalid 2FA code");
+    }
+
     const accessToken = this.fastify.auth.generateToken(
       Number(authUser.userId),
       "warrior",
       authUser.username,
     );
-
-      //update users online status in User service
-    await this.callUserService<{}>(
-        "POST",
-        "online",
-        accessToken,
-        { id: authUser.userId, isOnline: true },
-      );
-
-    return { type: 'access_token',token: accessToken };
+    //update users online status in User service
+    await this.callUserService<{}>("POST", "online", accessToken, {
+      id: authUser.userId,
+      isOnline: true,
+    });
+    return { token: accessToken };
   }
 
-  // validate 2FA
-  async validateTFA(twoFactorCode: string, tfa_token: string) {
+  async changePassword(
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    try {
+      const authUser = await this.prisma.userAuth.findUnique({
+        where: { userId },
+        select: {
+          passwordHash: true,
+        },
+      });
 
-     const payload = this.fastify.auth.verifyToken(tfa_token);
+      if (!authUser) {
+        throw new Error("User not found");
+      }
 
-     // Check if auth user still exists
-     const authUser = await this.prisma.userAuth.findUnique({
-       where: { username: payload.username },
-       select: {
-         userId: true,
-         username: true,
-         isTFAEnabled: true,
-         TFASecret: true,
-       },
-     });
-
-     if (!authUser || !authUser.isTFAEnabled) {
-       throw new Error("Invalid credentials or 2FA not enabled");
-     }
-
-     if (!authUser.TFASecret) {
-       throw new Error("2FA not setup");
-     }
-
-     if (!twoFactorCode) {
-       throw new Error("2FA code required");
-     }
-
-     const isValid2FA = speakeasy.totp.verify({
-       secret: authUser.TFASecret,
-       encoding: "base32",
-       token: twoFactorCode,
-       window: 1,
-     });
-
-     if (!isValid2FA) {
-       throw new Error("Invalid 2FA code");
-     }
-
-     const accessToken = this.fastify.auth.generateToken(
-       Number(authUser.userId),
-       "warrior",
-       authUser.username,
-     );
-//update users online status in User service
-      await this.callUserService<{}>(
-        "POST",
-        "online",
-        accessToken,
-        { id: authUser.userId, isOnline: true },
+      const isValidPassword = await bcrypt.compare(
+        oldPassword,
+        authUser.passwordHash,
       );
-     return {token: accessToken };
+
+      if (!isValidPassword) {
+        throw new Error("Invalid credentials");
+      }
+
+      //hash  password
+      const passwordHash = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+
+      await this.fastify.prisma.userAuth.update({
+        where: { userId },
+        data: { passwordHash },
+      });
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   }
 
+  async deleteUser(username: string) {
+    try {
+      const authUser = await this.prisma.userAuth.findUnique({
+        where: { username },
+      });
+
+      if (!authUser) {
+        throw new Error("User not found");
+      }
+
+      await this.prisma.userAuth.deleteMany({
+        where: { username },
+      }).catch(() => {});
+
+      await this.callUserService<{ success: string }>(
+        "DELETE",
+        "delete_user",
+        undefined,
+        { username },
+      );
+     
+    } catch (error:any) {
+      throw new Error(`Deletion failed: ${error.message}`);
+    }
+  }
   //validate token controller
 
   async validateToken(token: string) {
     try {
       const payload = this.fastify.auth.verifyToken(token);
 
-      if (payload.role === 'guest')
-      {
+      if (payload.role === "guest") {
         return {
           valid: true,
           user: {
@@ -254,5 +374,4 @@ export class AuthService {
       return { valid: false, reason: "invalid_token" };
     }
   }
-
 }
