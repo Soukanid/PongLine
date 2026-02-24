@@ -26,5 +26,6 @@ export async function chatRoutes(server: FastifyInstance) {
   server.get('/unread-count', chatController.getUnreadCount);
   
   server.post('/mark-msg-read', chatController.markMessagesAsRead);
+  
 }
 

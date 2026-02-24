@@ -5,7 +5,7 @@ services:
     container_name: api-gateway
     build: ./api-gateway
     ports:
-      - "443:443"
+      - "8443:443"
     depends_on:
       - auth-service
       - chat-service

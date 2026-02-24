@@ -666,4 +666,43 @@ export class UserController {
       return reply.code(500).send();
     }
   }
+  async changeUsername(req: FastifyRequest<{ Body: { newUsername: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+    
+    if (!userId)
+      return reply.code(401).send();
+
+    const myId = parseInt(userId);
+    const { newUsername } = req.body;
+
+    if (!newUsername || newUsername.trim() === '')
+      return reply.code(400).send();
+
+    const trimmedUsername = newUsername.trim();
+
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { username: trimmedUsername }
+      });
+
+      if (existingUser)
+      {
+        if (existingUser.id === myId)
+          return reply.code(200).send();
+        return reply.code(409).send({ error: "Username is already taken" });
+      }
+
+      await prisma.user.update({
+        where: { id: myId },
+        data: { username: trimmedUsername },
+        select: { username: true }
+      });
+
+      return reply.code(200).send({"success": "true"});
+
+    } catch (error) {
+      return reply.code(500).send(error);
+    }
+  }
 }

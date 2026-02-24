@@ -40,4 +40,6 @@ export async function userRoutes(server: FastifyInstance) {
   server.post('/online', userController.setOnlineStatus);
 
   server.get('/get-id', userController.getIdByUsername);
+
+  server.post('/change-username', userController.changeUsername);
 }

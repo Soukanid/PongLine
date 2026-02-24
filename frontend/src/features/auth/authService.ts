@@ -117,7 +117,7 @@ export class AuthService {
       if (appStore.getUser()?.role !== "guest"){
         await api.post<{ success?: string; error?: string }>(
           "api/user-management/online",
-          { isOnline: false },
+          { id: appStore.getUser()?.id ,isOnline: false },
         );
       }
       await api.post<{ success?: string; error?: string }>(
