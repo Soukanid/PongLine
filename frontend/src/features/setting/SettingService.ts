@@ -71,6 +71,7 @@ class SettingService {
       return ({ "success": "false", "message": "Failed to update the Password" });
     }
   }
+  
 }
 
 export const settingService = new SettingService();

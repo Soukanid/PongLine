@@ -146,13 +146,21 @@ export async function saveMatch(matchResult: any, winner: any) {
                     finalMatchToNotify = updatedFinalMatch; 
                 }
 
-                if (finalMatch.winnerName)
-                  console.log("soukaina");
+                if (finalMatch?.winnerName)
+                {
+                    await tx.tournament.update({
+                        where: { id: tournamentId },
+                        data: {
+                            tour_state: "Finished"
+                        }
+                    });
+                };
             }
             
         });
         if (finalMatchToNotify)
             await notifyPlayersAboutFinaleMatch(finalMatchToNotify.username1, finalMatchToNotify.username2, finalMatchToNotify.room_id);
+        
 
     } catch (error) {
         console.error("Transaction Failed: Match not saved.", error);

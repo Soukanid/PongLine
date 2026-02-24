@@ -121,13 +121,15 @@ export class Header extends BaseComponent {
       this.style.display = "flex";
       this.render();
       this.addEvents();
+      this.updateChatBadge();
+      this.updateNotifBadge();
     }
   }
 
   async connectedCallback()
   {
     super.connectedCallback?.();
-      
+      this.update();
     chatService.onNotification(this.handleNotification);
     chatService.onChatUpdate(this.handleIncomingChat);
     const list = await headerService.fetchUnreadNotifications();

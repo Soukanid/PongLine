@@ -1,4 +1,4 @@
-
+import { appStore } from "../../core/Store"
 class ProfileService {
 
   async createTourn(name: string)
@@ -99,7 +99,19 @@ class ProfileService {
   async getProfile(username: string)
   {
     try {
-      
+
+      console.log(appStore.getUser());
+      if (appStore.getUser()?.role === "guest") {
+        return {
+          id: 0,    
+          username: appStore.getUser()?.username,
+          avatar: "/default_avatar.png",
+          role: "guest",
+          relationship: "me",
+          isOnline: true
+        };
+      }
+
       let endpoint = "";
 
       if (username === "ME")
@@ -126,6 +138,14 @@ class ProfileService {
   }
 
   async getStats(username: string) {
+    if (appStore.getUser()?.role === "guest") {
+      return {
+        total_games: 0,
+        total_losses: 0,
+        total_wins: 0,
+      };
+    }
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/stats/${username}`, {
         headers: {
@@ -145,6 +165,8 @@ class ProfileService {
   }
 
   async getMatchHistory(username: string) {
+    if (appStore.getUser()?.role === "guest")
+        return ([]);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/game/history/${username}`, {
         headers: {

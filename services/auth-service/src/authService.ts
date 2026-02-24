@@ -221,7 +221,7 @@ export class AuthService {
             id: payload.userId,
             role: "guest",
             alias: payload.username,
-            username: "",
+            username: payload.username,
           },
         };
       }

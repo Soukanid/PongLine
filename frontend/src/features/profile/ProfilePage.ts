@@ -418,28 +418,87 @@ render() {
     {
       btnTournament.disabled = true;
       btnTournament.classList.add('opacity-50', 'cursor-not-allowed');
-      btnTournament.innerHTML = `<span class="text-[10px] uppercase font-bold text-green-400">WAITING For Players...</span>`;
+      btnTournament.innerHTML = `<span class="text-[10px] uppercase font-bold text-green-400">IN TOURNAMENT...</span>`;
     }
+
     const listContainer = this.querySelector('#tournament-list');
 
     if (listContainer)
     {
-      const playerCount = tourn.participant?.length || 1; 
+      const participants = tourn.participant || [];
+      const getPlayerName = (index: number) => {
+          if (!participants[index])
+            return null;
+          return participants[index].username || participants[index].alias || `Player ${index + 1}`;
+      };
+
+      const p1 = getPlayerName(0);
+      const p2 = getPlayerName(1);
+      const p3 = getPlayerName(2);
+      const p4 = getPlayerName(3);
+      
+      const playerCount = participants.length;
+
+      const matches = tourn.matches || [];
+      const sf1Winner = matches[0]?.winnerName;
+      const sf2Winner = matches[1]?.winnerName;
+      const finalMatch = matches[2] || {};
+      
+      const f1 = finalMatch.username1 || sf1Winner || null;
+      const f2 = finalMatch.username2 || sf2Winner || null;
       
       listContainer.innerHTML = `
-        <div class="border border-retro/50 p-4 bg-retro/10 flex flex-col items-center text-center animate-pulse">
-          <h4 class="text-retro font-bold uppercase tracking-widest mb-2">${tourn.tour_name}</h4>
-          <p class="text-xs text-retro/70 mb-4">Status: ${tourn.tour_state}</p>
-          <div class="flex gap-2">
-            <span class="text-xl font-bold">${playerCount}</span>
-            <span class="text-xl text-retro/50">/ 4</span>
+        <div class="border border-retro/50 p-4 bg-retro/5 flex flex-col w-full">
+          <div class="text-center mb-5 border-b border-retro/30 pb-3">
+            <h4 class="text-retro font-bold uppercase tracking-widest mb-1">${tourn.tour_name}</h4>
+            <p class="text-[10px] text-retro/70">STATUS: ${tourn.tour_state} [${playerCount}/4]</p>
           </div>
-          <p class="text-[10px] text-retro/50 mt-2 uppercase">Players Joined</p>
+          
+          <div class="flex flex-col gap-4 w-full font-mono text-xs">
+            
+            <div class="flex flex-col">
+              <span class="text-[10px] text-retro/50 mb-1">SEMI-FINAL 1</span>
+              <div class="flex justify-between items-center border border-retro/30 p-2 bg-black">
+                 <span class="w-[40%] text-right truncate ${p1 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${p1 || 'WAITING...'}
+                 </span>
+                 <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
+                 <span class="w-[40%] text-left truncate ${p2 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${p2 || 'WAITING...'}
+                 </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col">
+              <span class="text-[10px] text-retro/50 mb-1">SEMI-FINAL 2</span>
+              <div class="flex justify-between items-center border border-retro/30 p-2 bg-black">
+                 <span class="w-[40%] text-right truncate ${p3 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${p3 || 'WAITING...'}
+                 </span>
+                 <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
+                 <span class="w-[40%] text-left truncate ${p4 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${p4 || 'WAITING...'}
+                 </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col mt-2 pt-2 border-t border-dashed border-retro/30">
+              <span class="text-[10px] text-retro/70 mb-1 text-center font-bold tracking-widest">GRAND FINAL</span>
+              <div class="flex justify-between items-center border border-retro/50 p-3 bg-black">
+                 <span class="w-[40%] text-right truncate ${f1 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${f1 || 'SF1_WINNER'}
+                 </span>
+                 <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
+                 <span class="w-[40%] text-left truncate ${f2 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
+                    ${f2 || 'SF2_WINNER'}
+                 </span>
+              </div>
+            </div>
+            </div>
         </div>
       `;
     }
   }
-
   //--------------------------------------------------------------------------------------------------
   addEvents() : void
   {
@@ -484,9 +543,8 @@ render() {
 
         try {
           const tourn = await profileService.createTourn(value);
-          if (tourn) {
+          if (tourn)
              this.switchView(tourn); 
-          }
         } catch (error: any) {
           this.showModalError(error.message || "Failed to create tournament.");
         } finally {
@@ -508,9 +566,8 @@ render() {
 
         try {
           const updatedTourn = await profileService.joinTourn(value);
-          if (updatedTourn) {
+          if (updatedTourn)
             this.switchView(updatedTourn);
-          }
         } catch (error: any) {
           this.showModalError(error.message || "Failed to join tournament.");
         } finally {

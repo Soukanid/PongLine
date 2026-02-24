@@ -43,9 +43,12 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             some: { username: username}
           }
         },
-        include: { participant: true }
-      });
-      
+        include: { participant: true,
+        matches: {
+            orderBy: { id: 'asc' }
+          }
+        }
+        });
       if (!myTour)
         return reply.code(204).send([]);
       return reply.code(200).send(myTour);
