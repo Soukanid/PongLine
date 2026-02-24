@@ -3,6 +3,7 @@ import  "../features/auth/LoginPage";
 import  "../features/game/Game";
 import "../features/chat/ChatPage";
 import "../features/game/Render";
+import "../features/setting/SettingPage";
 import "../features/utils/LandingPage";
 import "../features/utils/NotFoundPage";
 import "../features/utils/NotAllowedPage";

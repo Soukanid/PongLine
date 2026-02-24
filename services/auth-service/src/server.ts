@@ -4,11 +4,12 @@ import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 
 export const fastify = Fastify({
+    logger: true,
     bodyLimit: 1048576
 }).withTypeProvider<TypeBoxTypeProvider>()
 
 fastify.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 })

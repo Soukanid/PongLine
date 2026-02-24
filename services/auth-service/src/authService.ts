@@ -143,13 +143,13 @@ export class AuthService {
     );
 
       //update users online status in User service
-    /* await this.callUserService<{}>(
-        "PATCH",
+    await this.callUserService<{}>(
+        "POST",
         "online",
         accessToken,
-        { isOnline: true },
+        { id: authUser.userId, isOnline: true },
       );
-*/
+
     return { type: 'access_token',token: accessToken };
   }
 
@@ -197,15 +197,13 @@ export class AuthService {
        "warrior",
        authUser.username,
      );
-/*
 //update users online status in User service
       await this.callUserService<{}>(
-        "PATCH",
+        "POST",
         "online",
         accessToken,
-        { isOnline: true },
+        { id: authUser.userId, isOnline: true },
       );
-*/
      return {token: accessToken };
   }
 
@@ -253,6 +251,7 @@ export class AuthService {
       if (error.name === "TokenExpiredError") {
         return { valid: false, reason: "token_expired" };
       }
+          console.log("helllooo")
       return { valid: false, reason: "invalid_token" };
     }
   }

@@ -618,13 +618,16 @@ export class UserController {
     }
   }
 
-  async setOnlineStatus(req: FastifyRequest<{ Body: { isOnline: boolean } }>, reply: FastifyReply)
+  async setOnlineStatus(req: FastifyRequest<{ Body: { id: number, isOnline: boolean } }>, reply: FastifyReply)
   {
-    const userId = req.headers['x-user-id']?.toString();
+
+
+    const userId = req.body.id;
     
     if (!userId)
-      return reply.code(400).send();
-    const myId = parseInt(userId);
+      return reply.code(404).send();
+
+    const myId = userId;
 
     const { isOnline } = req.body;
 
@@ -634,7 +637,8 @@ export class UserController {
         data: { isOnline: isOnline }
       });
 
-      return reply.send({});
+      console.log(req.body.id);
+      return reply.code(200).send({'success': "true"});
     } catch (error) {
       console.error(error);
       return reply.code(500).send('Failed to update status');

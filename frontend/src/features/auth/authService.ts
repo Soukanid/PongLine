@@ -114,14 +114,12 @@ export class AuthService {
   //logout controller
   static async logout(): Promise<{ success?: string; error?: string }> {
     try {
-      /*
       if (appStore.getUser()?.role !== "guest"){
-        await api.patch<{ success?: string; error?: string }>(
+        await api.post<{ success?: string; error?: string }>(
           "api/user-management/online",
           { isOnline: false },
         );
       }
-*/
       await api.post<{ success?: string; error?: string }>(
         "api/auth/logout",
         {},

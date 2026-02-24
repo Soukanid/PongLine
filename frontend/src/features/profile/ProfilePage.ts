@@ -57,14 +57,14 @@ render() {
             <div class="h-10 w-10 flex items-center justify-center">
                <img src='${tournIcon}' class=" h-full w-full object-contain filter group-hover:brightness-0"> 
             </div>
-            <span class="text-[10px] uppercase tracking-tighter font-bold">Tournament</span>
+            <span class="text-[14px] uppercase tracking-tighter font-bold">Tournament</span>
           </button>
 
           <button id="btn-pingpong" class="flex-1 group border border-retro cursor-pointer py-4 flex flex-col items-center gap-2 hover:bg-retro hover:text-black transition-all duration-300">
             <div class="h-10 w-10 flex items-center justify-center">
                <img src='${gameIcon}' class="h-full w-full object-contain filter group-hover:brightness-0"> 
             </div>
-            <span class="text-[10px] uppercase tracking-tighter font-bold">Ping Pong</span>
+            <span class="text-[14px] uppercase tracking-tighter font-bold">Ping Pong</span>
           </button>
         </div>
 
@@ -86,7 +86,7 @@ render() {
                 <input id="tournament-input" type="text" autocomplete="off"
                   class="w-full bg-transparent border-b border-retro py-2 text-center text-lg focus:outline-none placeholder-retro/30"
                   placeholder="ENTER NAME OR CODE">
-                <p class="text-[10px] text-retro/40 mt-2 text-center italic">* Use a Name to Create, or a Code to Join *</p>
+                <p class="text-[14px] text-retro/40 mt-2 text-center italic">* Use a Name to Create, or a Code to Join *</p>
               </div>
               <div class="flex gap-4">
                 <button id="btn-create" class="cursor-pointer flex-1 border border-retro py-3 hover:bg-retro hover:text-black transition-colors font-bold uppercase">

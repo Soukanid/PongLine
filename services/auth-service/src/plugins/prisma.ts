@@ -3,9 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import fastify, { type FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 
-export const prisma = new PrismaClient({
-  log:["query", "info", "warn", "error"]
-});
+export const prisma = new PrismaClient();
 
 export const prismaPlugin = fp(async (fastify: FastifyInstance)=>{
     fastify.decorate('prisma', prisma)
