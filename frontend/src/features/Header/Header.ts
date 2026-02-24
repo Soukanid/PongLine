@@ -27,6 +27,7 @@ export class Header extends BaseComponent {
                 type="text" 
                 autocomplete="off"
                 spellcheck="false"
+                maxlength="20"
                 class="flex-1 focus:outline-none bg-transparent font-mono text-retro placeholder-retro/50 py-2 text-sm" 
                 placeholder="Find a player..."
               >
