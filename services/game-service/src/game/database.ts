@@ -21,6 +21,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
                 success: true,
                 roomId: roomId
             });
+            
         } catch (error) {
             return reply.status(500).send({ success: false, error: "Internal Server Error" });
         }
@@ -61,7 +62,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/history/:username', async (request, reply) => {
+    fastify.get<{ Params: { username: string } }>('/history/:username', async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { username } = request.params;
         const matches = await prisma.match.findMany({
