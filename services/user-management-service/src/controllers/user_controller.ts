@@ -742,4 +742,40 @@ export class UserController {
       return reply.code(500).send({ error: "Failed to update the avatar" });
     }
   }
+
+  async deleteUser(req: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+    
+    if (!userId)
+      return reply.code(401).send({ error: 'Unauthorized' });
+
+    const myId = parseInt(userId);
+    const { username } = req.body;
+
+    if (!username || username.trim() === '')
+      return reply.code(400).send({ error: 'Username is required' });
+
+    try {
+      const targetUser = await prisma.user.findUnique({
+        where: { username: username.trim() }
+      });
+
+      if (!targetUser)
+        return reply.code(404).send({ error: 'User not found' });
+
+      if (targetUser.id !== myId)
+        return reply.code(403).send({ error: 'Forbidden: You can only delete your own account' });
+
+      await prisma.user.delete({
+        where: { username: targetUser.username }
+      });
+
+      return reply.code(200).send({ success: true, message: "User deleted successfully" });
+
+    } catch (error) {
+      console.error(error);
+      return reply.code(500).send({ error: "Failed to delete the user" });
+    }
+  }
 }

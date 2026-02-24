@@ -3,7 +3,11 @@ import { Type } from '@sinclair/typebox'
 export const RegisterSchema = {
   body: Type.Object({
     email: Type.String({ format: 'email' }),
-    username: Type.String({ minLength: 3, maxLength: 20 }),
+    username: Type.String({ 
+      minLength: 3, 
+      maxLength: 20,
+      pattern: '^[a-zA-Z0-9_]+$' 
+    }),
     password: Type.String({ minLength: 6 })
   }),
   response: {

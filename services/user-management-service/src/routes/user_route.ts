@@ -44,4 +44,7 @@ export async function userRoutes(server: FastifyInstance) {
   server.post('/change-username', userController.changeUsername);
 
   server.post('/change-avatar', userController.updateAvatar);
+  
+  server.delete('/delete-user', userController.deleteUser);
+
 }

@@ -268,9 +268,11 @@ export class Header extends BaseComponent {
       const userItem = document.createElement('div');
       userItem.className = "flex items-center p-3 text-retro font-mono hover:bg-retro hover:text-black cursor-pointer";
 
-      userItem.innerHTML = `
-        <span class="font-mono font-bold text-sm pointer-events-none">${u.username}</span> 
-      `;
+      const nameSpan = document.createElement('span');
+      nameSpan.className = "font-mono font-bold text-sm pointer-events-none";
+      nameSpan.textContent = u.username;
+      
+      userItem.appendChild(nameSpan);
 
       userItem.addEventListener("click", () => {
         window.history.pushState({}, "", `/profile?username=${u.username}`);
