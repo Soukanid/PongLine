@@ -62,9 +62,10 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.get<{ Params: { username: string } }>('/history/:username', async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.get('/history/:username', async (request: FastifyRequest<{ Params: { username: string } }>, reply: FastifyReply) => {
       try {
         const { username } = request.params;
+        
         const matches = await prisma.match.findMany({
             where: {
                 OR: [
@@ -82,7 +83,7 @@ export default async function gameRoutes(fastify: FastifyInstance) {
         return reply.status(200).send({ matches });
       } catch (error) {
         console.error(error);
-        return reply.status(500).send("Internal Server Error" );
+        return reply.status(500).send("Internal Server Error");
       }
     });
 }

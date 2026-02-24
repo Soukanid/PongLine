@@ -62,10 +62,10 @@ export class Header extends BaseComponent {
               </button>
 
               <div id="menu-dropdown" class="absolute right-0 top-full mt-2 w-36 bg-black border border-retro z-50 hidden flex-col rounded overflow-hidden">
-                <button id="menu-settings" class="w-full text-sm text-retro text-left px-4 py-2 hover:bg-retro/20 transition-colors block">
+                <button id="menu-settings" class="w-full font-mono cursor-pointer text-retro text-left px-4 py-2 hover:bg-retro/20 transition-colors block">
                   Settings
                 </button>
-                <button id="menu-logout" class="w-full text-sm text-retro text-left px-4 py-2 hover:bg-retro/20 transition-colors block border-t border-retro/20">
+                <button id="menu-logout" class="w-full font-mono text-retro cursor-pointer text-left px-4 py-2 hover:bg-retro/20 transition-colors block border-t border-retro/20">
                   Logout
                 </button>
               </div>
