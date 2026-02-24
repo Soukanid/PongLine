@@ -259,7 +259,7 @@ export class ChatPage extends BaseComponent {
 
       const icon = document.createElement('img');
       icon.className = "items-center m-2  w-8 h-8 ml-auto group-hover:brightness-0 hover:opacity-80 transition-opacity cursor-pointer";
-      icon.src = gameIcon;
+      icon.src = '/game.png';
 
       icon.addEventListener('click', async () => {
         try {

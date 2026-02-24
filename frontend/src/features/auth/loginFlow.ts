@@ -121,19 +121,30 @@ export class LoginFlow {
     return true;
   }
 
-  async intra(){
-    window.location.assign(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/42/login`)
-    this.terminal.print(`Redirecting to
+  async intra() {
+    window.location.assign(`${import.meta.env.VITE_API_GATEWAY_URL}/api/auth/42/login`);
+    
+    this.terminal.print("Redirecting to...");
 
-          ██╗  ████╗
-         ██╔╝  █  ██║ 
-        ██╔╝     ██║
-       ██████╗  █████║
-           ██║  ╚════╝
-           ╚═╝           
-    `)
-    setTimeout(() => {}, 10);
+    const pre = document.createElement("pre");
+    
+    pre.textContent = `
+       ██╗  ████╗
+      ██╔╝  █  ██║ 
+     ██╔╝     ██║
+    ██████╗  █████║
+        ██║  ╚════╝
+        ╚═╝            
+`;
+
+    pre.style.lineHeight = "1";
+    pre.style.letterSpacing = "0";
+    pre.style.fontSize = "1rem";
+    pre.style.fontFamily = "'Courier New', Consolas, monospace";
+    pre.style.color = "inherit";
+
+    this.terminal.printElem(pre);
+    
     return true;
-
   }
 }

@@ -1,5 +1,6 @@
 import { BaseComponent } from '../../core/Component';
 import { settingService } from './SettingService'
+import { profileService } from './profile/profileService';
 
 export class SettingsPage extends BaseComponent {
   
