@@ -37,11 +37,11 @@ class App {
   private async render() {
     const path = new URL(window.location.href);
     const page = await router.resolve(path);
-    const header = document.querySelector('app-header');
+   /* const header = document.querySelector('app-header');
     if (header){
       (header as any).update();
     }
-
+*/
     if (this.currentPage) {
       this.currentPage.remove();
     }

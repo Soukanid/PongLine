@@ -24,7 +24,7 @@ const routes: Route[] = [
   {path: '/login', page: "login-page", protected:false},
   {path: '/dashboard', page: "profile-page", protected:false},
   {path: '/profile', page: "profile-page", protected:false},
-  {path: '/settings', page: "settings-page", protected:true},
+  {path: '/settings', page: "settings-page", protected:false},
   {path: '/menu', page: "menu-page", protected:false},
   {path: '/game', page: "game-page", protected:false},
   {path: '/chat', page: "chat-page", protected:true},
@@ -35,9 +35,16 @@ const routes: Route[] = [
 export const router = {
   async resolve(url:URL): Promise<HTMLElement>{
 
-    //check if route exists
-    const route = routes.find(r => this.matchPath(r.path, url.pathname))
 
+      return document.createElement("settings-page");
+    //check if route exists
+   /* const route = routes.find(r => this.matchPath(r.path, url.pathname))
+
+if (route && route.path === '/settings')
+    {
+      history.pushState({},"",route.path);
+      return document.createElement("settings-page");
+    }
     //landing page
     if (route && route.path === '/')
     {
@@ -81,6 +88,7 @@ export const router = {
     }
 
     return document.createElement(route.page)
+    */
   },
 
   matchPath(routePath: string, currentPath: string): boolean{
