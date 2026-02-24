@@ -85,10 +85,10 @@ export class PongGame {
         		if (this.keys['s'] || this.keys['S']) this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
     		} else if (this.game.mode === 'bot') {
     		    const paddleCenter = this.game.paddle1Y + 40;
-    		    if (this.game.ballX < (this.width * 2) / 7) {
-					if (paddleCenter + 30 < this.game.ballY ) {
+    		    if (this.game.ballX < (this.width * 2) / 7 && this.game.ballX > 22) {
+					if (paddleCenter + 25 < this.game.ballY ) {
 						this.game.paddle1Y = Math.min(this.height - 80, this.game.paddle1Y + speed);
-					} else if (paddleCenter - 30 > this.game.ballY ) {
+					} else if (paddleCenter - 25 > this.game.ballY ) {
 						this.game.paddle1Y = Math.max(0, this.game.paddle1Y - speed);
 					}
 				}
@@ -316,7 +316,7 @@ export class PongGame {
 		ctx.fillStyle = '#1BFB08';
 		ctx.fillRect(x, y, width, height);
 	}
-	private renderRoomId(room: string){
+	private renderWaiting(room: string){
     	if (room === '' || !room) {
     	    return;
     	}
@@ -328,13 +328,8 @@ export class PongGame {
     	this.context.textAlign = 'center';
     	this.context.textBaseline = 'middle';
 
-    	this.context.fillText('WAITING FOR OPPONENT...', this.width / 2, this.height / 2 - 40);
-		
-    	this.context.font = 'italic 32px VT323, monospace';
-    	this.context.fillText(`ROOM ID: ${room}`, this.width / 2, this.height / 2 + 10);
+    	this.context.fillText('WAITING FOR OPPONENT...', this.width / 2, this.height / 2);
 
-    	this.context.font = '14px VT323, monospace';
-    	this.context.fillText('SHARE THIS CODE TO START', this.width / 2, this.height / 2 + 60);
 	}
 	private renderGameFull(): void {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -367,7 +362,7 @@ export class PongGame {
 		}
 		if (this.game.mode === 'remote' && this.isStarted === false) {
 			if (this.roomId){
-				this.renderRoomId(this.roomId);
+				this.renderWaiting(this.roomId);
 			}
 	        requestAnimationFrame(() => this.loop());
         	return;
