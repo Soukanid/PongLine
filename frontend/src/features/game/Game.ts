@@ -27,15 +27,14 @@ export class Game extends BaseComponent {
 
         const canvas = document.getElementById('PongGame') as HTMLCanvasElement;
         if (!canvas) {
-            console.error("Canvas element 'PongGame' not found in DOM");
             return;
         }
 
         const params = new URL(window.location.href).searchParams;
         const mode = params.get('mode') || 'something';
-        const nick = params.get('nick');
-        const left = params.get('left');
-        const right = params.get('right');
+        const nick = params.get('nick') || 'WARRIOR';
+        const left = params.get('left') || undefined;
+        const right = params.get('right') || undefined;
         const room = params.get('room') || undefined;
 
         if ((mode != "remote" && mode != "local" && mode != "bot")
@@ -56,7 +55,6 @@ export class Game extends BaseComponent {
         this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
             const name = appStore.getUser()?.username;
-            console.log(`username: ${name}, room: ${room}`);
             this.game.joinRoom(room, `${name}`, `${name}`);
         }
         this.game.loop();

@@ -227,10 +227,8 @@ export class PongGame {
 			requestAnimationFrame(() => this.loop());
 		});
 		this.socket.on('connect', () => {
-			console.log('Connected to game server');
 		});
-		this.socket.on('playerDisconnected', (data: any) => {
-			console.log('Disconnected from game server', data.playerId);
+		this.socket.on('playerDisconnected', () => {
 			this.isPaused = true;
 			this.context.fillStyle = 'rgba(0, 0, 0, 0.85)';
 		    this.context.fillRect(0, 0, this.width, this.height);

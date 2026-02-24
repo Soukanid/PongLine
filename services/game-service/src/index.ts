@@ -20,7 +20,6 @@ const start = async () => {
     
     await fastify.register(gameRoutes);
     await fastify.register(tournamentRoutes);
-    console.log('Server is running...');
     await fastify.ready();
 
 
@@ -36,7 +35,6 @@ const start = async () => {
     }, 16);
 
     io.on("connection", (socket: Socket) => {
-      console.log("A user connected:", socket.id);
 
       socket.on("joinGame", (data: any) => {
         const { gameId, username, nickname } = data;
@@ -72,6 +70,7 @@ const start = async () => {
       
       socket.on("playerInput", (data: { gameId: string; up: boolean; down: boolean }) => {
         const { gameId, up, down } = data;
+        const paddleHeight = 80;
         const speed = 5;
         const room = rooms[gameId];
         if (!room) return;
@@ -83,7 +82,7 @@ const start = async () => {
         if (up) paddle.y -= speed;
         if (down) paddle.y += speed;
 
-        paddle.y = Math.max(0, Math.min(room.gameState.canvas.height - 100, paddle.y));
+        paddle.y = Math.max(0, Math.min(room.gameState.canvas.height - paddleHeight, paddle.y));
       });
       socket.on("disconnect", () => {
           for (const gameId in rooms) {
@@ -97,11 +96,7 @@ const start = async () => {
                 const winner = room.players[winnerIndex];
 
                 if (winner && winner.socketId) {
-                  io.to(winner.socketId).emit("playerDisconnected", { 
-                      winnerId: winner.socketId,
-                      reason: "Opponent disconnected" 
-                  });
-                  console.log(`Winner notified: ${winner.socketId}`);
+                  io.to(winner.socketId).emit("playerDisconnected");
                   const state = room.gameState;
                   const matchResult = {
                     room_id: gameId,
@@ -116,20 +111,16 @@ const start = async () => {
                 }
                 
                 delete rooms[gameId];
-                console.log(`Room ${gameId} cleaned up.`);
                 break; 
               }
           }
       });
     });
     
-    await fastify.listen({ port: 3003, host: '0.0.0.0' }); 
-    console.log("Game service is running on port 3003");
-
+    await fastify.listen({ port: 3003, host: '0.0.0.0' });
 
   } catch (err) {
     fastify.log.error(err);
-    process.exit(1);
   }
 };
 

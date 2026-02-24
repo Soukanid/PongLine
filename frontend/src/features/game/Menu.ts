@@ -201,8 +201,6 @@ export class Menu extends BaseComponent {
           
             if (res.success && res.roomId) {
               this.showRoomIdDialog(res.roomId, resolve, cleanup);
-            } else {
-              console.log('Server failed to create room.');
             }
           } catch (err) {
             console.error(err);

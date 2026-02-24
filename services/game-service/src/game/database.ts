@@ -154,7 +154,6 @@ export async function saveMatch(matchResult: any, winner: any) {
         if (finalMatchToNotify)
             await notifyPlayersAboutFinaleMatch(finalMatchToNotify.username1, finalMatchToNotify.username2, finalMatchToNotify.room_id);
 
-        console.log(`Match ${matchResult.room_id} saved successfully.`);
     } catch (error) {
         console.error("Transaction Failed: Match not saved.", error);
     }
