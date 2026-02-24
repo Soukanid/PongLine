@@ -251,12 +251,19 @@ export class UserController {
       }
   }
 
- async getMe(req: FastifyRequest, reply: FastifyReply)
+  async getMe(req: FastifyRequest, reply: FastifyReply)
   {
+      const role = req.headers['x-user-role']?.toString();
+      const username = req.headers['x-user-username']?.toString();
+
+      console.log(username);
+      if (role === "guest")
+        return { id: 0, username: username, role, avatar: ""};
+
       const myId = req.headers['x-user-id']?.toString();
 
       if (!myId)
-      return reply.code(400).send();
+        return reply.code(400).send();
 
       const userId = parseInt(myId);
 
@@ -265,7 +272,6 @@ export class UserController {
           where: { id: Number(userId) },
           select: {
             id: true,
-            email: true,
             username: true,
             avatar: true,
           },
@@ -283,12 +289,11 @@ export class UserController {
         }
 
         const formatUsr = {
-          requestId: user.id,
           id: user.id,
           username: user.username,
+          role: "warrior",
           avatar: avatarBase64
         };
-
        
         return reply.send(formatUsr);
       } catch (error)
@@ -703,6 +708,41 @@ export class UserController {
 
     } catch (error) {
       return reply.code(500).send({ error: "Failed to Update the Username"});
+    }
+  }
+
+  async updateAvatar(req: FastifyRequest<{ Body: { avatarBase64: string } }>, reply: FastifyReply)
+  {
+    const userId = req.headers['x-user-id']?.toString();
+    
+    if (!userId)
+      return reply.code(401).send();
+
+    const myId = parseInt(userId);
+    const { avatarBase64 } = req.body;
+
+    if (!avatarBase64 || typeof avatarBase64 !== 'string')
+      return reply.code(400).send({ error: "Avatar data is required" });
+
+    try {
+      const base64Data = avatarBase64.replace(/^data:image\/\w+;base64,/, "");
+      
+      const avatarBuffer = Buffer.from(base64Data, 'base64');
+
+      const maxSizeBytes = 2 * 1024 * 1024;
+
+      if (avatarBuffer.length > maxSizeBytes)
+        return reply.code(400).send({ error: "Image is too large. Maximum size is 2MB." });
+
+      await prisma.user.update({
+        where: { id: myId },
+        data: { avatar: avatarBuffer }
+      });
+
+      return reply.code(200).send({ success: "true", message: "Avatar updated successfully" });
+
+    } catch (error) {
+      return reply.code(500).send({ error: "Failed to update the avatar" });
     }
   }
 }
