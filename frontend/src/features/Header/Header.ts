@@ -1,10 +1,5 @@
 import { BaseComponent } from "../../core/Component";
 import { chatService } from "./../chat/ChatServices";
-import  pongLineImage  from "../../../public/pongline.png";
-import  searchIcon  from "../../../public/search.png";
-import  notifIcon  from "../../../public/notif.png";
-import  chatIcon  from "../../../public/chat.png";
-import doorIcon from "../../../public/logout.png"
 import { headerService } from "./HeaderService";
 import { AuthService } from "../auth/authService";
 import { router } from "../../core/Router";
@@ -14,14 +9,14 @@ export class Header extends BaseComponent {
   render() {
     this.setHtml(`
       <div class="flex-1 flex flex-row items-center h-20 w-full px-6">
-        <img id="pongLine" src="${pongLineImage}" class="h-8 w-40 cursor-pointer hover:opacity-80 transition-opacity" > 
+        <img id="pongLine" src="/pongline.png" class="h-8 w-40 cursor-pointer hover:opacity-80 transition-opacity" > 
 
         <div class="ml-auto flex flex-row items-center gap-6">
           
           <div class="relative">
             
             <div class="flex border-b border-retro/50 items-center w-80 focus-within:border-retro transition-colors">
-              <img src="${searchIcon}" class="m-2 w-7 h-7 " alt="Search" />
+              <img src="/search.png" class="m-2 w-7 h-7 " alt="Search" />
               <input 
                 id="user-search" 
                 type="text" 
@@ -40,14 +35,14 @@ export class Header extends BaseComponent {
           </div>
           <div class="flex gap-4">
             <div class="relative">
-              <img id="chatPage" src="${chatIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+              <img id="chatPage" src="/chat.png" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
               <span id="chat-badge" class="absolute -top-3 -right-1 text-xxl text-retro font-bold  rounded-full hidden">
                 0
               </span>
             </div>
             <div class="relative" id="notif-container">
               <button id="notif-btn" class="relative hover:scale-110 transition-transform">
-                <img src="${notifIcon}" class="h-8 w-8 cursor-pointer">
+                <img src="/notif.png" class="h-8 w-8 cursor-pointer">
                 <span id="notif-badge" class="absolute -top-3 -right-1 text-xxl text-retro font-bold rounded-full hidden">
                     0
                 </span>
@@ -59,7 +54,7 @@ export class Header extends BaseComponent {
             </div> 
             <div class="relative">
               <button id="menu-btn" class="relative hover:scale-110 transition-transform">
-                <img id="Logout" src="${doorIcon}" class="h-8 w-8 cursor-pointer" > 
+                <img id="Logout" src="/logout.png" class="h-8 w-8 cursor-pointer" > 
               </button>
 
               <div id="menu-dropdown" class="absolute right-0 top-full mt-2 w-36 bg-black border border-retro z-50 hidden flex-col rounded overflow-hidden">
@@ -298,22 +293,32 @@ export class Header extends BaseComponent {
     ) as HTMLElement;
 
     searchInput.addEventListener("input", (e) => {
-      const query = (e.target as HTMLInputElement).value.trim();
+      const inputEl = e.target as HTMLInputElement;
+      
+      // only numbers and letters are allowed
+      
+      const sanitizedValue = inputEl.value.replace(/[^a-zA-Z0-9_]/g, '');
 
-      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      if (inputEl.value !== sanitizedValue)
+        inputEl.value = sanitizedValue;
 
-      // if no input we will hide the div
-      if (query.length < 3) {
+      const query = sanitizedValue.trim();
+
+      if (this.debounceTimer)
+        clearTimeout(this.debounceTimer);
+
+      if (query.length < 3)
+      {
         resultsContainer.classList.add("hidden");
         resultsContainer.innerHTML = "";
-      } else {
-        // here we use the debouncer
+      }
+      else
+      {
         this.debounceTimer = setTimeout(() => {
           this.searchUser(query, resultsContainer);
         }, 300);
       }
     });
-
     document.addEventListener("click", (e) => {
       if (!this.contains(e.target as Node))
         resultsContainer.classList.add("hidden");

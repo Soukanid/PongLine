@@ -1,13 +1,6 @@
 import { BaseComponent } from '../../core/Component';
 import { chatService} from './ChatServices';
 import { Message, Friend } from '../../core/Types'
-import contactIcon from '../../../public/contact.png'
-import gameIcon from '../../../public/game.png'
-import searchIcon from '../../../public/search.png'
-import sendIcon from '../../../public/sent.png'
-import blockIcon from '../../../public/block.png'
-import inviteIcon from '../../../public/invite.png'
-import personIcon from '../../../public/person.png'
 import { router } from "../../core/Router";
 
 
@@ -44,7 +37,7 @@ export class ChatPage extends BaseComponent {
 
           <button id="send-btn" 
             class="cursor-pointer ml-4 px-4 py-2">
-            <img src="${sendIcon}"
+            <img src="/sent.png"
               class="w-8 h-8  group-hover:brightness-0" disabled/>
           </button>
           </div>
@@ -52,7 +45,7 @@ export class ChatPage extends BaseComponent {
         </div>
         <div class="w-1/4 flex border border-retro/50 rounded-xl flex-col ml-4">
           <div class="h-12 flex items-center text-white border-b border-retro/50 shrink-0">
-              <img src="${searchIcon}" class="m-2 w-8 h-8 shrink-0" alt="Search" />
+              <img src="/search.png" class="m-2 w-8 h-8 shrink-0" alt="Search" />
 
               <input 
                   id="friend-search" 
@@ -63,18 +56,18 @@ export class ChatPage extends BaseComponent {
                   placeholder="Search friends..." 
               >
               <button id="invitations" class="cursor-pointer px-4 py-2 shrink-0">
-                  <img src="${inviteIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+                  <img src="/invite.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
               </button>
           </div>
           <div id="friends-list" class="min-h-0 flex-1 flex flex-col text-white  overflow-y-auto scrollbar-hide p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           </div>
           <div class="border-t border-retro/50 flex justify-between items-center px-4 py-2">
             <button id="friends-contact" class="cursor-pointer px-4 py-2">
-              <img src="${contactIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+              <img src="/contact.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
             </button>
 
             <button id="blocked_user" class="cursor-pointer px-4 py-2">
-              <img src="${blockIcon}" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
+              <img src="/block.png" class="w-8 h-8 group-hover:brightness-0 hover:opacity-80 transition-opacity" />
             </button>
 
             <button id="friend-chat" class="cursor-pointer px-4 py-2">
@@ -152,7 +145,7 @@ export class ChatPage extends BaseComponent {
         const nameEl = friendItem.querySelector('.username-text') as HTMLElement;
 
         if (!f.avatar)
-          imgEl.src = personIcon;
+          imgEl.src = '/person.png';
         else
           imgEl.src = f.avatar;
 

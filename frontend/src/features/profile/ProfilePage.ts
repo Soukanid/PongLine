@@ -1,10 +1,19 @@
 import { BaseComponent } from "../../core/Component";
-import tournIcon from "./../../../public/tourn.png";
-import gameIcon from "./../../../public/game.png";
 import { profileService } from "./ProfileService";
-import { Tournament } from "./../types";
+import { Tournament } from "./../../core/Types";
 import { router } from "../../core/Router";
 import { chatService } from "../chat/ChatServices";
+
+function escapeHTML(str: string | null | undefined): string {
+  if (!str)
+    return '';
+  return str.replace(/[&<>'"]/g, (tag) => {
+    const charsToReplace: Record<string, string> = {
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    };
+    return charsToReplace[tag] || tag;
+  });
+}
 
 export class ProfilePage extends BaseComponent {
 
@@ -55,14 +64,14 @@ render() {
         <div class="flex flex-row gap-4 w-full shrink-0">
           <button id="btn-tournament" class="flex-1 group border border-retro py-4 flex cursor-pointer flex-col items-center gap-2 hover:bg-retro hover:text-black transition-all duration-300">
             <div class="h-10 w-10 flex items-center justify-center">
-               <img src='${tournIcon}' class=" h-full w-full object-contain filter group-hover:brightness-0"> 
+               <img src='/tourn.png' class=" h-full w-full object-contain filter group-hover:brightness-0"> 
             </div>
             <span class="text-[14px] uppercase tracking-tighter font-bold">Tournament</span>
           </button>
 
           <button id="btn-pingpong" class="flex-1 group border border-retro cursor-pointer py-4 flex flex-col items-center gap-2 hover:bg-retro hover:text-black transition-all duration-300">
             <div class="h-10 w-10 flex items-center justify-center">
-               <img src='${gameIcon}' class="h-full w-full object-contain filter group-hover:brightness-0"> 
+               <img src='/game.png' class="h-full w-full object-contain filter group-hover:brightness-0"> 
             </div>
             <span class="text-[14px] uppercase tracking-tighter font-bold">Ping Pong</span>
           </button>
@@ -203,7 +212,7 @@ render() {
       
       item.innerHTML = `
         <div class="flex flex-col">
-          <span class="text-retro/50 uppercase">vs ${opponent || 'Unknown'}</span>
+          <span class="text-retro/50 uppercase">vs ${escapeHTML(opponent) || 'Unknown'}</span>
           <span class="font-bold tracking-wider">${new Date(match.playedAt).toLocaleDateString()}</span>
         </div>
         <div class="flex flex-col items-end">
@@ -345,7 +354,7 @@ render() {
 
     item.innerHTML = `
       <div class="flex-1 flex-col w-full ">
-        <span class="font-bold tracking-wider">${t.tour_name}</span>
+        <span class="font-bold tracking-wider">${escapeHTML(t.tour_name)}</span>
       </div>
       <button class="join-btn cursor-pointer text-retro font-bold ml-auto hover:scale-110" data-id="${t.id}">
         < JOIN >
@@ -450,7 +459,7 @@ render() {
       listContainer.innerHTML = `
         <div class="border border-retro/50 p-4 bg-retro/5 flex flex-col w-full">
           <div class="text-center mb-5 border-b border-retro/30 pb-3">
-            <h4 class="text-retro font-bold uppercase tracking-widest mb-1">${tourn.tour_name}</h4>
+            <h4 class="text-retro font-bold uppercase tracking-widest mb-1">${escapeHTML(tourn.tour_name)}</h4>
             <p class="text-[10px] text-retro/70">STATUS: ${tourn.tour_state} [${playerCount}/4]</p>
           </div>
           
@@ -460,11 +469,11 @@ render() {
               <span class="text-[10px] text-retro/50 mb-1">SEMI-FINAL 1</span>
               <div class="flex justify-between items-center border border-retro/30 p-2 bg-black">
                  <span class="w-[40%] text-right truncate ${p1 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${p1 || 'WAITING...'}
+                    ${escapeHTML(p1) || 'WAITING...'}
                  </span>
                  <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
                  <span class="w-[40%] text-left truncate ${p2 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${p2 || 'WAITING...'}
+                    ${escapeHTML(p2) || 'WAITING...'}
                  </span>
               </div>
             </div>
@@ -473,11 +482,11 @@ render() {
               <span class="text-[10px] text-retro/50 mb-1">SEMI-FINAL 2</span>
               <div class="flex justify-between items-center border border-retro/30 p-2 bg-black">
                  <span class="w-[40%] text-right truncate ${p3 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${p3 || 'WAITING...'}
+                    ${escapeHTML(p3) || 'WAITING...'}
                  </span>
                  <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
                  <span class="w-[40%] text-left truncate ${p4 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${p4 || 'WAITING...'}
+                    ${escapeHTML(p4) || 'WAITING...'}
                  </span>
               </div>
             </div>
@@ -486,11 +495,11 @@ render() {
               <span class="text-[10px] text-retro/70 mb-1 text-center font-bold tracking-widest">GRAND FINAL</span>
               <div class="flex justify-between items-center border border-retro/50 p-3 bg-black">
                  <span class="w-[40%] text-right truncate ${f1 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${f1 || 'SF1_WINNER'}
+                    ${escapeHTML(f1) || 'SF1_WINNER'}
                  </span>
                  <span class="text-[10px] text-retro/50 font-bold mx-2">VS</span>
                  <span class="w-[40%] text-left truncate ${f2 ? 'text-retro font-bold' : 'text-retro/30 animate-pulse'}">
-                    ${f2 || 'SF2_WINNER'}
+                    ${escapeHTML(f2) || 'SF2_WINNER'}
                  </span>
               </div>
             </div>
@@ -512,6 +521,15 @@ render() {
     const btnCopy = this.querySelector('#btn-copy-code') as HTMLButtonElement;
     const errorDiv = this.querySelector('#modal-error');
 
+    if (input)
+    {
+      input.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement;
+        const sanitized = target.value.replace(/[^a-zA-Z0-9_-]/g, '');
+        if (target.value !== sanitized)
+          target.value = sanitized;
+      });
+    }
     if (btnTournament && modal) {
       btnTournament.addEventListener('click', () => {
         modal.classList.remove('hidden');
@@ -524,7 +542,8 @@ render() {
       input.value = '';
     };
 
-    if (closeModal) closeModal.addEventListener('click', hideModal);
+    if (closeModal)
+      closeModal.addEventListener('click', hideModal);
     
     modal.addEventListener('click', (e) => {
       if (e.target === modal)
