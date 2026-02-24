@@ -117,9 +117,7 @@ export class AuthService {
         );
       }
       await api.post<{ success?: string; error?: string }>(
-        "api/auth/logout",
-        {},
-      );
+        "api/auth/logout",{});
 
       appStore.setUser(null);
       await Promise.resolve();

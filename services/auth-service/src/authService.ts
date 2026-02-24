@@ -76,7 +76,7 @@ export class AuthService {
       //create user in User service
       const user = await this.callUserService<{ id: number }>(
         "POST",
-        "create_user",
+        "create-user",
         tempToken,
         { email, username },
       );
@@ -131,7 +131,7 @@ export class AuthService {
       //create user in User service
       const user = await this.callUserService<{ id: number }>(
         "POST",
-        "create_user",
+        "create-user",
         tempToken,
         { email, username },
       );
@@ -319,7 +319,7 @@ export class AuthService {
 
       await this.callUserService<{ success: string }>(
         "DELETE",
-        "delete_user",
+        "delete-user",
         undefined,
         { username },
       );
