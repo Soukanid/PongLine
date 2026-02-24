@@ -202,7 +202,7 @@ export class UserController {
       }
   }
 
-  async createUser(req: FastifyRequest< { Body: { guest? :{ alias: string }, user? : { email: string, username: string}}}>, reply: FastifyReply) {
+  async createUser(req: FastifyRequest< { Body: { email: string, username: string }}>, reply: FastifyReply) {
     
     try {
       const defaultAvatarPath = path.join(__dirname, '../../data/avatars/default_avatar.png') 
@@ -215,31 +215,14 @@ export class UserController {
       {
         avatarBuffer = Buffer.alloc(0);
       }
-      if (req.body.guest)
-      {
-        const guest = await prisma.user.create({
-          data: {
-            email: "guest0989@gmail.com",
-            username: req.body.guest.alias,
-            avatar: avatarBuffer
-          }
-        });
-
-        return reply.status(201).send( {id: guest.id });
-      }
-      else if (req.body.user)
-    {
-        const user = await prisma.user.create({
-          data : {
-            email: req.body.user.email,
-            username: req.body.user.username,
-            avatar: avatarBuffer
-          },
-        });
-
-        return reply.status(201).send( {id: user.id });
-      }
-
+      const user = await prisma.user.create({
+        data : {
+          email: req.body.email,
+          username: req.body.username,
+          avatar: avatarBuffer
+        },
+      });
+      return reply.status(201).send( {id: user.id });
     } catch (error)
     {
       console.error(error);
@@ -273,8 +256,8 @@ export class UserController {
       const role = req.headers['x-user-role']?.toString();
       const username = req.headers['x-user-username']?.toString();
 
-      // if (role === "guest")
-      //   return { id: 0, username: username, role, avatar: ""};
+      if (role === "guest")
+        return { id: 0, username: username, role, avatar: ""};
 
       const myId = req.headers['x-user-id']?.toString();
 
@@ -658,6 +641,7 @@ export class UserController {
         data: { isOnline: isOnline }
       });
 
+      console.log(req.body.id);
       return reply.code(200).send({'success': "true"});
     } catch (error) {
       console.error(error);
@@ -745,7 +729,6 @@ export class UserController {
       const avatarBuffer = Buffer.from(base64Data, 'base64');
 
       const maxSizeBytes = 2 * 1024 * 1024;
-
       if (avatarBuffer.length > maxSizeBytes)
         return reply.code(400).send({ error: "Image is too large. Maximum size is 2MB." });
 
