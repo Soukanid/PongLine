@@ -20,6 +20,7 @@ export class ChatPage extends BaseComponent {
   private activeFriendUsername : string | null = null;
   private isBlockedView: boolean = false;
   private isInvitationView: boolean = false;
+  private isOnlineView: boolean = true;
 
 
   async render() {
@@ -133,8 +134,8 @@ export class ChatPage extends BaseComponent {
 
         // Show the status of the friend
         var statusHTML: string = '';
-        if (f.isOnline)
-          statusHTML = `<span class="mr-3 text-[20px] font-mono text-retro animate-pulse"> ONLINE </span>`;
+        if (this.isOnlineView && f.isOnline)
+          statusHTML = `<span class="mr-3 text-[20px] font-mono text-retro animate-pulse hover:text-black"> ONLINE </span>`;
         
         friendItem.innerHTML = `
           <img class="m-2 w-10 h-10 rounded-full avatar-img transition-transform hover:scale-110 group-hover:brightness-0">
@@ -178,6 +179,7 @@ export class ChatPage extends BaseComponent {
   async loadFriend() {
     this.isBlockedView = false
     this.isInvitationView = false;
+    this.isOnlineView = true;
 
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);
@@ -359,6 +361,7 @@ export class ChatPage extends BaseComponent {
   {
     this.isBlockedView = false;
     this.isInvitationView = false;
+    this.isOnlineView = true;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
@@ -372,6 +375,7 @@ export class ChatPage extends BaseComponent {
   {
     this.isBlockedView = true;
     this.isInvitationView = false;
+    this.isOnlineView = false;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)
@@ -387,6 +391,7 @@ export class ChatPage extends BaseComponent {
   {
     this.isBlockedView = false;
     this.isInvitationView = true;
+    this.isOnlineView = false;
 
     const searchInput = this.querySelector('#friend-search') as HTMLInputElement;
       if (searchInput)

@@ -69,7 +69,7 @@ export class ChatController {
           created_at: true
         },
 
-        orderBy: { created_at: 'asc' }
+        orderBy: { created_at: 'desc' }
       });
 
       // to remove duplicated users and fetsh them
@@ -93,7 +93,10 @@ export class ChatController {
         throw new Error('User Service failed');
 
       const userData = await userServiceResponse.json(); 
-      return reply.send(userData);
+      const sortedUserData = contactIds
+        .map(id => userData.find((user: any) => user.id === id))
+        .filter(Boolean);
+      return reply.send(sortedUserData);
 
     } catch (error) {
       console.error("Failed to fetch chat friends", error);
