@@ -137,7 +137,7 @@ export class Header extends BaseComponent {
   async connectedCallback()
   {
     super.connectedCallback?.();
-    this.update();
+      
     chatService.onNotification(this.handleNotification);
     chatService.onChatUpdate(this.handleIncomingChat);
     const list = await headerService.fetchUnreadNotifications();
@@ -152,6 +152,7 @@ export class Header extends BaseComponent {
     }
     this.updateNotifBadge();
     this.update();
+    
   }
 
   disconnectedCallback() {

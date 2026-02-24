@@ -66,6 +66,7 @@ export const router = {
       return document.createElement("not-found-page")
     }
 
+    console.log(appStore.getUser());
     //redirect from protected routes for guests
     if (route.protected && appStore.getUser()?.role === 'guest'){
       console.log("Protected route")

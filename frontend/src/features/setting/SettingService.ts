@@ -40,7 +40,7 @@ class SettingService {
       if (res && res.ok)
         return ({ "success" : "true"});
       else
-        return ({ "seccess" : "false", "message": data.error})
+        return ({ "success" : "false", "message": data.error})
       } catch (err) {
         return ({ "success": "false", "message": "Failed to update the Username"});       
       }

@@ -4,6 +4,7 @@ CREATE TABLE "users_auth" (
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
     "isTFAEnabled" BOOLEAN NOT NULL DEFAULT false,
     "TFASecret" TEXT,
