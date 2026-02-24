@@ -140,7 +140,6 @@ export class AuthService {
   static async setCurrentUser(): Promise<void> {
     try {
       const me = await api.get<User>("api/user-management/me", {});
-      console.log(me);
       appStore.setUser(me);
     } catch {
       appStore.setUser(null);

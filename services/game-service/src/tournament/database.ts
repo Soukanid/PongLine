@@ -28,6 +28,28 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   });
 
+  const checkAndDeleteExpiredTournament = async (tournament: any) => {
+    const now = new Date();
+    const startedAt = new Date(tournament.startedAt);
+    const elapsedMs = now.getTime() - startedAt.getTime();
+    const elapsedMin = elapsedMs / (1000 * 60);
+
+    if (elapsedMin >= 30) {
+      try {
+        await prisma.$transaction([
+          prisma.match.deleteMany({ where: { tournamentId: tournament.id } }),
+          prisma.participant.deleteMany({ where: { tournamentId: tournament.id } }),
+          prisma.tournament.delete({ where: { id: tournament.id } })
+        ]);
+        return true;
+      } catch (error) {
+        console.error("Error deleting expired tournament:", error);
+        return false;
+      }
+    }
+    return false;
+  };
+
   fastify.get('/my-tournament', async (request: FastifyRequest, reply: FastifyReply) => {
     
     const username = request.headers['x-user-username']?.toString();
@@ -51,6 +73,11 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         });
       if (!myTour)
         return reply.code(204).send([]);
+
+      const isExpired = await checkAndDeleteExpiredTournament(myTour);
+      if (isExpired)
+        return reply.code(204).send([]);
+
       return reply.code(200).send(myTour);
     } catch (error)
     {
