@@ -641,7 +641,6 @@ export class UserController {
         data: { isOnline: isOnline }
       });
 
-      console.log(req.body.id);
       return reply.code(200).send({'success': "true"});
     } catch (error) {
       console.error(error);

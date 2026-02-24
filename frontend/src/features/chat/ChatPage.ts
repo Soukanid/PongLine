@@ -179,7 +179,7 @@ export class ChatPage extends BaseComponent {
   async loadFriend() {
     this.isBlockedView = false
     this.isInvitationView = false;
-    this.isOnlineView = true;
+    this.isOnlineView = false;
 
     try {
       const url = new URL(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/chat_friends`);

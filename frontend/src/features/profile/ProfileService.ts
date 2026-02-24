@@ -100,7 +100,6 @@ class ProfileService {
   {
     try {
 
-      console.log(appStore.getUser());
       if (appStore.getUser()?.role === "guest") {
         return {
           id: 0,    

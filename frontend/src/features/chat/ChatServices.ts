@@ -1,4 +1,5 @@
 import { Message , Friend } from "../../core/Types"
+import { appStore } from "../../core/Store";
 
 type ChatHandler = (msg: Message) => void;
 type NotificationHandler = (notif: any) => void;
@@ -13,6 +14,8 @@ class ChatService {
 
   connectSocket()
   {
+    if (!appStore.getUser()?.id)
+      return ;
     if (this.socket && this.socket.readyState === WebSocket.OPEN)
       return ;
 

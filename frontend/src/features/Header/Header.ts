@@ -129,7 +129,7 @@ export class Header extends BaseComponent {
   async connectedCallback()
   {
     super.connectedCallback?.();
-      this.update();
+    this.update();
     chatService.onNotification(this.handleNotification);
     chatService.onChatUpdate(this.handleIncomingChat);
     const list = await headerService.fetchUnreadNotifications();
@@ -188,23 +188,29 @@ export class Header extends BaseComponent {
       item.className = "p-3 border-b border-retro/10 hover:bg-retro/10 transition-colors flex flex-col";
           
       let actionButton = '';
+      let messageText = '';
+      let textClass = 'text-retro';
 
       if (n.type === 'TOURNAMENT_MATCH') {
+        messageText = "> Your Tournament match is ready";
         actionButton = `
           <button class="join-match-btn   py-1  uppercase font-bold text-retro hover:bg-retro hover:text-black transition-colors cursor-pointer mt-1">
           [ JOIN_ROOM.exe ]
           </button>
         `;
       }
+      else if (n.type === 'TOURNAMENT_CONGRAT')
+        messageText = n.content || "> YOU WON THE TOURNAMENT CONGRATULATION !";
+      else
+        messageText = n.content || "> New Notification";
 
       item.innerHTML = `
-        <div class="text-sm text-retro font-mono animate-pulse">"You Tournament match is ready"</div>
+        <div class="text-sm ${textClass} font-mono animate-pulse">${messageText}</div>
         ${actionButton}
-        <div class="text-lg text-retro/50 text-right">${new Date(n.createdAt).toLocaleTimeString()}</div>
+        <div class="text-xs text-retro/50 text-right mt-2">${new Date(n.createdAt).toLocaleTimeString()}</div>
       `;
 
-      if (n.type === 'TOURNAMENT_MATCH')
-      {
+      if (n.type === 'TOURNAMENT_MATCH') {
         const btn = item.querySelector('.join-match-btn') as HTMLButtonElement;
         btn?.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -221,6 +227,8 @@ export class Header extends BaseComponent {
   }
 
   async searchUser(str: String, container: HTMLElement) {
+    if (appStore.getUser()?.role === "guest")
+      return ;
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/search?str=${str}`,

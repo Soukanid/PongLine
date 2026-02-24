@@ -88,6 +88,8 @@ export default async function gameRoutes(fastify: FastifyInstance) {
 
 export async function saveMatch(matchResult: any, winner: any) {
     let finalMatchToNotify: any = null;
+    let tournamentWinnerToNotify: string | null = null;
+
     try {
         await prisma.$transaction(async (tx: any) => {
             await tx.player.upsert({
@@ -154,12 +156,32 @@ export async function saveMatch(matchResult: any, winner: any) {
                             tour_state: "Finished"
                         }
                     });
+                    tournamentWinnerToNotify = finalMatch.winnerName;
                 };
             }
             
         });
+
         if (finalMatchToNotify)
             await notifyPlayersAboutFinaleMatch(finalMatchToNotify.username1, finalMatchToNotify.username2, finalMatchToNotify.room_id);
+
+        if (tournamentWinnerToNotify)
+        {
+            const url = new URL(`${process.env.CHAT_SERVICE_URL}notify`);
+            try {
+                await fetch(url.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: tournamentWinnerToNotify, 
+                        type: "TOURNAMENT_CONGRAT",
+                        payload: `YOU WON THE TOURNAMENT CONGRATULATION !`
+                    }),
+                });
+            } catch(error) {
+                console.error("Failed to send congratulation notification:", error);
+            }
+        }
         
 
     } catch (error) {
@@ -176,7 +198,8 @@ async function notifyPlayersAboutFinaleMatch(username1: string, username2: strin
     const url = new URL(`${process.env.CHAT_SERVICE_URL}notify`);
 
     for (const notif of notifications) {
-      if (!notif.username) continue; 
+      if (!notif.username)
+        continue; 
 
       try {
         await fetch(url.toString(), {
