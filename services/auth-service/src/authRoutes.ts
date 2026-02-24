@@ -101,6 +101,96 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
   );
 
+  fastify.post(
+    "/change-password",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+
+        const { currentPassword, newPassword } = request.body as {
+          currentPassword?: string;
+          newPassword?: string;
+        };
+
+        if (!currentPassword || !newPassword)
+          return reply.code(400).send();
+
+        //[soukaina] I need the userId here
+        // await authService.changePassword(userId, currentPassword, newPassword);
+
+        return reply.code(200).send({ success: "Password updated successfully" });
+
+      } catch (error: any) {
+        return reply.code(500).send({ error: "Internal Server Error" });
+      }
+    }
+  );
+
+  fastify.post(
+    "/change-username",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(401).send({ error: "Unauthorized" });
+        const userId = request.headers['x-user-id']?.toString();
+        const myUsername = request.headers['x-user-username']?.toString();
+    
+        if (!userId || !myUsername)
+          return reply.code(401).send();
+
+        const myId = parseInt(userId);
+        const { newUsername } = request.body as { newUsername: string };
+
+        if (!newUsername || newUsername.trim() === '')
+          return reply.code(400).send();
+
+        const trimmedUsername = newUsername.trim();
+
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+
+        if (!usernameRegex.test(trimmedUsername))
+            return reply.code(400).send({ error: "Username is Invalid"});
+
+        const existingUser = await fastify.prisma.userAuth.findUnique({
+          where: { username: trimmedUsername },
+        });
+
+        if (existingUser)
+        {
+          if (existingUser.username === myUsername)
+            return reply.code(200).send();
+          return reply.code(409).send({ error: "Username is already taken" });
+        }
+
+        await fastify.prisma.userAuth.update({
+          where: { username: myUsername }, 
+          data: { username: trimmedUsername },
+        });
+
+        const newAccessToken = fastify.auth.generateToken(
+          myId,
+          "warrior",
+          trimmedUsername
+        );
+
+        reply.setCookie("access_token", newAccessToken, {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 86400, //[soukaina] should be changed
+        });
+
+        return reply.code(200).send({ 
+          success: "true", 
+        });
+
+      } catch (error: any) {
+        return reply.code(500).send({ error: "Failed to Update the Username" });
+      }
+    },
+  );
+
   // get 42 authorization
   fastify.get(
     "/42/login",

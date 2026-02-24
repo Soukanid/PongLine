@@ -702,7 +702,7 @@ export class UserController {
       return reply.code(200).send({"success": "true"});
 
     } catch (error) {
-      return reply.code(500).send(error);
+      return reply.code(500).send({ error: "Failed to Update the Username"});
     }
   }
 }

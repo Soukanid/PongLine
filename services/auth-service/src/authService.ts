@@ -251,8 +251,8 @@ export class AuthService {
       if (error.name === "TokenExpiredError") {
         return { valid: false, reason: "token_expired" };
       }
-          console.log("helllooo")
       return { valid: false, reason: "invalid_token" };
     }
   }
+
 }

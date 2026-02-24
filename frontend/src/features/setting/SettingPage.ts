@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../core/Component';
+import { settingService } from './SettingService'
 
 export class SettingsPage extends BaseComponent {
   
@@ -136,49 +137,90 @@ export class SettingsPage extends BaseComponent {
     const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
     const emailInput = this.querySelector('#email-input') as HTMLInputElement;
 
-    changeProfileBtn?.addEventListener('click', () => {
-      console.log('Update Profile:', usernameInput.value, emailInput.value);
-      // Add your fetch call to update profile here
+    changeProfileBtn?.addEventListener('click', async () => {
+      const newUsername = usernameInput.value.trim();
+      
+      if (!newUsername)
+        return;
+
+      const userRes = settingService.changeUsernameOnUserService(newUsername) as any;
+      
+      if (userRes.success === true)
+      {
+        //[soukaina] alert for now but it should be checked
+        alert("> ERROR: " + userRes.message);
+        return;
+      }
+      
+      const authRes = settingService.changeUsernameOnAuthService(newUsername) as any;
+
+      if (!authRes.success)
+      {
+        //[soukaina] alert for now but it should be checked
+        alert("> ERROR: " + userRes.message);
+        return;
+      }
+
     });
 
-    // Selectors for Password
     const changePasswordBtn = this.querySelector('#change-password-btn');
     const currentPwInput = this.querySelector('#current-pw-input') as HTMLInputElement;
     const newPwInput = this.querySelector('#new-pw-input') as HTMLInputElement;
     const repeatPwInput = this.querySelector('#repeat-pw-input') as HTMLInputElement;
 
-    changePasswordBtn?.addEventListener('click', () => {
-      if (newPwInput.value !== repeatPwInput.value) {
-        alert("Passwords do not match!");
+    changePasswordBtn?.addEventListener('click', async () => {
+      const currentPw = currentPwInput.value;
+      const newPw = newPwInput.value;
+      const repeatPw = repeatPwInput.value;
+
+      if (!currentPw || !newPw)
+      {
+        //[soukaina] should be changed
+        alert("> ERROR: Please fill in all password fields.");
         return;
       }
-      console.log('Update Password requested');
-      // Add your fetch call to update password here
+
+      if (newPw !== repeatPw)
+      {
+        //[soukaina] should be changed
+        alert("> ERROR: New passwords do not match!");
+        return;
+      }
+
+      const res = await settingService.changePassword(currentPw, newPw);
+
+      if (res.success === "true")
+      {
+        //[soukaina] should be changed
+        alert("> SUCCESS: Password updated securely.");
+        currentPwInput.value = '';
+        newPwInput.value = '';
+        repeatPwInput.value = '';
+      }
+      else
+        //[soukaina] should be changed
+        alert("> ERROR: " + res.message); 
     });
 
-    // Selectors for 2FA
+
     const toggle2faBtn = this.querySelector('#toggle-2fa-btn');
     const verifyCodeBtn = this.querySelector('#verify-code-btn');
     const verifyInput = this.querySelector('#verification-code-input') as HTMLInputElement;
 
     toggle2faBtn?.addEventListener('click', () => {
       console.log('Toggle 2FA requested');
-      // Add logic to fetch QR code and toggle state
     });
 
     verifyCodeBtn?.addEventListener('click', () => {
       console.log('Verify code:', verifyInput.value);
-      // Add logic to verify 2FA token
     });
 
-    // Selector for Delete Account
     const deleteAccountBtn = this.querySelector('#delete-account-btn');
     
     deleteAccountBtn?.addEventListener('click', () => {
       const confirmDelete = confirm("Are you sure you want to delete your account? This cannot be undone.");
       if (confirmDelete) {
         console.log('Delete account confirmed');
-        // Add logic to hit your delete endpoint
       }
     });
   }
