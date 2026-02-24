@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { createGameRoom } from './../game/database';
@@ -6,7 +6,7 @@ export const prisma = new PrismaClient();
 
 export default async function tournamentRoutes(fastify: FastifyInstance) {
 
-  fastify.get('/activeTournaments', async (request, reply) => {
+  fastify.get('/activeTournaments', async (request: FastifyRequest, reply: FastifyReply) => {
     
     try {
       const activeTour = await prisma.tournament.findMany({
@@ -28,7 +28,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get('/my-tournament', async (request, reply) => {
+  fastify.get('/my-tournament', async (request: FastifyRequest, reply: FastifyReply) => {
     
     const username = request.headers['x-user-username']?.toString();
     if (!username)
@@ -56,7 +56,30 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post('/create', async (request, reply) => {
+  const scheduleTournamentCleanup  = (tourId: string) =>  {
+  
+    setTimeout(async () => {
+      try {
+        const tour = await prisma.tournament.findUnique({
+          where: { tour_id: tourId },
+          select: { id: true, tour_state: true }
+        });
+    
+        if (tour && tour.tour_state === "Pending") {
+          await prisma.$transaction([
+            prisma.match.deleteMany({ where: { tournamentId: tour.id } }),
+            prisma.participant.deleteMany({ where: { tournamentId: tour.id } }),
+            prisma.tournament.delete({ where: { id: tour.id } })
+          ]);
+        }
+      } catch (error) {
+        console.error("Error during tournament cleanup:", error);
+      }
+    }, 10 * 60 * 1000);
+  
+  }
+
+  fastify.post('/create', async (request: FastifyRequest, reply: FastifyReply) => {
     const { tour_name } = request.body as any;
     const creator_username = request.headers['x-user-username']?.toString();
     const creator_nickname = request.headers['x-user-alias']?.toString();
@@ -85,7 +108,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
                   }
               },
               matches: {
-                  create: roomIds.map(id => ({
+                  create: roomIds.map((id: any) => ({
                       room_id: id,
                   }))
               }
@@ -93,6 +116,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
           include: { matches: true, participant: true }
       });
   
+      scheduleTournamentCleanup(tourId);
+
       return reply.status(201).send(tour);
     } catch (error) {
       fastify.log.error(error);
@@ -129,7 +154,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     await notifyPlayersAboutMatches(players, matches);
   }
 
-  fastify.post('/join', async (request, reply) => {
+  fastify.post('/join', async (request: FastifyRequest, reply: FastifyReply) => {
     const { tour_id } = request.body as any;
     const username = request.headers['x-user-username'] as string;
     const nickname = request.headers['x-user-alias'] as string;
@@ -149,7 +174,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         if (tour._count.participant >= 4) 
             return reply.code(400).send({ error: "Tournament is already full" });
 
-        if (tour.participant.some(p => p.username === username)) 
+        if (tour.participant.some((p: any) => p.username === username)) 
             return reply.code(400).send({ error: "Already joined" });
 
         const isFull = tour._count.participant === 3;
@@ -205,7 +230,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     }
   }
 
-  fastify.delete('/delete/:tour_id', async (request, reply) => {
+  fastify.delete('/delete/:tour_id', async (request: FastifyRequest, reply: FastifyReply) => {
     const { tour_id } = request.params as { tour_id: string };
 
     try {
