@@ -1,4 +1,5 @@
 import { BaseComponent } from '../../core/Component';
+import { AuthService } from '../auth/authService';
 import { router } from '../../core/Router';
 import "../../css/button.css";
 import "../../css/game.css";
@@ -197,6 +198,11 @@ export class Menu extends BaseComponent {
               body: JSON.stringify({})
             });
           
+            if (response.status === 401) {
+              await AuthService.logout();
+              return;
+            }
+
             const res = await response.json();
           
             if (res.success && res.roomId) {

@@ -57,7 +57,18 @@ export class Header extends BaseComponent {
               </div>
             </div> 
             <div class="relative">
-              <img id="Logout" src="${doorIcon}" class="h-8 w-8 cursor-pointer hover:scale-110 transition-transform" > 
+              <button id="menu-btn" class="relative hover:scale-110 transition-transform">
+                <img id="Logout" src="${doorIcon}" class="h-8 w-8 cursor-pointer" > 
+              </button>
+
+              <div id="menu-dropdown" class="absolute right-0 top-full mt-2 w-36 bg-black border border-retro z-50 hidden flex-col rounded overflow-hidden">
+                <button id="menu-settings" class="w-full text-sm text-retro text-left px-4 py-2 hover:bg-retro/20 transition-colors block">
+                  Settings
+                </button>
+                <button id="menu-logout" class="w-full text-sm text-retro text-left px-4 py-2 hover:bg-retro/20 transition-colors block border-t border-retro/20">
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -68,6 +79,7 @@ export class Header extends BaseComponent {
   private  debounceTimer: any = null;
   private notifcounter : number = 0;
   private isNotifOpen : boolean = false;
+  private isMenuOpen : boolean = false;
   private unreadChatCounter: number = 0;
 
   handleNotification = (data: any) => {
@@ -301,6 +313,13 @@ export class Header extends BaseComponent {
         notifDropdown?.classList.add("hidden");
         this.isNotifOpen = false;
       }
+
+      const menuDropdown = this.querySelector("#menu-dropdown");
+      const menuBtn = this.querySelector("#menu-btn");
+      if (this.isMenuOpen && menuBtn) {
+        menuDropdown?.classList.add("hidden");
+        this.isMenuOpen = false;
+      }
     });
 
     const ponglineLink = this.querySelector("#pongLine") as HTMLImageElement;
@@ -309,9 +328,31 @@ export class Header extends BaseComponent {
       router.navigate("/dashboard");
     });
 
-    const logoutLink = this.querySelector("#Logout") as HTMLImageElement;
+    const menuBtn = this.querySelector("#menu-btn");
+    const menuDropdown = this.querySelector("#menu-dropdown");
+    const menuSettings = this.querySelector("#menu-settings");
+    const menuLogout = this.querySelector("#menu-logout");
 
-    logoutLink.addEventListener("click", () => {
+    menuBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!menuDropdown) return;
+
+      this.isMenuOpen = !this.isMenuOpen;
+      if (this.isMenuOpen) menuDropdown.classList.remove("hidden");
+      else menuDropdown.classList.add("hidden");
+    });
+
+    menuSettings?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.isMenuOpen = false;
+      menuDropdown?.classList.add("hidden");
+      router.navigate("/settings");
+    });
+
+    menuLogout?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.isMenuOpen = false;
+      menuDropdown?.classList.add("hidden");
       AuthService.logout();
     });
 
