@@ -55,7 +55,13 @@ export class Game extends BaseComponent {
         this.game = new PongGame('PongGame', mode, left, right ?? nick, this.socket, room);
         if (mode === 'remote' && room) {
             const name = appStore.getUser()?.username;
-            this.game.joinRoom(room, `${name}`, `${name}`);
+            const role = appStore.getUser()?.role;
+            const guest = 'GUEST';
+            if (role === 'guest') {
+                this.game.joinRoom(room, `${guest}`, `${name}`);
+            } else {
+                this.game.joinRoom(room, `${name}`, `${name}`);
+            }
         }
         this.game.loop();
     }
