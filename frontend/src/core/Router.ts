@@ -24,7 +24,7 @@ const routes: Route[] = [
   {path: '/login', page: "login-page", protected:false},
   {path: '/dashboard', page: "profile-page", protected:false},
   {path: '/profile', page: "profile-page", protected:false},
-  {path: '/settings', page: "settings-page", protected:false},
+  {path: '/settings', page: "settings-page", protected:true},
   {path: '/menu', page: "menu-page", protected:false},
   {path: '/game', page: "game-page", protected:false},
   {path: '/chat', page: "chat-page", protected:true},

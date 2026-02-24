@@ -23,10 +23,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           maxAge: 86400,
         });
 
-        reply.send({ success: "Login successful" });
+        return reply.send({ success: "Login successful" });
       } catch (error) {
-        if (error instanceof Error) reply.send({ error: error.message });
-        reply.code(400).send({ error: "something's wrong" });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(400).send({ error: "something's wrong" });
       }
     },
   );
@@ -43,10 +43,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           };
 
         await authService.register(email, username, password);
-        reply.code(201).send({ success: "Account created successfully" });
+        return reply.code(201).send({ success: "Account created successfully" });
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
-        reply.code(400).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(400).send({ error: error.message });
       }
     },
   );
@@ -102,7 +102,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return result;
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
         return { valid: false, reason: "validation_error" };
       }
     },
@@ -201,7 +201,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         });
 
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
         return reply.code(500).send({ error: "Failed to Update the Username" });
       }
     },
@@ -293,10 +293,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           maxAge: 86400,
         });
 
-        reply.redirect(process.env.VITE_API_GATEWAY_URL + "dashboard");
+        return reply.redirect(process.env.VITE_API_GATEWAY_URL + "dashboard");
       } catch (error: any) {
         console.error("42 OAuth error:", error.response?.data || error);
-        if (error instanceof Error) reply.send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
         return reply.status(500).send({ error: error.response?.data });
       }
     },
@@ -331,8 +331,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           qrCodeUrl: secret.otpauth_url,
         };
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
-        reply.code(401).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(401).send({ error: error.message });
       }
     },
   );
@@ -384,8 +384,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return { success: true };
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
-        reply.code(400).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(400).send({ error: error.message });
       }
     },
   );
@@ -416,10 +416,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           sameSite: "strict",
         });
 
-        reply.send({ success: true });
+        return reply.send({ success: true });
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
-        reply.code(401).send({ error: error.message });
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(401).send({ error: error.message });
       }
     },
   );
