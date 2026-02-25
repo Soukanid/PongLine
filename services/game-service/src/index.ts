@@ -104,7 +104,7 @@ const start = async () => {
                     username2: room.players[1]?.username,
                     score_plr1: state.scores.left,
                     score_plr2: state.scores.right,
-                    winnerName: winner?.username,
+                    winnerName: winner?.nickname,
                   };
                       
                   saveMatch(matchResult, winner);
