@@ -101,7 +101,7 @@ export class SettingsPage extends BaseComponent {
                 
                 <div class="flex flex-col gap-2 items-center w-full">
                   
-                  <button id="toggle-2fa-btn" class="w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase">
+                  <button id="toggle-2fa-btn" class="w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase">setting
                     [ ENABLE_2FA.sh ]
                   </button>
 
