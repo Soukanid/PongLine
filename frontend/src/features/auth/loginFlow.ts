@@ -24,17 +24,19 @@ export class LoginFlow {
         <label for="password">Password :</label>
         <input type="password" placeholder="ifta7 ya simsim" id="password" required />
       </div>
-       <div class="hidden w-full bg-transparent border-none outline-none">
-        <label for="tfacode">2FA Code :</label>
-        <input type="number" placeholder="ha lm39ool" id="tfacode"/>
-      </div>
-    `;
+           `;
 
     this.terminal.printElem(form);
 
     const email = form.querySelector("#email") as HTMLInputElement;
     const password = form.querySelector("#password") as HTMLInputElement;
-    const tfacode = form.querySelector("#tfacode") as HTMLInputElement;
+    const tfadiv = document.createElement('div');
+    tfadiv.innerText = `<div >
+    <label for="tfacode">2FA Code :</label>
+	    <input type="number" placeholder="ha lm39ool" id="tfacode"/>
+    `;
+    tfadiv.classList.add('w-full ','bg-transparent ','border-none' ,'outline-none');
+    const tfacode = tfadiv.querySelector("#tfacode") as HTMLInputElement;
 
     email.focus();
 
@@ -67,7 +69,7 @@ export class LoginFlow {
           if (result.success === "TFA") {
             this.terminal.print("2 Factor Authentication Required");
             this.terminal.print("Please Enter the 2FA code");
-            tfacode.parentElement?.classList.remove("hidden");
+	    form.appendChild(tfadiv);
             tfacode.focus();
           }
           else if (result.success === "logged in"){

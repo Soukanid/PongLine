@@ -1,6 +1,7 @@
 import { BaseComponent } from '../../core/Component';
+import { appStore } from '../../core/Store';
 import { settingService } from './SettingService'
-import { appStore } from './../../core/Store'
+import { QRCode } from 'qrcode';
 
 export class SettingsPage extends BaseComponent {
   
@@ -164,7 +165,11 @@ export class SettingsPage extends BaseComponent {
     };
 
     // ==========================================
+<<<<<<< HEAD
     // 1. TWO-FACTOR AUTHENTICATION LOGIC
+=======
+    // 2. TWO-FACTOR AUTHENTICATION LOGIC
+>>>>>>> refs/remotes/origin/main
     // ==========================================
     const toggle2faBtn = this.querySelector('#toggle-2fa-btn') as HTMLButtonElement;
     const setupSection = this.querySelector('#tfa-setup-section') as HTMLDivElement;
@@ -173,6 +178,7 @@ export class SettingsPage extends BaseComponent {
     const qrCodeImg = this.querySelector('#qr-code-img') as HTMLImageElement;
     const qrLoadingText = this.querySelector('#qr-loading-text') as HTMLSpanElement;
 
+<<<<<<< HEAD
     const update2FA_UI = async () => {
       const isEnabled = await settingService.getTFAStatus();
       if (isEnabled) {
@@ -212,6 +218,57 @@ export class SettingsPage extends BaseComponent {
           setupSection.classList.remove('hidden');
           toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
           
+=======
+
+    // Helper function to sync the UI with the user's actual 2FA state
+    const update2FA_UI = async () => {
+      const isEnabled = await settingService.getTFAStatus();
+           if (isEnabled) {
+        toggle2faBtn.textContent = "[ DISABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-red-900/20 border-2 border-red-600 text-red-500 font-bold py-3 px-4 hover:bg-red-600 hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); // Hide QR code and input
+      } else {
+        toggle2faBtn.textContent = "[ ENABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); // Hide QR code until they click enable
+      }
+    };
+
+    // Initialize the UI on load
+    update2FA_UI();
+
+    // Handle the Toggle Button
+    toggle2faBtn?.addEventListener('click', async () => {
+
+      var isEnabled = await settingService.getTFAStatus();
+      if (isEnabled) {
+        // SCENARIO 1: They are disabling 2FA
+        const confirmDisable = confirm("> WARNING: Are you sure you want to disable 2FA? This decreases account security.");
+        if (confirmDisable) {
+          // TODO: Call backend to disable 2FA
+           const res = await settingService.disableTFA();
+           if (res.success) { 
+              update2FA_UI()}
+
+          alert("> SUCCESS: 2FA Disabled.");
+      isEnabled = await settingService.getTFAStatus();
+          if (isEnabled === false) // Update local store
+          update2FA_UI(); 
+        }
+      } else {
+        // SCENARIO 2: They are starting the setup process
+        const isSetupVisible = !setupSection.classList.contains('hidden');
+
+        if (isSetupVisible) {
+          // They clicked "Cancel Setup"
+          update2FA_UI(); // Resets everything back to default
+        } else {
+          // They clicked "Enable". Show the setup section and change button text
+          setupSection.classList.remove('hidden');
+          toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
+          
+          // TODO: Call backend to generate the QR code
+>>>>>>> refs/remotes/origin/main
            const res = await settingService.setup2FA()
            qrCodeImg.src = res;
            qrCodeImg.classList.remove('hidden');
@@ -220,6 +277,7 @@ export class SettingsPage extends BaseComponent {
       }
     });
 
+<<<<<<< HEAD
     verifyCodeBtn?.addEventListener('click', async () => {
       const code = verifyInput.value.trim();
       if (code.length !== 6) {
@@ -246,6 +304,36 @@ export class SettingsPage extends BaseComponent {
     // ==========================================
     // 2. AVATAR UPLOAD LOGIC
     // ==========================================
+=======
+    // Handle the Verify Code Button
+    verifyCodeBtn?.addEventListener('click', async () => {
+      const code = verifyInput.value.trim();
+      if (code.length !== 6) {
+        alert("> ERROR: Invalid code format.");
+        return;
+      }
+
+      // TODO: Call backend to verify the code and officially enable 2FA
+       const res = await settingService.verify2FA(code);
+      
+      if (res.success) {
+        alert("> SUCCESS: 2FA Enabled securely.");
+        verifyInput.value = "";
+        
+        // Update store and UI
+      const isEnabled = await settingService.getTFAStatus();
+        if (isEnabled === true)
+        update2FA_UI();
+      } else {
+        alert("> ERROR: Incorrect verification code.");
+      }
+    });
+    
+    // Selectors for Profile
+    const changeProfileBtn = this.querySelector('#change-profile-btn');
+    const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
+    const emailInput = this.querySelector('#email-input') as HTMLInputElement;
+>>>>>>> refs/remotes/origin/main
     const avatarContainer = this.querySelector('#avatar-container');
     const avatarError = this.querySelector('#avatar-msg');
 
