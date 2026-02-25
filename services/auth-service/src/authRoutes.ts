@@ -2,6 +2,7 @@ import  { type FastifyInstance, type FastifyReply, type FastifyRequest }  from "
 import { AuthService } from "./authService.ts";
 import { LoginSchema, RegisterSchema, ValidateSchema } from "./authSchemas.ts";
 import * as speakeasy from 'speakeasy' 
+import  QRCode from "qrcode";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify.prisma, fastify);
@@ -94,6 +95,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         const result = await authService.validateToken(token);
         if (!result.valid) {
+        //  await authService.logout();
           return reply.code(401).send(result);
         }
         reply.header("X-User-Id", result.user?.id);
@@ -131,7 +133,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (!currentPassword || !newPassword)
           return reply.code(400).send();
 
-        await authService.changePassword(userId, currentPassword, newPassword);
+        await authService.changePassword(userId!, currentPassword, newPassword);
 
         return reply.code(200).send({ success: "Password updated successfully" });
 
@@ -314,56 +316,137 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
   );
 
+  // 2FA status check
+
+  fastify.get(
+    "/2fa/status",
+    async (request: FastifyRequest, reply: FastifyReply) =>{
+      try {
+              const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send({error:result.reason});
+        }
+
+        const username = result.user?.username;
+        if (username){
+        const user = await fastify.prisma.userAuth.findUnique({
+          where: { username },
+          select: { isTFAEnabled: true },
+        });
+        return reply.code(200).send({tfa: user?.isTFAEnabled});
+        }
+        return reply.code(400).send({error: "username not found"});
+      } catch (error: any) {
+        return reply.code(400).send({error: error.message});
+        
+      }
+    }
+  )
+
   // 2FA setup (for cybersecurity module)
   fastify.post(
     "/2fa/setup",
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         // Extract token from header
-        const username = Array.isArray(request.headers["x-user-username"])
-          ? request.headers["x-user-username"][0]
-          : request.headers["x-user-username"];
-        if (!username) {
-          return reply.status(400).send({ error: "X-User-Id header missing" });
+        const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send(result);
         }
+
+        const username = result.user?.username;
+        if (username){
+        await fastify.prisma.userAuth.findUnique({
+          where: { username },
+        });
 
         // Generate 2FA secret
         const secret = speakeasy.generateSecret({
           name: `Pongline:${username}`,
           length: 20,
-        }).base32;
+        });
 
         // Store secret (but don't enable yet)
         await fastify.prisma.userAuth.update({
           where: { username },
-          data: { TFASecret: secret },
+          data: { TFASecret: secret.base32 },
         });
+        const qrDataUrl = await QRCode.toDataURL(secret.otpauth_url);
 
-        return {
-          qrCodeUrl: secret.otpauth_url,
-        };
-      } catch (error: any) {
+        return reply.code(200).send({
+          qrCode: qrDataUrl,
+        });
+      }} catch (error: any) {
         if (error instanceof Error) return reply.send({ error: error.message });
         return reply.code(401).send({ error: error.message });
       }
     },
   );
 
+  // Disable 2FA
+  fastify.post(
+    "/2fa/disable",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+         const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send(result);
+        }
+
+        const username = result.user?.username;
+        if (username){
+        const user = await fastify.prisma.userAuth.findUnique({
+          where: { username },
+          select: {
+            isTFAEnabled: true,
+          },
+        });
+
+        if (!user || !user.isTFAEnabled) {
+          throw new Error("2FA not set up");
+        }
+
+        await fastify.prisma.userAuth.update({
+          where: { username },
+          data: {
+            isTFAEnabled: false,
+          },
+        });
+      }
+       }catch (error: any) {
+        if (error instanceof Error) return reply.send({ error: error.message });
+        return reply.code(400).send({ error: error.message });
+      }
+    });
   // Enable 2FA
   fastify.post(
     "/2fa/enable",
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         // Extract token from header
-        const username = Array.isArray(request.headers["x-user-username"])
-          ? request.headers["x-user-username"][0]
-          : request.headers["x-user-username"];
-        if (!username) {
-          return reply.status(400).send({ error: "X-User-Id header missing" });
+        const token = request.cookies?.access_token;
+        if (!token)
+          return reply.code(400).send({ error: "access token missing" });
+
+        const result = await authService.validateToken(token);
+        if (!result.valid) {
+          return reply.code(401).send(result);
         }
 
-        const { code } = request.body as {code: number};
-
+        const username = result.user?.username;
+        if (username){
         const user = await fastify.prisma.userAuth.findUnique({
           where: { username },
           select: {
@@ -375,8 +458,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (!user || !user.TFASecret) {
           throw new Error("2FA not set up");
         }
+        const { code } = request.body as {code: number};
 
-        // Verify the code
+       // Verify the code
         const isValid = speakeasy.totp.verify({
           secret: user.TFASecret,
           encoding: "base32",
@@ -395,7 +479,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         });
 
         return { success: true };
-      } catch (error: any) {
+      } }catch (error: any) {
         if (error instanceof Error) return reply.send({ error: error.message });
         return reply.code(400).send({ error: error.message });
       }
@@ -474,16 +558,7 @@ fastify.delete(
           return reply.code(400).send({ error: "access token missing" });
 
         const result = await authService.validateToken(token);
-        if (!result.valid) {
-          reply.clearCookie("access_token", {
-          path: "/",
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-        });
-          return reply.code(401).send(result);
-        }
-
+          
         if (result.user?.role === 'guest')
         {
           await authService.deleteUser(result.user?.username);

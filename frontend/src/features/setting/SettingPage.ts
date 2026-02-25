@@ -1,6 +1,7 @@
 import { BaseComponent } from '../../core/Component';
+import { appStore } from '../../core/Store';
 import { settingService } from './SettingService'
-import { appStore } from './../../core/Store'
+import { QRCode } from 'qrcode';
 
 export class SettingsPage extends BaseComponent {
   
@@ -94,7 +95,7 @@ export class SettingsPage extends BaseComponent {
               </div>
             </div>
 
-            <div class="lg:col-span-5 flex flex-col gap-6">
+            <div id='tfa' class="lg:col-span-5 flex flex-col gap-6">
               
               <div class="relative border border-retro/40 bg-retro/5 p-4 mt-4 rounded-sm flex-1">
                 <div class="absolute -top-3 left-4 bg-black px-2 text-xs text-retro/70 tracking-widest">[ TWO_FACTOR_AUTH ]</div>
@@ -107,25 +108,27 @@ export class SettingsPage extends BaseComponent {
 
                   <div class="w-full h-[1px] bg-retro/20 my-1"></div>
 
-                  <div class="text-center w-full">
-                    <p class="text-sm text-retro/80 mb-4">> SCAN_QR_CODE :</p>
-                    <div class="mx-auto bg-black/90 rounded-sm w-48 h-48 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,0,0.15)] mb-6">
-                      <div class="w-40 h-40 border-2 border-retro border-dashed flex items-center justify-center">
-                        <span class="text-retro font-bold opacity-60 text-xs">AWAITING_KEY...</span>
+                  <div id="tfa-setup-section" class="hidden w-full flex-col items-center">
+                    <div class="text-center w-full">
+                      <p class="text-sm text-retro/80 mb-4">> SCAN_QR_CODE :</p>
+                      <div class="mx-auto bg-black/90 rounded-sm w-48 h-48 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,0,0.15)] mb-6">
+                        <div class="w-40 h-40 border-2 border-retro border-dashed flex items-center justify-center overflow-hidden">
+                          <img id="qr-code-img" class="hidden w-full h-full object-cover"/>
+                          <span id="qr-loading-text" class="text-retro font-bold opacity-60 text-xs">AWAITING_KEY...</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-full flex flex-col gap-3">
+                      <label class="text-retro/80 text-sm">> VERIFICATION_CODE :</label>
+                      <div class="flex gap-2">
+                        <input id="verification-code-input" type="text" class="flex-1 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro text-center tracking-[0.5em] text-lg placeholder-retro/20" placeholder="000000" maxlength="6">
+                        <button id="verify-code-btn" class="bg-retro text-black font-bold px-4 hover:bg-white transition-colors cursor-pointer text-sm">
+                          VERIFY
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div class="w-full flex flex-col gap-3">
-                    <label class="text-retro/80 text-sm">> VERIFICATION_CODE :</label>
-                    <div class="flex gap-2">
-                      <input id="verification-code-input" type="text" class="flex-1 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro text-center tracking-[0.5em] text-lg placeholder-retro/20" placeholder="000000" maxlength="6">
-                      <button id="verify-code-btn" class="bg-retro text-black font-bold px-4 hover:bg-white transition-colors cursor-pointer text-sm">
-                        VERIFY
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
               </div>
 
@@ -147,7 +150,7 @@ export class SettingsPage extends BaseComponent {
     `);
   }
 
-  addEvents() {
+  async addEvents() {
 
     const showMessage = (id: string, msg: string, isError: boolean = false) => {
       const el = this.querySelector(`#${id}`);
@@ -160,6 +163,99 @@ export class SettingsPage extends BaseComponent {
         if (el.textContent === msg) el.textContent = '';
       }, 3000);
     };
+
+    // ==========================================
+    // 2. TWO-FACTOR AUTHENTICATION LOGIC
+    // ==========================================
+    const toggle2faBtn = this.querySelector('#toggle-2fa-btn') as HTMLButtonElement;
+    const setupSection = this.querySelector('#tfa-setup-section') as HTMLDivElement;
+    const verifyCodeBtn = this.querySelector('#verify-code-btn') as HTMLButtonElement;
+    const verifyInput = this.querySelector('#verification-code-input') as HTMLInputElement;
+    const qrCodeImg = this.querySelector('#qr-code-img') as HTMLImageElement;
+    const qrLoadingText = this.querySelector('#qr-loading-text') as HTMLSpanElement;
+
+
+    // Helper function to sync the UI with the user's actual 2FA state
+    const update2FA_UI = async () => {
+      const isEnabled = await settingService.getTFAStatus();
+           if (isEnabled) {
+        toggle2faBtn.textContent = "[ DISABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-red-900/20 border-2 border-red-600 text-red-500 font-bold py-3 px-4 hover:bg-red-600 hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); // Hide QR code and input
+      } else {
+        toggle2faBtn.textContent = "[ ENABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); // Hide QR code until they click enable
+      }
+    };
+
+    // Initialize the UI on load
+    update2FA_UI();
+
+    // Handle the Toggle Button
+    toggle2faBtn?.addEventListener('click', async () => {
+
+      var isEnabled = await settingService.getTFAStatus();
+      if (isEnabled) {
+        // SCENARIO 1: They are disabling 2FA
+        const confirmDisable = confirm("> WARNING: Are you sure you want to disable 2FA? This decreases account security.");
+        if (confirmDisable) {
+          // TODO: Call backend to disable 2FA
+           const res = await settingService.disableTFA();
+           if (res.success) { 
+              update2FA_UI()}
+
+          alert("> SUCCESS: 2FA Disabled.");
+      isEnabled = await settingService.getTFAStatus();
+          if (isEnabled === false) // Update local store
+          update2FA_UI(); 
+        }
+      } else {
+        // SCENARIO 2: They are starting the setup process
+        const isSetupVisible = !setupSection.classList.contains('hidden');
+
+        if (isSetupVisible) {
+          // They clicked "Cancel Setup"
+          update2FA_UI(); // Resets everything back to default
+        } else {
+          // They clicked "Enable". Show the setup section and change button text
+          setupSection.classList.remove('hidden');
+          toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
+          
+          // TODO: Call backend to generate the QR code
+           const res = await settingService.setup2FA()
+           qrCodeImg.src = res;
+           qrCodeImg.classList.remove('hidden');
+           qrLoadingText.classList.add('hidden');
+        }
+      }
+    });
+
+    // Handle the Verify Code Button
+    verifyCodeBtn?.addEventListener('click', async () => {
+      const code = verifyInput.value.trim();
+      if (code.length !== 6) {
+        alert("> ERROR: Invalid code format.");
+        return;
+      }
+
+      // TODO: Call backend to verify the code and officially enable 2FA
+       const res = await settingService.verify2FA(code);
+      
+      if (res.success) {
+        alert("> SUCCESS: 2FA Enabled securely.");
+        verifyInput.value = "";
+        
+        // Update store and UI
+      const isEnabled = await settingService.getTFAStatus();
+        if (isEnabled === true)
+        update2FA_UI();
+      } else {
+        alert("> ERROR: Incorrect verification code.");
+      }
+    });
+    
+    // Selectors for Profile
     const changeProfileBtn = this.querySelector('#change-profile-btn');
     const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
     const emailInput = this.querySelector('#email-input') as HTMLInputElement;
@@ -340,6 +436,7 @@ export class SettingsPage extends BaseComponent {
     deleteAccountBtn?.addEventListener('click', () => {
       const confirmDelete = confirm("> SYSTEM WARNING: Delete account? This cannot be undone.");
       if (confirmDelete) {
+        settingService.purgeAccount();
         console.log('Delete account confirmed');
       }
     });
