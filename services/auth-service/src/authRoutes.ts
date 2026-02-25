@@ -133,9 +133,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (!currentPassword || !newPassword)
           return reply.code(400).send();
 
-        await authService.changePassword(userId!, currentPassword, newPassword);
+        const updateResult = await authService.changePassword(userId!, currentPassword, newPassword);
 
-        return reply.code(200).send({ success: "Password updated successfully" });
+        if (!updateResult.success) {
+           return reply.code(400).send({ error: updateResult.error });
+        }
+
+        return reply.code(200).send({ success: "true" });
 
       } catch (error: any) {
         if (error instanceof Error) reply.code(400).send({ error: error.message });
