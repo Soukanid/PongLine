@@ -681,13 +681,13 @@ export class UserController {
     const userId = req.headers['x-user-id']?.toString();
     
     if (!userId)
-      return reply.code(401).send();
+      return reply.code(401).send({ success: "false"});
 
     const myId = parseInt(userId);
     const { newUsername } = req.body;
 
     if (!newUsername || newUsername.trim() === '')
-      return reply.code(400).send();
+      return reply.code(400).send({ success: "false" });
 
     const trimmedUsername = newUsername.trim();
 
@@ -699,8 +699,8 @@ export class UserController {
       if (existingUser)
       {
         if (existingUser.id === myId)
-          return reply.code(200).send();
-        return reply.code(409).send({ error: "Username is already taken" });
+          return reply.code(200).send({ success: "true"});
+        return reply.code(409).send({ success: "false", error: "Username is already taken" });
       }
 
       await prisma.user.update({
@@ -709,10 +709,10 @@ export class UserController {
         select: { username: true }
       });
 
-      return reply.code(200).send({"success": "true"});
+      return reply.code(200).send({success: "true"});
 
     } catch (error) {
-      return reply.code(500).send({ error: "Failed to Update the Username"});
+      return reply.code(500).send({ success: "false", error: "Failed to Update the Username"});
     }
   }
 

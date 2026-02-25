@@ -56,8 +56,9 @@ export class SettingsPage extends BaseComponent {
                     <input disabled id="email-input" type="email" class="md:col-span-2 bg-black border border-retro/50  px-3 py-2 text-retro focus:outline-none focus:border-retro focus:ring-1 focus:ring-retro transition-all placeholder-retro/30" placeholder="user@system.com">
                   </div>
                   </div>
+                  <span id="profile-msg" class="text-[10px] font-bold mb-2 text-left mr-auto min-h-[15px]"></span>
                   <div class="flex justify-end pr-4">
-                    <button id="change-profile-btn" class="bg-black text-retro font-bold py-2 px-6 hover:bg-retro hover:text-black transition-colors cursor-pointer text-sm tracking-wider uppercase">
+                    <button id="change-profile-btn" class="bg-retro text-black font-bold py-2 px-6 border border-retro/50 transition-colors cursor-pointer text-sm tracking-wider uppercase">
                       [ Update_Profile ]
                     </button>
                   </div>
@@ -84,6 +85,7 @@ export class SettingsPage extends BaseComponent {
                   </div>
                   
                   <div class="flex justify-end pr-4">
+                    <span id="password-msg" class="text-[10px] font-bold mb-2 text-right min-h-[15px]"></span>
                     <button id="change-password-btn" class="bg-retro border border-retro text-black font-bold py-2 px-6 hover:bg-black hover:text-retro transition-colors cursor-pointer text-sm tracking-wider uppercase">
                       [ Change_Password ]
                     </button>
@@ -147,6 +149,17 @@ export class SettingsPage extends BaseComponent {
 
   addEvents() {
 
+    const showMessage = (id: string, msg: string, isError: boolean = false) => {
+      const el = this.querySelector(`#${id}`);
+      if (!el) return;
+      
+      el.textContent = msg;
+      el.className = `text-[10px] font-bold min-h-[15px] transition-all duration-300 ${isError ? 'text-red-500' : 'text-green-500'}`;
+      
+      setTimeout(() => {
+        if (el.textContent === msg) el.textContent = '';
+      }, 3000);
+    };
     const changeProfileBtn = this.querySelector('#change-profile-btn');
     const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
     const emailInput = this.querySelector('#email-input') as HTMLInputElement;
@@ -197,7 +210,6 @@ export class SettingsPage extends BaseComponent {
         return ;
       }
       
-      // Also a good idea to check if it's actually a PNG
       if (file.type !== 'image/png') {
         if (avatarError) {
           avatarError.textContent = '> ERROR: FILE MUST BE PNG';
@@ -247,18 +259,17 @@ export class SettingsPage extends BaseComponent {
     changeProfileBtn?.addEventListener('click', async () => {
       const newUsername = usernameInput.value.trim();
       
-      if (!newUsername)
-        return;
+      if (!newUsername) return;
 
       const userRes = await settingService.changeUsernameOnUserService(newUsername) as any;
       
-      if (userRes.success === true)
+      if (userRes.success === "false" || userRes.success === false)
       {
-        //[soukaina] alert for now but it should be checked
-        alert("> ERROR: " + userRes.message);
+        const errorText = userRes.message || "USERNAME UPDATE FAILED";
+        showMessage('profile-msg', '> ERROR: ' + errorText.toUpperCase(), true);
         return;
       }
-
+      showMessage('profile-msg', '> SUCCESS: PROFILE UPDATED', false);
     });
 
     const changePasswordBtn = this.querySelector('#change-password-btn');
@@ -273,13 +284,13 @@ export class SettingsPage extends BaseComponent {
 
       if (!currentPw || !newPw)
       {
-        alert("> ERROR: Please fill in all password fields.");
+        showMessage('password-msg', '> ERROR: FIELDS REQUIRED', true);
         return;
       }
 
       if (newPw !== repeatPw)
       {
-        alert("> ERROR: New passwords do not match!");
+        showMessage('password-msg', '> ERROR: PASSWORDS MISMATCH', true);
         return;
       }
 
@@ -287,15 +298,16 @@ export class SettingsPage extends BaseComponent {
 
       if (res.success === "true")
       {
-        alert("> SUCCESS: Password updated securely.");
+        showMessage('password-msg', '> SUCCESS: PASSWORD CHANGED', false);
         currentPwInput.value = '';
         newPwInput.value = '';
         repeatPwInput.value = '';
       }
       else
-        alert("> ERROR: " + res.message); 
+      {
+        showMessage('password-msg', '> ERROR: ' + res.message, true);
+      }
     });
-
 
     const toggle2faBtn = this.querySelector('#toggle-2fa-btn');
     const verifyCodeBtn = this.querySelector('#verify-code-btn');
@@ -312,7 +324,7 @@ export class SettingsPage extends BaseComponent {
     const deleteAccountBtn = this.querySelector('#delete-account-btn');
     
     deleteAccountBtn?.addEventListener('click', () => {
-      const confirmDelete = confirm("Are you sure you want to delete your account? This cannot be undone.");
+      const confirmDelete = confirm("> SYSTEM WARNING: Delete account? This cannot be undone.");
       if (confirmDelete) {
         console.log('Delete account confirmed');
       }
