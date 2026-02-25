@@ -27,15 +27,13 @@ export class SettingsPage extends BaseComponent {
                   
                   <div class="flex flex-col items-center">
                     <div id="avatar-container" class="relative w-28 h-28 border border-retro flex items-center justify-center shrink-0 group cursor-pointer hover:bg-retro/10 transition-all shadow-[0_0_10px_rgba(0,255,0,0.1)] mb-6">
-
                         ${avatarHTML}
-
                       <div class="absolute -bottom-6  px-2 text-[10px] text-retro transition-colors">
                         [ UPLOAD ]
                       </div>
                     </div>
                     <span class="text-retro/50 text-[10px]">> FORMAT: PNG | MAX: 1MB</span>
-                    <span id="avatar-error" class="text-red-500 text-[10px] hidden font-bold mt-1 text-center"></span>
+                    <span id="avatar-msg" class="text-red-500 text-[10px] hidden font-bold mt-1 text-center"></span>
                   </div>
 
                   <div class="flex flex-col gap-1 text-sm text-retro/60">
@@ -56,8 +54,8 @@ export class SettingsPage extends BaseComponent {
                     <input disabled id="email-input" type="email" class="md:col-span-2 bg-black border border-retro/50  px-3 py-2 text-retro focus:outline-none focus:border-retro focus:ring-1 focus:ring-retro transition-all placeholder-retro/30" placeholder="user@system.com">
                   </div>
                   </div>
-                  <span id="profile-msg" class="text-[10px] font-bold mb-2 text-left mr-auto min-h-[15px]"></span>
-                  <div class="flex justify-end pr-4">
+                  <div class="flex flex-col items-end pr-4">
+                    <span id="profile-msg" class="text-[10px] font-bold mb-2 text-right min-h-[15px]"></span>
                     <button id="change-profile-btn" class="bg-retro text-black font-bold py-2 px-6 border border-retro/50 transition-colors cursor-pointer text-sm tracking-wider uppercase">
                       [ Update_Profile ]
                     </button>
@@ -84,7 +82,7 @@ export class SettingsPage extends BaseComponent {
                     <input id="repeat-pw-input" type="password" class="md:col-span-2 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro focus:ring-1 focus:ring-retro transition-all" placeholder="••••••••">
                   </div>
                   
-                  <div class="flex justify-end pr-4">
+                  <div class="flex flex-col items-end pr-4">
                     <span id="password-msg" class="text-[10px] font-bold mb-2 text-right min-h-[15px]"></span>
                     <button id="change-password-btn" class="bg-retro border border-retro text-black font-bold py-2 px-6 hover:bg-black hover:text-retro transition-colors cursor-pointer text-sm tracking-wider uppercase">
                       [ Change_Password ]
@@ -94,38 +92,42 @@ export class SettingsPage extends BaseComponent {
               </div>
             </div>
 
-            <div class="lg:col-span-5 flex flex-col gap-6">
+            <div id='tfa' class="lg:col-span-5 flex flex-col gap-6">
               
               <div class="relative border border-retro/40 bg-retro/5 p-4 mt-4 rounded-sm flex-1">
                 <div class="absolute -top-3 left-4 bg-black px-2 text-xs text-retro/70 tracking-widest">[ TWO_FACTOR_AUTH ]</div>
                 
                 <div class="flex flex-col gap-2 items-center w-full">
                   
-                  <button id="toggle-2fa-btn" class="w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase">setting
+                  <button id="toggle-2fa-btn" class="w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase">
                     [ ENABLE_2FA.sh ]
                   </button>
 
+                  <span id="tfa-msg" class="text-[10px] font-bold min-h-[15px] w-full text-center"></span>
+
                   <div class="w-full h-[1px] bg-retro/20 my-1"></div>
 
-                  <div class="text-center w-full">
-                    <p class="text-sm text-retro/80 mb-4">> SCAN_QR_CODE :</p>
-                    <div class="mx-auto bg-black/90 rounded-sm w-48 h-48 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,0,0.15)] mb-6">
-                      <div class="w-40 h-40 border-2 border-retro border-dashed flex items-center justify-center">
-                        <span class="text-retro font-bold opacity-60 text-xs">AWAITING_KEY...</span>
+                  <div id="tfa-setup-section" class="hidden w-full flex-col items-center">
+                    <div class="text-center w-full">
+                      <p class="text-sm text-retro/80 mb-4">> SCAN_QR_CODE :</p>
+                      <div class="mx-auto bg-black/90 rounded-sm w-48 h-48 flex items-center justify-center shadow-[0_0_20px_rgba(0,255,0,0.15)] mb-6">
+                        <div class="w-40 h-40 border-2 border-retro border-dashed flex items-center justify-center overflow-hidden">
+                          <img id="qr-code-img" class="hidden w-full h-full object-cover"/>
+                          <span id="qr-loading-text" class="text-retro font-bold opacity-60 text-xs">AWAITING_KEY...</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="w-full flex flex-col gap-3">
+                      <label class="text-retro/80 text-sm">> VERIFICATION_CODE :</label>
+                      <div class="flex gap-2">
+                        <input id="verification-code-input" type="text" class="flex-1 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro text-center tracking-[0.5em] text-lg placeholder-retro/20" placeholder="000000" maxlength="6">
+                        <button id="verify-code-btn" class="bg-retro text-black font-bold px-4 hover:bg-white transition-colors cursor-pointer text-sm">
+                          VERIFY
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div class="w-full flex flex-col gap-3">
-                    <label class="text-retro/80 text-sm">> VERIFICATION_CODE :</label>
-                    <div class="flex gap-2">
-                      <input id="verification-code-input" type="text" class="flex-1 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro text-center tracking-[0.5em] text-lg placeholder-retro/20" placeholder="000000" maxlength="6">
-                      <button id="verify-code-btn" class="bg-retro text-black font-bold px-4 hover:bg-white transition-colors cursor-pointer text-sm">
-                        VERIFY
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
               </div>
 
@@ -147,35 +149,106 @@ export class SettingsPage extends BaseComponent {
     `);
   }
 
-  addEvents() {
+  async addEvents() {
 
     const showMessage = (id: string, msg: string, isError: boolean = false) => {
       const el = this.querySelector(`#${id}`);
       if (!el) return;
       
       el.textContent = msg;
-      el.className = `text-[10px] font-bold min-h-[15px] transition-all duration-300 ${isError ? 'text-red-500' : 'text-retro'}`;
+      el.className = `text-[10px] font-bold min-h-[15px] transition-all duration-300 ${isError ? 'text-red-500' : 'text-green-500'}`;
       
       setTimeout(() => {
         if (el.textContent === msg) el.textContent = '';
       }, 3000);
     };
-    const changeProfileBtn = this.querySelector('#change-profile-btn');
-    const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
-    const emailInput = this.querySelector('#email-input') as HTMLInputElement;
+
+    // ==========================================
+    // 1. TWO-FACTOR AUTHENTICATION LOGIC
+    // ==========================================
+    const toggle2faBtn = this.querySelector('#toggle-2fa-btn') as HTMLButtonElement;
+    const setupSection = this.querySelector('#tfa-setup-section') as HTMLDivElement;
+    const verifyCodeBtn = this.querySelector('#verify-code-btn') as HTMLButtonElement;
+    const verifyInput = this.querySelector('#verification-code-input') as HTMLInputElement;
+    const qrCodeImg = this.querySelector('#qr-code-img') as HTMLImageElement;
+    const qrLoadingText = this.querySelector('#qr-loading-text') as HTMLSpanElement;
+
+    const update2FA_UI = async () => {
+      const isEnabled = await settingService.getTFAStatus();
+      if (isEnabled) {
+        toggle2faBtn.textContent = "[ DISABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-red-900/20 border-2 border-red-600 text-red-500 font-bold py-3 px-4 hover:bg-red-600 hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); 
+      } else {
+        toggle2faBtn.textContent = "[ ENABLE_2FA.sh ]";
+        toggle2faBtn.className = "w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
+        setupSection.classList.add('hidden'); 
+      }
+    };
+
+    update2FA_UI();
+
+    toggle2faBtn?.addEventListener('click', async () => {
+      var isEnabled = await settingService.getTFAStatus();
+      if (isEnabled) {
+        const confirmDisable = confirm("> WARNING: Are you sure you want to disable 2FA? This decreases account security.");
+        if (confirmDisable) {
+           const res = await settingService.disableTFA();
+           if (res.success) { 
+              update2FA_UI();
+           }
+          
+          // 👇 REPLACED ALERT WITH SHOWMESSAGE
+          showMessage('tfa-msg', '> SUCCESS: 2FA DISABLED SECURELY', false);
+          
+          isEnabled = await settingService.getTFAStatus();
+          if (isEnabled === false) update2FA_UI(); 
+        }
+      } else {
+        const isSetupVisible = !setupSection.classList.contains('hidden');
+        if (isSetupVisible) {
+          update2FA_UI(); 
+        } else {
+          setupSection.classList.remove('hidden');
+          toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
+          
+           const res = await settingService.setup2FA()
+           qrCodeImg.src = res;
+           qrCodeImg.classList.remove('hidden');
+           qrLoadingText.classList.add('hidden');
+        }
+      }
+    });
+
+    verifyCodeBtn?.addEventListener('click', async () => {
+      const code = verifyInput.value.trim();
+      if (code.length !== 6) {
+        // 👇 REPLACED ALERT WITH SHOWMESSAGE
+        showMessage('tfa-msg', '> ERROR: INVALID CODE FORMAT', true);
+        return;
+      }
+      
+      const res = await settingService.verify2FA(code);
+      
+      if (res.success) {
+        // 👇 REPLACED ALERT WITH SHOWMESSAGE
+        showMessage('tfa-msg', '> SUCCESS: 2FA ENABLED SECURELY', false);
+        verifyInput.value = "";
+        
+        const isEnabled = await settingService.getTFAStatus();
+        if (isEnabled === true) update2FA_UI();
+      } else {
+        // 👇 REPLACED ALERT WITH SHOWMESSAGE
+        showMessage('tfa-msg', '> ERROR: INCORRECT VERIFICATION CODE', true);
+      }
+    });
+
+    // ==========================================
+    // 2. AVATAR UPLOAD LOGIC
+    // ==========================================
     const avatarContainer = this.querySelector('#avatar-container');
-    const avatarError = this.querySelector('#avatar-error'); // 👈 Get the error span
-    const user = appStore.getUser();
+    const avatarError = this.querySelector('#avatar-msg');
 
-    if (user)
-    {
-      if (usernameInput)
-        usernameInput.value = user.username || '';
-      if (emailInput)
-        emailInput.value = user.email || '';
-    }
-
-    // change the avatar
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/png';
@@ -189,37 +262,27 @@ export class SettingsPage extends BaseComponent {
     fileInput.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
 
-      // Reset error message on new selection
       if (avatarError) {
         avatarError.textContent = '';
         avatarError.classList.add('hidden');
       }
 
-      if (!target.files || target.files.length === 0)
-        return ;
+      if (!target.files || target.files.length === 0) return ;
 
       const file = target.files[0];
 
-      if (file.size > 1024 * 1024)
-      {
-        if (avatarError) {
-          avatarError.textContent = '> ERROR: MAX SIZE 1MB EXCEEDED';
-          avatarError.classList.remove('hidden');
-        }
+      if (file.size > 1024 * 1024) {
+        showMessage('avatar-msg', '> ERROR: MAX SIZE 1MB EXCEEDED', true);
         target.value = '';
         return ;
       }
       
       if (file.type !== 'image/png') {
-        if (avatarError) {
-          avatarError.textContent = '> ERROR: FILE MUST BE PNG';
-          avatarError.classList.remove('hidden');
-        }
+        showMessage('avatar-msg', '> ERROR: FILE MUST BE PNG', true);
         target.value = '';
         return ;
       }
         
-      // create a reader object
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64String = event.target?.result as string;
@@ -231,30 +294,39 @@ export class SettingsPage extends BaseComponent {
 
         if (uploadLabel) uploadLabel.textContent = "[ UPLOAD ]";
 
-        if (res.success === "true" && avatarContainer)
-        {
+        if (res.success === "true" && avatarContainer) {
+          showMessage('avatar-msg', '> SUCCESS: ' + res.message, false);
+          
           let imgEl = avatarContainer.querySelector('img');
-          if (imgEl)
+          if (imgEl) {
             imgEl.src = base64String;
-          else
-          {
+          } else {
             avatarContainer.querySelector('span')?.remove();
             imgEl = document.createElement('img');
             imgEl.className = "w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all";
             imgEl.src = base64String;
             avatarContainer.prepend(imgEl);
           }
-        }
-        else
-        {
-          if (avatarError) {
-            avatarError.textContent = `> ERROR: ${res.message}`;
-            avatarError.classList.remove('hidden');
-          }
+        } else {
+          showMessage('avatar-msg', '> ERROR: ' + res.message, true);
         }
       };
       reader.readAsDataURL(file);
     });
+
+    // ==========================================
+    // 3. PROFILE UPDATE LOGIC 
+    // ==========================================
+    const changeProfileBtn = this.querySelector('#change-profile-btn');
+    const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
+    const emailInput = this.querySelector('#email-input') as HTMLInputElement;
+    
+    const user = appStore.getUser();
+
+    if (user) {
+      if (usernameInput) usernameInput.value = user.username || '';
+      if (emailInput) emailInput.value = user.email || '';
+    }
 
     changeProfileBtn?.addEventListener('click', async () => {
       const newUsername = usernameInput.value.trim();
@@ -263,8 +335,7 @@ export class SettingsPage extends BaseComponent {
 
       const userRes = await settingService.changeUsernameOnUserService(newUsername) as any;
       
-      if (userRes.success === "false" || userRes.success === false)
-      {
+      if (userRes.success === "false" || userRes.success === false) {
         const errorText = userRes.message || userRes.error || "USERNAME UPDATE FAILED";
         showMessage('profile-msg', '> ERROR: ' + errorText.toUpperCase(), true);
         return;
@@ -272,20 +343,21 @@ export class SettingsPage extends BaseComponent {
 
       const authRes = await settingService.changeUsernameOnAuthService(newUsername) as any;
 
-      if (authRes.success === "false" || authRes.success === false)
-      {
+      if (authRes.success === "false" || authRes.success === false) {
         const errorText = authRes.message || authRes.error || "AUTH UPDATE FAILED";
         showMessage('profile-msg', '> ERROR: ' + errorText.toUpperCase(), true);
         return;
       }
 
       const currentUser = appStore.getUser();
-      if (currentUser)
-        currentUser.username = newUsername;
+      if (currentUser) currentUser.username = newUsername;
+      
       showMessage('profile-msg', '> SUCCESS: PROFILE UPDATED', false);
     });
 
-
+    // ==========================================
+    // 4. PASSWORD & ACCOUNT MGMT 
+    // ==========================================
     const changePasswordBtn = this.querySelector('#change-password-btn');
     const currentPwInput = this.querySelector('#current-pw-input') as HTMLInputElement;
     const newPwInput = this.querySelector('#new-pw-input') as HTMLInputElement;
@@ -296,43 +368,26 @@ export class SettingsPage extends BaseComponent {
       const newPw = newPwInput.value;
       const repeatPw = repeatPwInput.value;
 
-      if (!currentPw || !newPw)
-      {
+      if (!currentPw || !newPw) {
         showMessage('password-msg', '> ERROR: FIELDS REQUIRED', true);
         return;
       }
 
-      if (newPw !== repeatPw)
-      {
+      if (newPw !== repeatPw) {
         showMessage('password-msg', '> ERROR: PASSWORDS MISMATCH', true);
         return;
       }
 
       const res = await settingService.changePassword(currentPw, newPw);
 
-      if (res.success === "true")
-      {
+      if (res.success === "true") {
         showMessage('password-msg', '> SUCCESS: PASSWORD CHANGED', false);
         currentPwInput.value = '';
         newPwInput.value = '';
         repeatPwInput.value = '';
-      }
-      else
-      {
+      } else {
         showMessage('password-msg', '> ERROR: ' + res.message, true);
       }
-    });
-
-    const toggle2faBtn = this.querySelector('#toggle-2fa-btn');
-    const verifyCodeBtn = this.querySelector('#verify-code-btn');
-    const verifyInput = this.querySelector('#verification-code-input') as HTMLInputElement;
-
-    toggle2faBtn?.addEventListener('click', () => {
-      console.log('Toggle 2FA requested');
-    });
-
-    verifyCodeBtn?.addEventListener('click', () => {
-      console.log('Verify code:', verifyInput.value);
     });
 
     const deleteAccountBtn = this.querySelector('#delete-account-btn');
@@ -340,6 +395,7 @@ export class SettingsPage extends BaseComponent {
     deleteAccountBtn?.addEventListener('click', () => {
       const confirmDelete = confirm("> SYSTEM WARNING: Delete account? This cannot be undone.");
       if (confirmDelete) {
+        settingService.purgeAccount();
         console.log('Delete account confirmed');
       }
     });
