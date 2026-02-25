@@ -14,13 +14,11 @@ class ProfileService {
         body: JSON.stringify({ tour_name: name })
       });
       
-      if (!response.ok)
-        console.log("failed to create the tournament");
        
       return await response.json();
     } catch (error)
     {
-      console.error(error);
+      console.error("");
     }
   }
   
@@ -62,12 +60,10 @@ class ProfileService {
         });
         
         if (!response.ok) {
-          console.error("Failed to fetch active tournaments");
           return []; 
         }
         return await response.json();
     } catch (error) {
-        console.error(error);
         return []; 
     }
   }

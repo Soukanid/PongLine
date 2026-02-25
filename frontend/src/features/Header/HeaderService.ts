@@ -9,14 +9,11 @@ class HeaderService {
         },
       );
 
-      if (!response.ok) {
-        console.error("Failed to fetch notifications history");
+      if (!response.ok)
         return [];
-      }
 
       return await response.json();
     } catch (error) {
-      console.error("Failed to fetch notifications", error);
       return [];
     }
   }
@@ -27,10 +24,8 @@ class HeaderService {
       const response = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/chat/mark-read`,
                   { method: 'POST' }
                   );
-      if (!response.ok)
-        console.error("Failed to mark the notifications as read");
     } catch (error) {
-      console.error("Failed to mark the notifications as read");
+      console.error("");
     }
   }
 }

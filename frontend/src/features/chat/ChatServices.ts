@@ -33,7 +33,7 @@ class ChatService {
           this.chatListeners.forEach(cb => cb(data));  
 
       } catch {
-        console.error("Failed to parse the message ", event.data);
+        console.error();
       }
     };
     
@@ -104,8 +104,6 @@ class ChatService {
       }
     });
   
-    if (!response.ok)
-      console.error("Failed to load Chat History");
     return await response.json();
   }
 
@@ -177,7 +175,6 @@ class ChatService {
       const data = await response.json();
       return (data.count);
     } catch (error) {
-      console.error("Failed to load unread count");
       return (0);
     }
   }
@@ -193,7 +190,7 @@ class ChatService {
       });
 
     } catch (error) {
-      console.error("Failed to mark messages as read");
+      console.error("");
     }
   }
 
@@ -225,7 +222,6 @@ class ChatService {
       }));
 
     } catch (error) {
-      console.error("Failed to search global users", error);
       return [];
     }
   }

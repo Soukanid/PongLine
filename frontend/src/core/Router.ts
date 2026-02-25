@@ -48,7 +48,6 @@ export const router = {
     //check authentication
     if (!AuthService.isAuthenticated()){
 
-      console.log("not authenticated");
       if (route && route.path !== "/login" && route.path !== "/") {
         history.pushState(
           {},
@@ -61,22 +60,18 @@ export const router = {
 
     //redirect if route doesnt exist
     if (!route){
-      console.log("route not found")
       history.pushState({},"", '/LostYourWay')
       return document.createElement("not-found-page")
     }
 
-    console.log(appStore.getUser());
     //redirect from protected routes for guests
     if (route.protected && appStore.getUser()?.role === 'guest'){
-      console.log("Protected route")
       history.pushState({},"", '/WarriorsOnly')
       return document.createElement("not-allowed-page")
     }
 
     //redirect to dashboard if already logged in
     if (route.path === '/login'){
-      console.log("login but authenticated")
       history.pushState({},"", '/dashboard')
       return document.createElement("profile-page")
     }

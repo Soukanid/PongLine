@@ -240,7 +240,6 @@ export class PongGame {
 		    this.context.fillText("YOU WIN BY DEFAULT!", this.width / 2, this.height / 2 + 30);
 		});
 		this.socket.on('error', (error: any) => {
-			console.error('Socket error:', error);
 			this.isPaused = true;
 		});
 	}
