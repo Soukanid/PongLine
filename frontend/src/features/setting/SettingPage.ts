@@ -154,7 +154,7 @@ export class SettingsPage extends BaseComponent {
       if (!el) return;
       
       el.textContent = msg;
-      el.className = `text-[10px] font-bold min-h-[15px] transition-all duration-300 ${isError ? 'text-red-500' : 'text-green-500'}`;
+      el.className = `text-[10px] font-bold min-h-[15px] transition-all duration-300 ${isError ? 'text-red-500' : 'text-retro'}`;
       
       setTimeout(() => {
         if (el.textContent === msg) el.textContent = '';
