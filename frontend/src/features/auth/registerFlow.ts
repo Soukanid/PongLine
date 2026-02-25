@@ -26,14 +26,14 @@ export class RegisterFlow {
     alias.focus();
     alias.addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
-        if (!alias.value) this.terminal.print("Alias required");
+        if (!alias.value) this.terminal.printError("Alias required");
         else {
           const result = await AuthService.guest(alias.value);
-
+          this.terminal.removeError();
           if (result.error) this.terminal.print("Error : " + result.error);
           if (result.success) {
             await AuthService.setCurrentUser();
-            this.terminal.print(" Starting ...");
+            this.terminal.printError(" Starting ...");
             const params = new URLSearchParams(window.location.search);
             const redirect = params.get("redirect");
             router.navigate(redirect || "/dashboard");

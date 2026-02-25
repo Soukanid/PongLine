@@ -70,7 +70,7 @@ export class LoginFlow {
           if (result.success === "TFA") {
             this.terminal.print("2 Factor Authentication Required");
             this.terminal.print("Please Enter the 2FA code");
-	    form.appendChild(tfadiv);
+	          this.terminal.printElem(tfadiv);
             tfacode.focus();
           }
           else if (result.success === "logged in"){
