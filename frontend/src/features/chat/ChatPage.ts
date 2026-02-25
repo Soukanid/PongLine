@@ -219,20 +219,47 @@ export class ChatPage extends BaseComponent {
         second: '2-digit' 
     });
 
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const formattedContent = msg.content.replace(urlRegex, (url) => {
-        return `<a href="${url}" class=" text-retro px-2 py-1 ml-2 font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer">[ JOIN ]</a>`;
-    });
-
     const line = document.createElement('div');
     line.className = "w-full mb-1 font-mono text-sm text-retro break-words hover:bg-retro/10 transition-colors px-2";
 
-    line.innerHTML = `
-      <span class="opacity-60 mr-2">[${timeStr}]</span>
-      <span class="font-bold mr-2">&lt;${senderName}&gt;</span>
-      <span class="text-retro">${formattedContent}</span>
-    `;
+    const metaSpan = document.createElement('span');
+    metaSpan.innerHTML = `<span class="opacity-60 mr-2">[${timeStr}]</span><span class="font-bold mr-2">&lt;</span>`;
+    
+    const nameNode = document.createTextNode(senderName);
+    metaSpan.appendChild(nameNode);
+    metaSpan.insertAdjacentHTML('beforeend', '<span class="font-bold mr-2">&gt;</span>');
+    
+    line.appendChild(metaSpan);
 
+    const contentSpan = document.createElement('span');
+    contentSpan.className = "text-retro";
+
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = msg.content.split(urlRegex);
+
+    parts.forEach(part => {
+      if (part.match(urlRegex))
+      {
+        const cleanUrl = part.replace(/["']/g, ''); 
+        
+        const a = document.createElement('a');
+        a.href = cleanUrl;
+        a.className = "text-retro px-2 py-1 ml-2 font-bold hover:bg-retro hover:text-black transition-colors cursor-pointer";
+        a.textContent = "[ JOIN ]";
+        
+        a.addEventListener('click', (e) => {
+           e.preventDefault();
+           const urlObj = new URL(cleanUrl);
+           router.navigate(urlObj.pathname + urlObj.search);
+        });
+
+        contentSpan.appendChild(a);
+      } 
+      else if (part.length > 0)
+        contentSpan.appendChild(document.createTextNode(part));
+    });
+
+    line.appendChild(contentSpan);
     area.appendChild(line);
     
     area.scrollTop = area.scrollHeight; 

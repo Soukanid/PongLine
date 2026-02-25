@@ -41,7 +41,8 @@ export class ApiClient {
 
     if (!response.ok) {
       if (response.status === 401 && redir) window.location.href = "/login";
-      throw new Error(responseData.error || "Request failed");
+      const errorMessage = responseData?.message || responseData?.error || response.statusText;
+      throw new Error(errorMessage);
     }
 
     return responseData;

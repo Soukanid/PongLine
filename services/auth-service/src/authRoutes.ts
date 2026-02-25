@@ -7,6 +7,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify.prisma, fastify);
 
   //guest
+//guest
   fastify.post(
     "/guest",
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -25,7 +26,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return reply.send({ success: "Login successful" });
       } catch (error) {
-        if (error instanceof Error) return reply.send({ error: error.message });
+        if (error instanceof Error) return reply.code(400).send({ error: error.message });
         return reply.code(400).send({ error: "something's wrong" });
       }
     },
@@ -45,8 +46,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         await authService.register(email, username, password);
         return reply.code(201).send({ success: "Account created successfully" });
       } catch (error: any) {
-        if (error instanceof Error) return reply.send({ error: error.message });
-        return reply.code(400).send({ error: error.message });
+        if (error instanceof Error) return reply.code(400).send({ error: error.message });
+        return reply.code(400).send({ error: "Failed to register" });
       }
     },
   );
@@ -77,8 +78,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         
         return reply.code(200).send({ success: "Login successful", tfa:false });
       } catch (error: any) {
-        if (error instanceof Error) return reply.send({ error: error.message });
-        else return reply.code(404).send({ error: error.message });
+        if (error instanceof Error) return reply.code(401).send({ error: error.message });
+        return reply.code(401).send({ error: "Unknown login error" });
       }
     },
   );
@@ -113,7 +114,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const token = request.cookies?.access_token;
-        if (!token) return reply.code(401).send();
+        if (!token)
+          return reply.code(401).send();
 
         const result = await authService.validateToken(token);
         if (!result.valid) {
@@ -146,18 +148,21 @@ export default async function authRoutes(fastify: FastifyInstance) {
       try {
         const token = request.cookies?.access_token;
         if (!token)
-          return reply.code(401).send({ error: "Unauthorized" });
-        const userId = request.headers['x-user-id']?.toString();
-        const myUsername = request.headers['x-user-username']?.toString();
-    
-        if (!userId || !myUsername)
           return reply.code(401).send();
+
+        const result = await authService.validateToken(token);
+
+        if (!result.valid)
+          return reply.code(401).send(result);
+ 
+        const userId = result.user?.id;
+        const myUsername = result.user?.username;
 
         const myId = parseInt(userId);
         const { newUsername } = request.body as { newUsername: string };
 
         if (!newUsername || newUsername.trim() === '')
-          return reply.code(400).send();
+          return reply.code(400).send({ success: "false"});
 
         const trimmedUsername = newUsername.trim();
 
@@ -173,8 +178,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         if (existingUser)
         {
           if (existingUser.username === myUsername)
-            return reply.code(200).send();
-          return reply.code(409).send({ error: "Username is already taken" });
+            return reply.code(200).send({ success: "true"});
+          return reply.code(409).send({ sucess: "false", error: "Username is already taken" });
         }
 
         await fastify.prisma.userAuth.update({
@@ -193,7 +198,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 86400, //[soukaina] should be changed
+          maxAge: 86400,
         });
 
         return reply.code(200).send({ 
@@ -453,7 +458,7 @@ fastify.delete(
         sameSite: "strict",
       });
 
-      return reply.code(204).send();
+      return reply.code(204).send({success: "true"});
       } catch (error: any) {
         if (error instanceof Error) return reply.send({ error: error.message });
         return reply.code(401).send({ error: error.message });
@@ -493,7 +498,7 @@ fastify.delete(
         return reply.send({ success: true });
       } catch (error: any) {
         if (error instanceof Error) return reply.send({ error: error.message });
-        return reply.code(401).send({ error: error.message });
+        return reply.code(401).send({ error: "Failed to logout" });
       }
     },
   );

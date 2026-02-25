@@ -13,9 +13,10 @@ export const RegisterSchema = {
   response: {
     201: Type.Object({
       success: Type.String()
-      }),
+    }),
     400: Type.Object({
-      error: Type.String()
+      error: Type.String(),
+      message: Type.Optional(Type.String())
     })
   }
 }

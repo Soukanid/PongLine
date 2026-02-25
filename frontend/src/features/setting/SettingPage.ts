@@ -265,12 +265,26 @@ export class SettingsPage extends BaseComponent {
       
       if (userRes.success === "false" || userRes.success === false)
       {
-        const errorText = userRes.message || "USERNAME UPDATE FAILED";
+        const errorText = userRes.message || userRes.error || "USERNAME UPDATE FAILED";
         showMessage('profile-msg', '> ERROR: ' + errorText.toUpperCase(), true);
         return;
       }
+
+      const authRes = await settingService.changeUsernameOnAuthService(newUsername) as any;
+
+      if (authRes.success === "false" || authRes.success === false)
+      {
+        const errorText = authRes.message || authRes.error || "AUTH UPDATE FAILED";
+        showMessage('profile-msg', '> ERROR: ' + errorText.toUpperCase(), true);
+        return;
+      }
+
+      const currentUser = appStore.getUser();
+      if (currentUser)
+        currentUser.username = newUsername;
       showMessage('profile-msg', '> SUCCESS: PROFILE UPDATED', false);
     });
+
 
     const changePasswordBtn = this.querySelector('#change-password-btn');
     const currentPwInput = this.querySelector('#current-pw-input') as HTMLInputElement;

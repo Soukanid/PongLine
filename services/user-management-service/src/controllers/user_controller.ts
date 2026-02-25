@@ -752,7 +752,6 @@ export class UserController {
 
   async deleteUser(req: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply)
   {
-
     console.log(req.body)
     const { username } = req.body;
 
@@ -767,9 +766,21 @@ export class UserController {
       if (!targetUser)
         return reply.code(404).send({ error: 'User not found' });
 
-      await prisma.user.deleteMany({
-        where: { username: targetUser.username }
-      });
+      await prisma.$transaction([
+        prisma.friendship.deleteMany({
+          where: {
+            OR: [ { senderId: targetUser.id }, { receiverId: targetUser.id } ]
+          }
+        }),
+        prisma.block.deleteMany({
+          where: {
+            OR: [ { blockerId: targetUser.id }, { blockedId: targetUser.id } ]
+          }
+        }),
+        prisma.user.delete({
+          where: { id: targetUser.id }
+        })
+      ]);
 
       return reply.code(200).send({ success: true, message: "User deleted successfully" });
 
@@ -778,4 +789,5 @@ export class UserController {
       return reply.code(500).send({ error: "Failed to delete the user" });
     }
   }
+
 }

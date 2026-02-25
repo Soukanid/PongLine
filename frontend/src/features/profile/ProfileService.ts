@@ -104,7 +104,7 @@ class ProfileService {
         return {
           id: 0,    
           username: appStore.getUser()?.username,
-          avatar: "/default_avatar.png",
+          avatar: "/default.png",
           role: "guest",
           relationship: "me",
           isOnline: true

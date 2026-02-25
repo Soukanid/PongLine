@@ -105,9 +105,7 @@ class ChatService {
     });
   
     if (!response.ok)
-    {
       console.error("Failed to load Chat History");
-    }
     return await response.json();
   }
 
