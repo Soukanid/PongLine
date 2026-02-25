@@ -253,6 +253,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
           },
         );
 
+        if (Response.ok!)
+          return reply.code(401).send({error: Response.json()})
+
         const tokenResponse = await Response.json();
         const intraToken = tokenResponse.access_token;
 
@@ -263,6 +266,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
           },
         });
 
+        if (Response.ok!)
+          return reply.code(401).send({error: Response.json()})
+
+ 
         const user = await Response.json();
         var authUser = await fastify.prisma.userAuth.findUnique({
           where: { username: user.login },

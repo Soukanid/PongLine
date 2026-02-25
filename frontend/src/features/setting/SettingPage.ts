@@ -1,10 +1,16 @@
 import { BaseComponent } from '../../core/Component';
 import { settingService } from './SettingService'
-import { profileService } from './profile/profileService';
+import { appStore } from './../../core/Store'
 
 export class SettingsPage extends BaseComponent {
   
   async render() {
+
+    const user = appStore.getUser();
+    const avatarHTML = user?.avatar 
+      ? `<img src="${user.avatar}" class="w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all">`
+      : `<span class="text-retro/40 text-xs">NO_IMAGE</span>`;
+    
     this.setHtml(`
       <div class="size-full  overflow-hidden px-4 pb-4 bg-black font-mono text-retro selection:bg-retro selection:text-black">
         
@@ -18,12 +24,20 @@ export class SettingsPage extends BaseComponent {
                 <div class="absolute -top-3 left-4 bg-black px-2 text-xs text-retro/70 tracking-widest">[ IDENTITY_MODULE ]</div>
                 
                 <div class="flex flex-col sm:flex-row gap-8 items-start sm:items-center mb-6 pb-8 border-b border-retro/20">
-                  <div class="relative w-28 h-28 border border-retro flex items-center justify-center shrink-0 group cursor-pointer hover:bg-retro/10 transition-all shadow-[0_0_10px_rgba(0,255,0,0.1)]">
-                    <span class="text-retro/40 text-xs">NO_IMAGE</span>
-                    <div class="absolute -bottom-3 bg-black px-2 text-[10px] text-retro group-hover:text-white transition-colors">
-                      [ UPLOAD ]
+                  
+                  <div class="flex flex-col items-center">
+                    <div id="avatar-container" class="relative w-28 h-28 border border-retro flex items-center justify-center shrink-0 group cursor-pointer hover:bg-retro/10 transition-all shadow-[0_0_10px_rgba(0,255,0,0.1)] mb-6">
+
+                        ${avatarHTML}
+
+                      <div class="absolute -bottom-6  px-2 text-[10px] text-retro transition-colors">
+                        [ UPLOAD ]
+                      </div>
                     </div>
+                    <span class="text-retro/50 text-[10px]">> FORMAT: PNG | MAX: 1MB</span>
+                    <span id="avatar-error" class="text-red-500 text-[10px] hidden font-bold mt-1 text-center"></span>
                   </div>
+
                   <div class="flex flex-col gap-1 text-sm text-retro/60">
                     <p>STATUS: <span class="text-retro animate-pulse">ONLINE</span></p>
                     <p>ACCESS: <span class="text-retro">STANDARD_USER</span></p>
@@ -39,11 +53,11 @@ export class SettingsPage extends BaseComponent {
                   
                   <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
                     <label class="text-retro/80 text-sm">> EMAIL :</label>
-                    <input id="email-input" type="email" class="md:col-span-2 bg-black border border-retro/50 px-3 py-2 text-retro focus:outline-none focus:border-retro focus:ring-1 focus:ring-retro transition-all placeholder-retro/30" placeholder="user@system.com">
+                    <input disabled id="email-input" type="email" class="md:col-span-2 bg-black border border-retro/50  px-3 py-2 text-retro focus:outline-none focus:border-retro focus:ring-1 focus:ring-retro transition-all placeholder-retro/30" placeholder="user@system.com">
                   </div>
                   </div>
                   <div class="flex justify-end pr-4">
-                    <button id="change-profile-btn" class="bg-retro text-black font-bold py-2 px-6 hover:bg-white transition-colors cursor-pointer text-sm tracking-wider uppercase">
+                    <button id="change-profile-btn" class="bg-black text-retro font-bold py-2 px-6 hover:bg-retro hover:text-black transition-colors cursor-pointer text-sm tracking-wider uppercase">
                       [ Update_Profile ]
                     </button>
                   </div>
@@ -132,10 +146,103 @@ export class SettingsPage extends BaseComponent {
   }
 
   addEvents() {
-    // Selectors for Profile
+
     const changeProfileBtn = this.querySelector('#change-profile-btn');
     const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
     const emailInput = this.querySelector('#email-input') as HTMLInputElement;
+    const avatarContainer = this.querySelector('#avatar-container');
+    const avatarError = this.querySelector('#avatar-error'); // 👈 Get the error span
+    const user = appStore.getUser();
+
+    if (user)
+    {
+      if (usernameInput)
+        usernameInput.value = user.username || '';
+      if (emailInput)
+        emailInput.value = user.email || '';
+    }
+
+    // change the avatar
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/png';
+    fileInput.style.display = 'none';
+    this.appendChild(fileInput);
+
+    avatarContainer?.addEventListener('click', () => {
+      fileInput.click();
+    });
+  
+    fileInput.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+
+      // Reset error message on new selection
+      if (avatarError) {
+        avatarError.textContent = '';
+        avatarError.classList.add('hidden');
+      }
+
+      if (!target.files || target.files.length === 0)
+        return ;
+
+      const file = target.files[0];
+
+      if (file.size > 1024 * 1024)
+      {
+        if (avatarError) {
+          avatarError.textContent = '> ERROR: MAX SIZE 1MB EXCEEDED';
+          avatarError.classList.remove('hidden');
+        }
+        target.value = '';
+        return ;
+      }
+      
+      // Also a good idea to check if it's actually a PNG
+      if (file.type !== 'image/png') {
+        if (avatarError) {
+          avatarError.textContent = '> ERROR: FILE MUST BE PNG';
+          avatarError.classList.remove('hidden');
+        }
+        target.value = '';
+        return ;
+      }
+        
+      // create a reader object
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64String = event.target?.result as string;
+
+        const uploadLabel = avatarContainer?.querySelector('div');
+        if (uploadLabel) uploadLabel.textContent = "[ UPLOADING... ]";
+
+        const res = await settingService.updateAvatar(base64String);
+
+        if (uploadLabel) uploadLabel.textContent = "[ UPLOAD ]";
+
+        if (res.success === "true" && avatarContainer)
+        {
+          let imgEl = avatarContainer.querySelector('img');
+          if (imgEl)
+            imgEl.src = base64String;
+          else
+          {
+            avatarContainer.querySelector('span')?.remove();
+            imgEl = document.createElement('img');
+            imgEl.className = "w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all";
+            imgEl.src = base64String;
+            avatarContainer.prepend(imgEl);
+          }
+        }
+        else
+        {
+          if (avatarError) {
+            avatarError.textContent = `> ERROR: ${res.message}`;
+            avatarError.classList.remove('hidden');
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    });
 
     changeProfileBtn?.addEventListener('click', async () => {
       const newUsername = usernameInput.value.trim();
@@ -143,18 +250,9 @@ export class SettingsPage extends BaseComponent {
       if (!newUsername)
         return;
 
-      const userRes = settingService.changeUsernameOnUserService(newUsername) as any;
+      const userRes = await settingService.changeUsernameOnUserService(newUsername) as any;
       
       if (userRes.success === true)
-      {
-        //[soukaina] alert for now but it should be checked
-        alert("> ERROR: " + userRes.message);
-        return;
-      }
-      
-      const authRes = settingService.changeUsernameOnAuthService(newUsername) as any;
-
-      if (!authRes.success)
       {
         //[soukaina] alert for now but it should be checked
         alert("> ERROR: " + userRes.message);
@@ -175,14 +273,12 @@ export class SettingsPage extends BaseComponent {
 
       if (!currentPw || !newPw)
       {
-        //[soukaina] should be changed
         alert("> ERROR: Please fill in all password fields.");
         return;
       }
 
       if (newPw !== repeatPw)
       {
-        //[soukaina] should be changed
         alert("> ERROR: New passwords do not match!");
         return;
       }
@@ -191,14 +287,12 @@ export class SettingsPage extends BaseComponent {
 
       if (res.success === "true")
       {
-        //[soukaina] should be changed
         alert("> SUCCESS: Password updated securely.");
         currentPwInput.value = '';
         newPwInput.value = '';
         repeatPwInput.value = '';
       }
       else
-        //[soukaina] should be changed
         alert("> ERROR: " + res.message); 
     });
 
@@ -227,4 +321,3 @@ export class SettingsPage extends BaseComponent {
 }
 
 customElements.define('settings-page', SettingsPage);
-

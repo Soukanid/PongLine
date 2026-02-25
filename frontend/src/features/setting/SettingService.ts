@@ -71,7 +71,31 @@ class SettingService {
       return ({ "success": "false", "message": "Failed to update the Password" });
     }
   }
+
+  async updateAvatar(avatarBase64: string)
+  {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_GATEWAY_URL}/api/user-management/change-avatar`, {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ avatarBase64: avatarBase64 })
+      });
+
+      const data = await res.json();
+
+      if (res && res.ok)
+        return ({ "success" : "true", "message": data.message });
+      else
+        return ({ "success" : "false", "message": data.error });
+        
+    } catch (err) {
+      return ({ "success": "false", "message": "Failed to update the Avatar" });
+    }
+  }
   
 }
+
 
 export const settingService = new SettingService();

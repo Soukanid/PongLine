@@ -278,6 +278,7 @@ export class UserController {
             id: true,
             username: true,
             role: true,
+            email: true,
             avatar: true,
           },
         });
@@ -297,6 +298,7 @@ export class UserController {
           id: user.id,
           username: user.username,
           role: user.role,
+          email: user.email,
           avatar: avatarBase64
         };
        
@@ -732,7 +734,7 @@ export class UserController {
       
       const avatarBuffer = Buffer.from(base64Data, 'base64');
 
-      const maxSizeBytes = 2 * 1024 * 1024;
+      const maxSizeBytes = 1024 * 1024;
       if (avatarBuffer.length > maxSizeBytes)
         return reply.code(400).send({ error: "Image is too large. Maximum size is 2MB." });
 
@@ -750,12 +752,8 @@ export class UserController {
 
   async deleteUser(req: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply)
   {
-    const userId = req.headers['x-user-id']?.toString();
-    
-    if (!userId)
-      return reply.code(401).send({ error: 'Unauthorized' });
 
-    const myId = parseInt(userId);
+    console.log(req.body)
     const { username } = req.body;
 
     if (!username || username.trim() === '')
@@ -769,10 +767,7 @@ export class UserController {
       if (!targetUser)
         return reply.code(404).send({ error: 'User not found' });
 
-      if (targetUser.id !== myId)
-        return reply.code(403).send({ error: 'Forbidden: You can only delete your own account' });
-
-      await prisma.user.delete({
+      await prisma.user.deleteMany({
         where: { username: targetUser.username }
       });
 
