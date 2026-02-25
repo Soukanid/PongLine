@@ -28,15 +28,16 @@ export class LoginFlow {
 
     this.terminal.printElem(form);
 
+    const tfadiv = document.createElement('div');
+    tfadiv.innerHTML = `
+    <label for="tfacode">2FA Code :</label>
+	    <input type="number" placeholder="ha lm39ool" id="tfacode"/>`;
+
+    tfadiv.classList.add('w-full','bg-transparent','border-none' ,'outline-none');
+   
     const email = form.querySelector("#email") as HTMLInputElement;
     const password = form.querySelector("#password") as HTMLInputElement;
-    const tfadiv = document.createElement('div');
-    tfadiv.innerText = `<div >
-    <label for="tfacode">2FA Code :</label>
-	    <input type="number" placeholder="ha lm39ool" id="tfacode"/>
-    `;
-    tfadiv.classList.add('w-full ','bg-transparent ','border-none' ,'outline-none');
-    const tfacode = tfadiv.querySelector("#tfacode") as HTMLInputElement;
+     const tfacode = tfadiv.querySelector("#tfacode") as HTMLInputElement;
 
     email.focus();
 

@@ -1,7 +1,7 @@
 import { BaseComponent } from '../../core/Component';
-import { appStore } from '../../core/Store';
 import { settingService } from './SettingService'
-import { QRCode } from 'qrcode';
+import { appStore } from './../../core/Store'
+import { router } from '../../core/Router';
 
 export class SettingsPage extends BaseComponent {
   
@@ -14,7 +14,19 @@ export class SettingsPage extends BaseComponent {
     
     this.setHtml(`
       <div class="size-full  overflow-hidden px-4 pb-4 bg-black font-mono text-retro selection:bg-retro selection:text-black">
-        
+        <div id="delete-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div class="border-2 border-retro bg-black p-8 w-full max-w-md shadow-[0_0_30px_rgba(255,0,0,0.3)]">
+            <h2 class="text-retro font-bold text-xl mb-4 tracking-widest animate-pulse">> DELETE USER </h2>
+            <div class="flex justify-end gap-4">
+              <button id="cancel-delete-btn" class="bg-transparent border border-retro text-retro px-4 py-2 hover:bg-retro hover:text-black transition-colors font-bold tracking-wider">
+                [ CANCEL ]
+              </button>
+              <button id="confirm-delete-btn" class="bg-retro/40 border border-retro text-retro px-4 py-2  hover:text-black transition-colors font-bold tracking-wider">
+                [ EXECUTE_PURGE ]
+              </button>
+            </div>
+          </div>
+        </div>
         <div class="size-full mx-auto flex flex-col gap-8">
           
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -164,13 +176,6 @@ export class SettingsPage extends BaseComponent {
       }, 3000);
     };
 
-    // ==========================================
-<<<<<<< HEAD
-    // 1. TWO-FACTOR AUTHENTICATION LOGIC
-=======
-    // 2. TWO-FACTOR AUTHENTICATION LOGIC
->>>>>>> refs/remotes/origin/main
-    // ==========================================
     const toggle2faBtn = this.querySelector('#toggle-2fa-btn') as HTMLButtonElement;
     const setupSection = this.querySelector('#tfa-setup-section') as HTMLDivElement;
     const verifyCodeBtn = this.querySelector('#verify-code-btn') as HTMLButtonElement;
@@ -178,7 +183,6 @@ export class SettingsPage extends BaseComponent {
     const qrCodeImg = this.querySelector('#qr-code-img') as HTMLImageElement;
     const qrLoadingText = this.querySelector('#qr-loading-text') as HTMLSpanElement;
 
-<<<<<<< HEAD
     const update2FA_UI = async () => {
       const isEnabled = await settingService.getTFAStatus();
       if (isEnabled) {
@@ -204,7 +208,6 @@ export class SettingsPage extends BaseComponent {
               update2FA_UI();
            }
           
-          // 👇 REPLACED ALERT WITH SHOWMESSAGE
           showMessage('tfa-msg', '> SUCCESS: 2FA DISABLED SECURELY', false);
           
           isEnabled = await settingService.getTFAStatus();
@@ -218,57 +221,6 @@ export class SettingsPage extends BaseComponent {
           setupSection.classList.remove('hidden');
           toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
           
-=======
-
-    // Helper function to sync the UI with the user's actual 2FA state
-    const update2FA_UI = async () => {
-      const isEnabled = await settingService.getTFAStatus();
-           if (isEnabled) {
-        toggle2faBtn.textContent = "[ DISABLE_2FA.sh ]";
-        toggle2faBtn.className = "w-full bg-red-900/20 border-2 border-red-600 text-red-500 font-bold py-3 px-4 hover:bg-red-600 hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
-        setupSection.classList.add('hidden'); // Hide QR code and input
-      } else {
-        toggle2faBtn.textContent = "[ ENABLE_2FA.sh ]";
-        toggle2faBtn.className = "w-full bg-transparent border-2 border-retro text-retro font-bold py-3 px-4 hover:bg-retro hover:text-black transition-colors cursor-pointer tracking-wider uppercase";
-        setupSection.classList.add('hidden'); // Hide QR code until they click enable
-      }
-    };
-
-    // Initialize the UI on load
-    update2FA_UI();
-
-    // Handle the Toggle Button
-    toggle2faBtn?.addEventListener('click', async () => {
-
-      var isEnabled = await settingService.getTFAStatus();
-      if (isEnabled) {
-        // SCENARIO 1: They are disabling 2FA
-        const confirmDisable = confirm("> WARNING: Are you sure you want to disable 2FA? This decreases account security.");
-        if (confirmDisable) {
-          // TODO: Call backend to disable 2FA
-           const res = await settingService.disableTFA();
-           if (res.success) { 
-              update2FA_UI()}
-
-          alert("> SUCCESS: 2FA Disabled.");
-      isEnabled = await settingService.getTFAStatus();
-          if (isEnabled === false) // Update local store
-          update2FA_UI(); 
-        }
-      } else {
-        // SCENARIO 2: They are starting the setup process
-        const isSetupVisible = !setupSection.classList.contains('hidden');
-
-        if (isSetupVisible) {
-          // They clicked "Cancel Setup"
-          update2FA_UI(); // Resets everything back to default
-        } else {
-          // They clicked "Enable". Show the setup section and change button text
-          setupSection.classList.remove('hidden');
-          toggle2faBtn.textContent = "[ CANCEL_SETUP.sh ]";
-          
-          // TODO: Call backend to generate the QR code
->>>>>>> refs/remotes/origin/main
            const res = await settingService.setup2FA()
            qrCodeImg.src = res;
            qrCodeImg.classList.remove('hidden');
@@ -277,11 +229,10 @@ export class SettingsPage extends BaseComponent {
       }
     });
 
-<<<<<<< HEAD
     verifyCodeBtn?.addEventListener('click', async () => {
       const code = verifyInput.value.trim();
-      if (code.length !== 6) {
-        // 👇 REPLACED ALERT WITH SHOWMESSAGE
+      if (code.length !== 6)
+      {
         showMessage('tfa-msg', '> ERROR: INVALID CODE FORMAT', true);
         return;
       }
@@ -289,51 +240,16 @@ export class SettingsPage extends BaseComponent {
       const res = await settingService.verify2FA(code);
       
       if (res.success) {
-        // 👇 REPLACED ALERT WITH SHOWMESSAGE
         showMessage('tfa-msg', '> SUCCESS: 2FA ENABLED SECURELY', false);
         verifyInput.value = "";
         
         const isEnabled = await settingService.getTFAStatus();
         if (isEnabled === true) update2FA_UI();
       } else {
-        // 👇 REPLACED ALERT WITH SHOWMESSAGE
         showMessage('tfa-msg', '> ERROR: INCORRECT VERIFICATION CODE', true);
       }
     });
 
-    // ==========================================
-    // 2. AVATAR UPLOAD LOGIC
-    // ==========================================
-=======
-    // Handle the Verify Code Button
-    verifyCodeBtn?.addEventListener('click', async () => {
-      const code = verifyInput.value.trim();
-      if (code.length !== 6) {
-        alert("> ERROR: Invalid code format.");
-        return;
-      }
-
-      // TODO: Call backend to verify the code and officially enable 2FA
-       const res = await settingService.verify2FA(code);
-      
-      if (res.success) {
-        alert("> SUCCESS: 2FA Enabled securely.");
-        verifyInput.value = "";
-        
-        // Update store and UI
-      const isEnabled = await settingService.getTFAStatus();
-        if (isEnabled === true)
-        update2FA_UI();
-      } else {
-        alert("> ERROR: Incorrect verification code.");
-      }
-    });
-    
-    // Selectors for Profile
-    const changeProfileBtn = this.querySelector('#change-profile-btn');
-    const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
-    const emailInput = this.querySelector('#email-input') as HTMLInputElement;
->>>>>>> refs/remotes/origin/main
     const avatarContainer = this.querySelector('#avatar-container');
     const avatarError = this.querySelector('#avatar-msg');
 
@@ -402,9 +318,6 @@ export class SettingsPage extends BaseComponent {
       reader.readAsDataURL(file);
     });
 
-    // ==========================================
-    // 3. PROFILE UPDATE LOGIC 
-    // ==========================================
     const changeProfileBtn = this.querySelector('#change-profile-btn');
     const usernameInput = this.querySelector('#username-input') as HTMLInputElement;
     const emailInput = this.querySelector('#email-input') as HTMLInputElement;
@@ -443,9 +356,6 @@ export class SettingsPage extends BaseComponent {
       showMessage('profile-msg', '> SUCCESS: PROFILE UPDATED', false);
     });
 
-    // ==========================================
-    // 4. PASSWORD & ACCOUNT MGMT 
-    // ==========================================
     const changePasswordBtn = this.querySelector('#change-password-btn');
     const currentPwInput = this.querySelector('#current-pw-input') as HTMLInputElement;
     const newPwInput = this.querySelector('#new-pw-input') as HTMLInputElement;
@@ -479,13 +389,23 @@ export class SettingsPage extends BaseComponent {
     });
 
     const deleteAccountBtn = this.querySelector('#delete-account-btn');
-    
+    const deleteModal = this.querySelector('#delete-modal');
+    const cancelDeleteBtn = this.querySelector('#cancel-delete-btn');
+    const confirmDeleteBtn = this.querySelector('#confirm-delete-btn');
+
     deleteAccountBtn?.addEventListener('click', () => {
-      const confirmDelete = confirm("> SYSTEM WARNING: Delete account? This cannot be undone.");
-      if (confirmDelete) {
-        settingService.purgeAccount();
-        console.log('Delete account confirmed');
-      }
+      if (deleteModal) deleteModal.classList.remove('hidden');
+    });
+
+    cancelDeleteBtn?.addEventListener('click', () => {
+      if (deleteModal) deleteModal.classList.add('hidden');
+    });
+
+    confirmDeleteBtn?.addEventListener('click', async () => {
+      if (confirmDeleteBtn) confirmDeleteBtn.textContent = "[ PURGING... ]";
+      await settingService.purgeAccount();
+      
+      location.reload();
     });
   }
 }

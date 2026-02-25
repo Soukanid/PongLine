@@ -1,3 +1,5 @@
+import { router } from '../../core/Router';
+import { appStore } from '../../core/Store';
 
 class SettingService {
 
@@ -180,9 +182,11 @@ class SettingService {
         method: 'DELETE',
       });
       const data = await res.json();
-
+    
       if (res && res.ok)
+      {
         return ({ "success" : "true" });
+      }
       else
         return ({ "success" : "false", "message": data.error });
         
