@@ -105,8 +105,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
         return result;
       } catch (error: any) {
-        if (error instanceof Error) return reply.send({ error: error.message });
-        return { valid: false, reason: "validation_error" };
+        if (error instanceof Error) return reply.code().send({ error: error.message });
+        return reply.code(401).send({ valid: false, reason: "validation_error" });
       }
     },
   );
@@ -142,7 +142,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         return reply.code(200).send({ success: "true" });
 
       } catch (error: any) {
-        if (error instanceof Error) reply.send({ error: error.message });
+        if (error instanceof Error) reply.code(400).send({ error: error.message });
         return reply.code(500).send({ error: "Internal Server Error" });
       }
     }
@@ -217,109 +217,122 @@ export default async function authRoutes(fastify: FastifyInstance) {
       }
     },
   );
+ // get 42 authorization
 
-  // get 42 authorization
+fastify.get(
+
+"/42/login",
+
+async (request: FastifyRequest, reply: FastifyReply) => {
+
+const params = new URLSearchParams({
+
+client_id: process.env.INTRA_ID!,
+
+redirect_uri: process.env.VITE_API_GATEWAY_URL + process.env.INTRA_REDIRECT,
+
+response_type: "code",
+
+scope: "public",
+
+});
+
+
+const authUrl = process.env.INTRA_AUTHORIZE+`?${params.toString()}`;
+
+
+return reply.redirect(authUrl);
+
+},
+
+); 
   fastify.get(
-    "/42/login",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const params = new URLSearchParams({
+  "/42/callback",
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const { code } = request.query as { code: string };
+
+    if (!code) {
+      return reply.redirect(process.env.VITE_API_GATEWAY_URL + "login");
+    }
+
+    try {
+      // 1. Exchange code for access_token
+      const tokenParams = new URLSearchParams({
+        grant_type: "authorization_code",
         client_id: process.env.INTRA_ID!,
-        redirect_uri: process.env.VITE_API_GATEWAY_URL + "api/auth/42/callback",
-        response_type: "code",
-        scope: "public",
+        client_secret: process.env.INTRA_SECRET!,
+        code: code,
+        redirect_uri: process.env.VITE_API_GATEWAY_URL + process.env.INTRA_REDIRECT,
       });
 
-      const authUrl = `https://api.intra.42.fr/oauth/authorize?${params.toString()}`;
+      const tokenResponse = await fetch(process.env.INTRA_TOKEN!, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: tokenParams, 
+      });
 
-      return reply.redirect(authUrl);
-    },
-  );
-
-  // get 42 access_token and authenticate
-  fastify.get(
-    "/42/callback",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const { code } = request.query as { code: string };
-
-      if (!code) {
-        return reply.status(400).send({ error: "Missing authorization code" });
+      if (!tokenResponse.ok) {
+        return reply.redirect(process.env.VITE_API_GATEWAY_URL + "login");
       }
 
-      try {
-        const params = new URLSearchParams({
-          grant_type: "authorization_code",
-          client_id: process.env.INTRA_ID!,
-          client_secret: process.env.INTRA_SECRET!,
-          code,
-          redirect_uri: process.env.VITE_API_GATEWAY_URL + "api/auth/42/callback",
-        });
+      const tokenData = await tokenResponse.json();
+      const intraToken = tokenData.access_token;
 
-        var Response = await fetch(
-          `https://api.intra.42.fr/oauth/token?${params.toString()}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          },
-        );
+      // 2. Get User Info from 42
+      const userResponse = await fetch(process.env.INTRA_ME!, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${intraToken}`,
+        },
+      });
 
-        if (Response.ok!)
-          return reply.code(401).send({error: Response.json()})
+      if (!userResponse.ok) {
+        return reply.redirect(process.env.VITE_API_GATEWAY_URL + "login");
+      }
 
-        const tokenResponse = await Response.json();
-        const intraToken = tokenResponse.access_token;
+      const user = await userResponse.json();
 
-        Response = await fetch("https://api.intra.42.fr/v2/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${intraToken}`,
-          },
-        });
+      // 3. Database Logic
+      let authUser = await fastify.prisma.userAuth.findUnique({
+        where: { username: user.login },
+      });
 
-        if (Response.ok!)
-          return reply.code(401).send({error: Response.json()})
-
- 
-        const user = await Response.json();
-        var authUser = await fastify.prisma.userAuth.findUnique({
-          where: { username: user.login },
-        });
-
-        if (!authUser) {
-          await authService.register(user.email, user.login, " ");
-        }
-
+      if (!authUser) {
+        // Ensure register actually finishes before moving on
+        await authService.register(user.email, user.login, " ");
         authUser = await fastify.prisma.userAuth.findUnique({
           where: { username: user.login },
         });
-
-        if (!authUser) {
-          throw new Error("something went wrong");
-        }
-        const accessToken = fastify.auth.generateToken(
-          Number(authUser.userId),
-          "warrior",
-          authUser.username,
-        );
-
-        reply.setCookie("access_token", accessToken, {
-          path: "/",
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-          maxAge: 86400,
-        });
-
-        return reply.redirect(process.env.VITE_API_GATEWAY_URL + "dashboard");
-      } catch (error: any) {
-        console.error("42 OAuth error:", error.response?.data || error);
-        if (error instanceof Error) return reply.send({ error: error.message });
-        return reply.status(500).send({ error: error.response?.data });
       }
-    },
-  );
 
+      if (!authUser) {
+        return reply.redirect(process.env.VITE_API_GATEWAY_URL + "login");
+      }
+
+      // 4. Issue Local JWT
+      const accessToken = fastify.auth.generateToken(
+        Number(authUser.userId),
+        "warrior",
+        authUser.username,
+      );
+
+      reply.setCookie("access_token", accessToken, {
+        path: "/",
+        httpOnly: true,
+        secure: true, 
+        sameSite: "strict",
+        maxAge: 86400,
+      });
+
+      return reply.redirect(process.env.VITE_API_GATEWAY_URL + "dashboard");
+    } catch (error) {
+      console.error("Auth Error:", error);
+      return reply.redirect(process.env.VITE_API_GATEWAY_URL + "login");
+    }
+  },
+);
   // 2FA status check
 
   fastify.get(
