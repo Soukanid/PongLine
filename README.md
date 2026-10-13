@@ -68,7 +68,7 @@ PongLine is built using a modern **Microservices Architecture** to ensure scalab
 
 ## 👩‍💻 About the Author
 
-Developed by **Soukaina Nid Bella** ([@Soukanid](https://github.com/Soukanid)), **Fatimezzahra Bbot** ([@bbotfatimezzahra]([https://github.com/Soukanid](https://github.com/bbotfatimezzahra))) and **Hajar Boustaji** ([@black5star](https://github.com/black5star)) as part of the 1337 Coding School (42 Network) curriculum in Morocco. 
+Developed by **Soukaina Nid Bella** ([@Soukanid](https://github.com/Soukanid)), **Fatimezzahra Bbot** ([@bbotfatimezzahra](https://github.com/bbotfatimezzahra)) and **Hajar Boustaji** ([@black5star](https://github.com/black5star)) as part of the 1337 Coding School (42 Network) curriculum in Morocco. 
 
 If you like the retro aesthetic or want to chat about microservices, C++, or robotics, feel free to reach out!
 
